@@ -1,0 +1,95 @@
+@model MediCareMS.Models.ViewModels.User.BookAppointmentViewModel
+@{
+    ViewData["Title"] = "Book Appointment";
+    var departments = ViewBag.Departments as List<MediCareMS.Models.Entities.Doctor.Department>;
+    var doctors = ViewBag.Doctors as List<MediCareMS.Models.Entities.Doctor.DoctorProfile>;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0" style="border-radius: 12px;">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-plus text-primary"></i> Book an Appointment</h5>
+                <p class="text-muted mt-2 text-sm">Fill out the form below to request an appointment with one of our specialists.</p>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="BookAppointment" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="DepartmentId" class="form-label fw-bold">Select Department <span class="text-danger">*</span></label>
+                            <select asp-for="DepartmentId" class="form-select border-light-subtle shadow-sm" id="departmentSelect" required>
+                                <option value="">-- Choose Department --</option>
+                                @if (departments != null)
+                                {
+                                    foreach (var dept in departments)
+                                    {
+                                        <option value="@dept.Id">@dept.Name</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="DoctorId" class="form-label fw-bold">Select Doctor <span class="text-danger">*</span></label>
+                            <select asp-for="DoctorId" class="form-select border-light-subtle shadow-sm" id="doctorSelect" required>
+                                <option value="">-- Choose Doctor --</option>
+                                @if (doctors != null)
+                                {
+                                    foreach (var doc in doctors)
+                                    {
+                                        <option value="@doc.Id" data-dept="@doc.DepartmentId">Dr. @doc.FullName (@doc.ConsultationFee.ToString("C0"))</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="DoctorId" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12 form-group">
+                            <label asp-for="AppointmentDate" class="form-label fw-bold">Preferred Date <span class="text-danger">*</span></label>
+                            <input asp-for="AppointmentDate" type="date" class="form-control border-light-subtle shadow-sm" required min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label asp-for="Symptoms" class="form-label fw-bold">Symptoms / Reason for Visit <span class="text-danger">*</span></label>
+                        <textarea asp-for="Symptoms" class="form-control border-light-subtle shadow-sm" rows="3" placeholder="Briefly describe your symptoms..." required></textarea>
+                        <span asp-validation-for="Symptoms" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <a asp-action="MyAppointments" class="btn btn-light rounded-pill px-4 me-2 border text-muted">Cancel</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm">Confirm Booking <i class="fas fa-check ms-1"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var deptSelect = document.getElementById('departmentSelect');
+            var docSelect = document.getElementById('doctorSelect');
+            var docOptions = docSelect.querySelectorAll('option[data-dept]');
+
+            deptSelect.addEventListener('change', function() {
+                var selectedDeptId = this.value;
+                docSelect.value = ''; // Reset doctor selection
+                
+                docOptions.forEach(function(opt) {
+                    if (!selectedDeptId || opt.getAttribute('data-dept') === selectedDeptId) {
+                        opt.style.display = '';
+                    } else {
+                        opt.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}

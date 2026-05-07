@@ -1,0 +1,51 @@
+@model MediCareMS.Models.ViewModels.Appointment.AppointmentCreateViewModel
+@{ ViewData["Title"] = "Book Appointment"; }
+<div class="page-header">
+    <h2><i class="fas fa-calendar-plus"></i> Book New Appointment</h2>
+    <a asp-action="Index" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+<div class="card">
+    <form asp-action="Create" method="post" class="form-grid">
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Patient *</label>
+                <select asp-for="PatientId" asp-items="Model.Patients" class="form-control">
+                    <option value="">-- Select Patient --</option>
+                </select>
+                <span asp-validation-for="PatientId" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Doctor *</label>
+                <select asp-for="DoctorId" asp-items="Model.Doctors" class="form-control">
+                    <option value="">-- Select Doctor --</option>
+                </select>
+                <span asp-validation-for="DoctorId" class="field-error"></span>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Appointment Date *</label>
+                <input asp-for="AppointmentDate" type="date" class="form-control" />
+                <span asp-validation-for="AppointmentDate" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Appointment Time *</label>
+                <input asp-for="AppointmentTime" type="time" class="form-control" />
+                <span asp-validation-for="AppointmentTime" class="field-error"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Chief Complaint</label>
+            <textarea asp-for="ChiefComplaint" class="form-control" rows="3" placeholder="Describe the main reason for the visit..."></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Additional Notes</label>
+            <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-calendar-check"></i> Book Appointment</button>
+            <a asp-action="Index" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,75 @@
+@model IEnumerable<MediCareMS.Models.ViewModels.Doctor.DoctorListViewModel>
+@using MediCareMS.Models.Enums
+@{ ViewData["Title"] = "Doctors"; }
+
+<div class="page-header">
+    <h2><i class="fas fa-user-md"></i> Doctor Management</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> Add Doctor</a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" class="search-bar">
+            <div class="search-group">
+                <input name="search" value="@ViewBag.Search" placeholder="Search by name or doctor no..." class="form-control" />
+                <select name="deptId" class="form-control">
+                    <option value="">All Departments</option>
+                    @foreach (var d in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Departments)
+                    {
+                        if (d.Value == ViewBag.DeptId?.ToString())
+                        {
+                            <option value="@d.Value" selected>@d.Text</option>
+                        }
+                        else
+                        {
+                            <option value="@d.Value">@d.Text</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
+                <a asp-action="Index" class="btn btn-outline">Reset</a>
+            </div>
+        </form>
+    </div>
+    <div class="doctor-cards-grid">
+    @foreach (var d in Model)
+    {
+        <div class="doctor-card">
+            <div class="doctor-card-avatar">
+                @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                {
+                    <img src="@d.ProfileImagePath" alt="@d.FullName" />
+                }
+                else
+                {
+                    <i class="fas fa-user-md"></i>
+                }
+            </div>
+            <div class="doctor-card-info">
+                <h4>@d.FullName</h4>
+                <p class="doctor-specialization">@d.Specialization</p>
+                <p class="doctor-dept"><i class="fas fa-hospital"></i> @d.Department</p>
+                @if (!string.IsNullOrEmpty(d.Qualification))
+                {
+                    <p class="doctor-qual"><i class="fas fa-graduation-cap"></i> @d.Qualification</p>
+                }
+                <div class="doctor-card-meta">
+                    <span><i class="fas fa-briefcase"></i> @(d.ExperienceYears ?? 0) yrs exp</span>
+                    <span class="doctor-fee">৳@d.ConsultationFee.ToString("N0")</span>
+                </div>
+                <span class="status-badge status-@d.Status.ToString().ToLower()">@d.Status</span>
+            </div>
+            <div class="doctor-card-actions">
+                <a asp-action="Edit" asp-route-id="@d.Id" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
+                <form asp-action="Delete" asp-route-id="@d.Id" method="post" onsubmit="return confirm('Delete this doctor?')">
+                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                </form>
+            </div>
+        </div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="empty-state"><i class="fas fa-user-md"></i><p>No doctors found.</p></div>
+    }
+    </div>
+</div>

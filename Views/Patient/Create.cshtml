@@ -1,0 +1,36 @@
+@model MediCareMS.Models.ViewModels.Patient.PatientCreateEditViewModel
+@{ ViewData["Title"] = "Register Patient"; }
+<div class="page-header">
+    <h2><i class="fas fa-user-plus"></i> Register New Patient</h2>
+    <a asp-action="Index" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+<div class="card">
+    <form asp-action="Create" method="post" class="form-grid">
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label">Full Name *</label><input asp-for="FullName" class="form-control" /></div>
+            <div class="form-group"><label class="form-label">Date of Birth *</label><input asp-for="DateOfBirth" type="date" class="form-control" /></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label">Gender *</label><select asp-for="Gender" asp-items="Html.GetEnumSelectList<MediCareMS.Models.Enums.Gender>()" class="form-control"></select></div>
+            <div class="form-group"><label class="form-label">Blood Group</label><select asp-for="BloodGroup" asp-items="Html.GetEnumSelectList<MediCareMS.Models.Enums.BloodGroup>()" class="form-control"><option value="">-- Select --</option></select></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label">Mobile</label><input asp-for="MobileNumber" class="form-control" /></div>
+            <div class="form-group"><label class="form-label">Email</label><input asp-for="Email" type="email" class="form-control" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Address</label><input asp-for="Address" class="form-control" /></div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label">Emergency Contact Name</label><input asp-for="EmergencyContactName" class="form-control" /></div>
+            <div class="form-group"><label class="form-label">Emergency Phone</label><input asp-for="EmergencyContactPhone" class="form-control" /></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label">Known Allergies</label><textarea asp-for="KnownAllergies" class="form-control" rows="2"></textarea></div>
+            <div class="form-group"><label class="form-label">Chronic Conditions</label><textarea asp-for="ChronicConditions" class="form-control" rows="2"></textarea></div>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Register Patient</button>
+            <a asp-action="Index" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>

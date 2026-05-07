@@ -1,0 +1,52 @@
+@model MediCareMS.Models.ViewModels.Patient.PatientDetailViewModel
+@using MediCareMS.Models.Enums
+@{ ViewData["Title"] = "Patient Details"; }
+<div class="page-header">
+    <h2><i class="fas fa-id-card"></i> Patient Details</h2>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline"><i class="fas fa-edit"></i> Edit</a>
+        <a asp-action="Index" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+    </div>
+</div>
+<div class="detail-grid">
+    <div class="card detail-card">
+        <div class="patient-profile-header">
+            <div class="patient-avatar"><i class="fas fa-user-injured"></i></div>
+            <div>
+                <h3>@Model.FullName</h3>
+                <span class="badge badge-light">@Model.PatientNo</span>
+            </div>
+        </div>
+        <div class="detail-fields">
+            <div class="detail-field"><span class="detail-label">Age / Gender</span><span class="detail-value">@Model.Age years / @Model.Gender</span></div>
+            <div class="detail-field"><span class="detail-label">Blood Group</span><span class="detail-value">@(Model.BloodGroup?.ToString().Replace("_"," ") ?? "—")</span></div>
+            <div class="detail-field"><span class="detail-label">Mobile</span><span class="detail-value">@(Model.MobileNumber ?? "—")</span></div>
+            <div class="detail-field"><span class="detail-label">Address</span><span class="detail-value">@(Model.Address ?? "—")</span></div>
+            <div class="detail-field"><span class="detail-label">Allergies</span><span class="detail-value">@(Model.KnownAllergies ?? "None")</span></div>
+            <div class="detail-field"><span class="detail-label">Conditions</span><span class="detail-value">@(Model.ChronicConditions ?? "None")</span></div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h3><i class="fas fa-history"></i> Recent Appointments</h3></div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>No.</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody>
+                @foreach (var a in Model.RecentAppointments)
+                {
+                    <tr>
+                        <td><span class="badge badge-light">@a.AppointmentNo</span></td>
+                        <td>@a.DoctorName</td>
+                        <td>@a.Date.ToString("dd MMM yyyy")</td>
+                        <td><span class="status-badge status-@a.Status.ToString().ToLower()">@a.Status</span></td>
+                    </tr>
+                }
+                @if (!Model.RecentAppointments.Any())
+                {
+                    <tr><td colspan="4" class="text-center">No appointments yet.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

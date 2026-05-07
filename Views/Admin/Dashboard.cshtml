@@ -1,0 +1,94 @@
+@model MediCareMS.Models.ViewModels.Appointment.DashboardViewModel
+@{ ViewData["Title"] = "Dashboard"; }
+
+<div class="stats-grid">
+    <div class="stat-card stat-blue">
+        <div class="stat-icon"><i class="fas fa-procedures"></i></div>
+        <div class="stat-info"><div class="stat-value">@Model.TotalPatients</div><div class="stat-label">Total Patients</div></div>
+    </div>
+    <div class="stat-card stat-green">
+        <div class="stat-icon"><i class="fas fa-user-md"></i></div>
+        <div class="stat-info"><div class="stat-value">@Model.TotalDoctors</div><div class="stat-label">Total Doctors</div></div>
+    </div>
+    <div class="stat-card stat-purple">
+        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-info"><div class="stat-value">@Model.TodayAppointments</div><div class="stat-label">Today's Appointments</div></div>
+    </div>
+    <div class="stat-card stat-orange">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-info"><div class="stat-value">@Model.PendingAppointments</div><div class="stat-label">Pending</div></div>
+    </div>
+    <div class="stat-card stat-teal">
+        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info"><div class="stat-value">@Model.CompletedAppointments</div><div class="stat-label">Completed</div></div>
+    </div>
+    <div class="stat-card stat-red">
+        <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-info"><div class="stat-value">৳@Model.TodayRevenue.ToString("N0")</div><div class="stat-label">Today Revenue</div></div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-calendar-alt"></i> Recent Appointments</h3>
+            <a asp-controller="Appointment" asp-action="Index" class="btn btn-sm btn-outline">View All</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>No.</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody>
+                @foreach (var a in Model.RecentAppointments)
+                {
+                    <tr>
+                        <td><span class="badge badge-light">@a.AppointmentNo</span></td>
+                        <td>@a.PatientName</td>
+                        <td>@a.DoctorName</td>
+                        <td>@a.Date.ToString("dd MMM yyyy")</td>
+                        <td><span class="status-badge status-@a.Status.ToString().ToLower()">@a.Status</span></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-user-md"></i> Available Doctors</h3>
+            <a asp-controller="Doctor" asp-action="Index" class="btn btn-sm btn-outline">View All</a>
+        </div>
+        <div class="doctor-availability-list">
+        @foreach (var d in Model.AvailableDoctors)
+        {
+            <div class="doctor-avail-item">
+                <div class="doctor-avail-avatar"><i class="fas fa-user-md"></i></div>
+                <div class="doctor-avail-info">
+                    <span class="doctor-avail-name">@d.DoctorName</span>
+                    <span class="doctor-avail-dept">@d.Department</span>
+                </div>
+                <div class="doctor-avail-fee">৳@d.ConsultationFee.ToString("N0")</div>
+                <span class="status-badge status-available">Available</span>
+            </div>
+        }
+        </div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="quick-actions-grid">
+        <a asp-controller="Appointment" asp-action="Create" class="quick-action-card">
+            <i class="fas fa-calendar-plus"></i><span>Book Appointment</span>
+        </a>
+        <a asp-controller="Patient" asp-action="Create" class="quick-action-card">
+            <i class="fas fa-user-plus"></i><span>Register Patient</span>
+        </a>
+        <a asp-controller="Doctor" asp-action="Create" class="quick-action-card">
+            <i class="fas fa-user-md"></i><span>Add Doctor</span>
+        </a>
+        <a href="#" class="quick-action-card">
+            <i class="fas fa-file-invoice-dollar"></i><span>Generate Invoice</span>
+        </a>
+    </div>
+</div>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MediCare HMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+<div class="app-wrapper">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
+            <div class="brand-text">
+                <span class="brand-name">MediCare</span>
+                <span class="brand-sub">HMS</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            @if (User.IsInRole("Super Admin") || User.IsInRole("Hospital Admin") || User.IsInRole("Doctor") || User.IsInRole("Receptionist") || User.IsInRole("Nurse"))
+            {
+                <div class="nav-section-label">Main</div>
+                <a asp-controller="Admin" asp-action="Dashboard" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Admin"?"active":"")">
+                    <i class="fas fa-th-large"></i><span>Dashboard</span>
+                </a>
+                <div class="nav-section-label">Medical</div>
+                <a asp-controller="Doctor" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Doctor"?"active":"")">
+                    <i class="fas fa-user-md"></i><span>Doctors</span>
+                </a>
+                <a asp-controller="Patient" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Patient"?"active":"")">
+                    <i class="fas fa-procedures"></i><span>Patients</span>
+                </a>
+                <a asp-controller="Appointment" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Appointment"?"active":"")">
+                    <i class="fas fa-calendar-check"></i><span>Appointments</span>
+                </a>
+                <div class="nav-section-label">Finance</div>
+                <a asp-controller="Billing" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Billing"?"active":"")">
+                    <i class="fas fa-file-invoice-dollar"></i><span>Billing</span>
+                </a>
+                <a asp-controller="Payment" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Payment"?"active":"")">
+                    <i class="fas fa-money-bill-wave"></i><span>Payments</span>
+                </a>
+                <div class="nav-section-label">System</div>
+                <a asp-controller="UserManagement" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="UserManagement"?"active":"")">
+                    <i class="fas fa-users-cog"></i><span>Users</span>
+                </a>
+                <a asp-controller="Department" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Department"?"active":"")">
+                    <i class="fas fa-hospital"></i><span>Departments</span>
+                </a>
+                <a asp-controller="Settings" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Settings"?"active":"")">
+                    <i class="fas fa-cog"></i><span>Settings</span>
+                </a>
+            }
+            else if (User.IsInRole("Patient"))
+            {
+                <div class="nav-section-label">User Portal</div>
+                <a asp-controller="User" asp-action="Dashboard" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="Dashboard"?"active":"")">
+                    <i class="fas fa-home"></i><span>Dashboard</span>
+                </a>
+                <a asp-controller="User" asp-action="MyAppointments" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="MyAppointments"?"active":"")">
+                    <i class="fas fa-calendar-alt"></i><span>My Appointments</span>
+                </a>
+                <a asp-controller="User" asp-action="BookAppointment" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="BookAppointment"?"active":"")">
+                    <i class="fas fa-calendar-plus"></i><span>Book Appointment</span>
+                </a>
+                <a asp-controller="User" asp-action="MyPrescriptions" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="MyPrescriptions"?"active":"")">
+                    <i class="fas fa-file-medical"></i><span>My Prescriptions</span>
+                </a>
+                <a asp-controller="User" asp-action="MyProfile" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="MyProfile"?"active":"")">
+                    <i class="fas fa-user-edit"></i><span>My Profile</span>
+                </a>
+            }
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar"><i class="fas fa-user"></i></div>
+                <div class="user-details">
+                    <span class="user-name">@User.Identity?.Name</span>
+                    <span class="user-role">@(User.IsInRole("Patient") ? "Patient" : "Administrator")</span>
+                </div>
+            </div>
+            <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                <button type="submit" class="logout-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+            </form>
+        </div>
+    </aside>
+    <div class="main-content" id="mainContent">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                <span class="page-title">@ViewData["Title"]</span>
+            </div>
+            <div class="topbar-right">
+                <span class="topbar-time" id="topbarTime"></span>
+                <div class="topbar-user"><i class="fas fa-user-circle"></i> @User.Identity?.Name</div>
+            </div>
+        </header>
+        <div class="alert-container">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success"><i class="fas fa-check-circle"></i> @TempData["Success"] <button class="alert-close">&times;</button></div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> @TempData["Error"] <button class="alert-close">&times;</button></div>
+            }
+        </div>
+        <main class="page-body">@RenderBody()</main>
+    </div>
+</div>
+<script>
+    function updateClock(){const e=document.getElementById('topbarTime');if(e)e.textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});}
+    updateClock();setInterval(updateClock,1000);
+    document.getElementById('sidebarToggle')?.addEventListener('click',()=>{document.getElementById('sidebar')?.classList.toggle('collapsed');document.getElementById('mainContent')?.classList.toggle('expanded');});
+    document.querySelectorAll('.alert-close').forEach(b=>b.addEventListener('click',()=>b.closest('.alert')?.remove()));
+    setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.opacity='0'),5000);
+</script>
+@RenderSection("Scripts", required: false)
+</body>
+</html>

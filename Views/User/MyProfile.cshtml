@@ -1,0 +1,81 @@
+@model MediCareMS.Models.ViewModels.User.MyProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-sm border-0" style="border-radius: 12px;">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-user-edit text-primary"></i> Edit My Profile</h5>
+                <p class="text-muted text-sm mt-1">Keep your contact and medical details up to date.</p>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="MyProfile" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="FullName" class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
+                            <input asp-for="FullName" class="form-control" required />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="MobileNumber" class="form-label fw-bold">Mobile Number <span class="text-danger">*</span></label>
+                            <input asp-for="MobileNumber" class="form-control" placeholder="+1234567890" required />
+                            <span asp-validation-for="MobileNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="BloodGroup" class="form-label fw-bold">Blood Group <span class="text-danger">*</span></label>
+                            <select asp-for="BloodGroup" class="form-select" asp-items="Html.GetEnumSelectList<MediCareMS.Models.Enums.BloodGroup>()" required>
+                                <option value="">-- Select Blood Group --</option>
+                            </select>
+                            <span asp-validation-for="BloodGroup" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Gender" class="form-label fw-bold">Gender <span class="text-danger">*</span></label>
+                            <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<MediCareMS.Models.Enums.Gender>()" required></select>
+                            <span asp-validation-for="Gender" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="DateOfBirth" class="form-label fw-bold">Date of Birth <span class="text-danger">*</span></label>
+                            <input asp-for="DateOfBirth" type="date" class="form-control" required />
+                            <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="Address" class="form-label fw-bold">Address</label>
+                            <input asp-for="Address" class="form-control" placeholder="123 Main St..." />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 text-muted" />
+                    <h6 class="fw-bold mb-3">Emergency Contact</h6>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6 form-group">
+                            <label asp-for="EmergencyContactName" class="form-label fw-bold">Contact Name</label>
+                            <input asp-for="EmergencyContactName" class="form-control" />
+                            <span asp-validation-for="EmergencyContactName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 form-group">
+                            <label asp-for="EmergencyContactPhone" class="form-label fw-bold">Contact Phone</label>
+                            <input asp-for="EmergencyContactPhone" class="form-control" />
+                            <span asp-validation-for="EmergencyContactPhone" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="fas fa-save ms-1"></i> Save Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

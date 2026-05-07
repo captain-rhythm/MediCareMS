@@ -1,0 +1,79 @@
+@model IEnumerable<MediCareMS.Models.ViewModels.Appointment.AppointmentListViewModel>
+@using MediCareMS.Models.Enums
+@{ ViewData["Title"] = "Appointments"; }
+<div class="page-header">
+    <h2><i class="fas fa-calendar-check"></i> Appointment Management</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> Book Appointment</a>
+</div>
+<div class="card">
+    <div class="card-header">
+        <form method="get" class="search-bar">
+            <div class="search-group">
+                <input name="search" value="@ViewBag.Search" placeholder="Search by No., patient or doctor..." class="form-control" />
+                <select name="status" class="form-control">
+                    <option value="">All Status</option>
+                    @foreach (AppointmentStatus s in Enum.GetValues(typeof(AppointmentStatus)))
+                    {
+                        if (ViewBag.Status != null && (int)ViewBag.Status == (int)s)
+                        {
+                            <option value="@((int)s)" selected>@s</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)s)">@s</option>
+                        }
+                    }
+                </select>
+                <input name="date" type="date" value="@ViewBag.Date" class="form-control" />
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                <a asp-action="Index" class="btn btn-outline">Reset</a>
+            </div>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table">
+            <thead><tr><th>No.</th><th>Patient</th><th>Doctor</th><th>Dept</th><th>Date & Time</th><th>Token</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td><span class="badge badge-light">@a.AppointmentNo</span></td>
+                    <td><strong>@a.PatientName</strong></td>
+                    <td>@a.DoctorName</td>
+                    <td>@a.Department</td>
+                    <td>@a.AppointmentDate.ToString("dd MMM yy") @a.AppointmentTime.ToString("hh:mm tt")</td>
+                    <td><span class="token-badge">#@a.TokenNumber</span></td>
+                    <td><span class="status-badge status-@a.Status.ToString().ToLower()">@a.Status</span></td>
+                    <td class="actions-cell">
+                        @if (a.Status == AppointmentStatus.Pending)
+                        {
+                            <form asp-action="UpdateStatus" method="post" style="display:inline">
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <input type="hidden" name="status" value="@((int)AppointmentStatus.Confirmed)" />
+                                <button class="btn btn-sm btn-success" title="Confirm"><i class="fas fa-check"></i></button>
+                            </form>
+                            <form asp-action="UpdateStatus" method="post" style="display:inline">
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <input type="hidden" name="status" value="@((int)AppointmentStatus.Cancelled)" />
+                                <button class="btn btn-sm btn-danger" title="Cancel"><i class="fas fa-times"></i></button>
+                            </form>
+                        }
+                        @if (a.Status == AppointmentStatus.Confirmed)
+                        {
+                            <form asp-action="UpdateStatus" method="post" style="display:inline">
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <input type="hidden" name="status" value="@((int)AppointmentStatus.Completed)" />
+                                <button class="btn btn-sm btn-primary" title="Mark Complete"><i class="fas fa-check-double"></i></button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (!Model.Any())
+            {
+                <tr><td colspan="8" class="text-center"><div class="empty-state"><i class="fas fa-calendar-times"></i><p>No appointments found.</p></div></td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

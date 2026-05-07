@@ -1,0 +1,10 @@
+namespace MediCareMS.Models.Entities.Auth;
+
+public class UserRole
+{
+    public int UserId { get; set; }
+    public int RoleId { get; set; }
+
+    public ApplicationUser User { get; set; } = null!;
+    public Role Role { get; set; } = null!;
+}
