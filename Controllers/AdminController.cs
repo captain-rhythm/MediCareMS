@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MediCareMS.Controllers;
 
-[Authorize(Roles = "Super Admin,Hospital Admin")]
+[Authorize(Roles = "Super Admin,Hospital Admin,Doctor,Receptionist,Nurse")]
 public class AdminController : Controller
 {
     private readonly AppDbContext _db;
@@ -19,8 +19,10 @@ public class AdminController : Controller
 
     public async Task<IActionResult> Dashboard()
     {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var monthStart = DateOnly.FromDateTime(new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1));
+        var todayStart = DateTime.Today;
+        var tomorrowStart = todayStart.AddDays(1);
+        var today = DateOnly.FromDateTime(todayStart);
+        var monthStart = DateOnly.FromDateTime(new DateTime(todayStart.Year, todayStart.Month, 1));
 
         var vm = new DashboardViewModel
         {
@@ -29,8 +31,8 @@ public class AdminController : Controller
             TodayAppointments = await _db.Appointments.CountAsync(a => a.AppointmentDate == today && !a.IsDeleted),
             PendingAppointments = await _db.Appointments.CountAsync(a => a.Status == AppointmentStatus.Pending && !a.IsDeleted),
             CompletedAppointments = await _db.Appointments.CountAsync(a => a.Status == AppointmentStatus.Completed && !a.IsDeleted),
-            TodayRevenue = await _db.Invoices.Where(i => i.CreatedAt.Date == DateTime.Today && !i.IsDeleted).SumAsync(i => (decimal?)i.PaidAmount) ?? 0,
-            MonthRevenue = await _db.Invoices.Where(i => i.DueDate >= monthStart && !i.IsDeleted).SumAsync(i => (decimal?)i.PaidAmount) ?? 0,
+            TodayRevenue = (decimal)(await _db.Invoices.Where(i => i.CreatedAt >= todayStart && i.CreatedAt < tomorrowStart && !i.IsDeleted).SumAsync(i => (double?)i.PaidAmount) ?? 0),
+            MonthRevenue = (decimal)(await _db.Invoices.Where(i => i.DueDate >= monthStart && !i.IsDeleted).SumAsync(i => (double?)i.PaidAmount) ?? 0),
 
             RecentAppointments = await _db.Appointments
                 .Include(a => a.Patient)

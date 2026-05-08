@@ -49,4 +49,11 @@ public class SignUpViewModel
     [Compare("Password", ErrorMessage = "Passwords do not match")]
     [DataType(DataType.Password)]
     public string ConfirmPassword { get; set; } = string.Empty;
+
+    [Required]
+    public MediCareMS.Models.Enums.Gender Gender { get; set; }
+
+    [Required]
+    [Phone]
+    public string MobileNumber { get; set; } = string.Empty;
 }

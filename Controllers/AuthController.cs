@@ -24,7 +24,11 @@ public class AuthController : Controller
     public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Dashboard");
+        {
+            if (User.IsInRole("Patient"))
+                return RedirectToAction("Dashboard", "User");
+            return RedirectToAction("Dashboard", "Admin");
+        }
         ViewBag.ReturnUrl = returnUrl;
         return View();
     }
@@ -97,7 +101,11 @@ public class AuthController : Controller
     public IActionResult SignUp()
     {
         if (User.Identity?.IsAuthenticated == true)
-            return RedirectToAction("Index", "Dashboard");
+        {
+            if (User.IsInRole("Patient"))
+                return RedirectToAction("Dashboard", "User");
+            return RedirectToAction("Dashboard", "Admin");
+        }
         return View();
     }
 
@@ -107,16 +115,23 @@ public class AuthController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        var existingUser = await _db.Users.AnyAsync(u => u.Email == model.Email || u.UserName == model.Email, cancellationToken);
-        if (existingUser)
+        var emailExists = await _db.Users.AnyAsync(u => u.Email == model.Email, cancellationToken);
+        if (emailExists)
         {
             ModelState.AddModelError("Email", "Email is already registered.");
             return View(model);
         }
 
+        // Build a safe username from the full name
+        var baseUsername = model.FullName.ToLower().Replace(" ", ".");
+        var username = baseUsername;
+        var suffix = 1;
+        while (await _db.Users.AnyAsync(u => u.UserName == username, cancellationToken))
+            username = $"{baseUsername}{suffix++}";
+
         var user = new MediCareMS.Models.Entities.Auth.ApplicationUser
         {
-            UserName = model.Email,
+            UserName = username,
             Email = model.Email,
             PasswordHash = _passwordHash.HashPassword(model.Password),
             Status = Models.Enums.AccountStatus.Active,
@@ -139,6 +154,8 @@ public class AuthController : Controller
             UserId = user.Id,
             FullName = model.FullName,
             Email = model.Email,
+            MobileNumber = model.MobileNumber,
+            Gender = model.Gender,
             CreatedAt = DateTime.UtcNow,
             DateOfBirth = DateTime.Today.AddYears(-20) // Default arbitrary
         });

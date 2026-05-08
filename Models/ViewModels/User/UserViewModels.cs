@@ -57,6 +57,10 @@ public class BookAppointmentViewModel
     [Required]
     [DataType(DataType.Date)]
     public DateOnly AppointmentDate { get; set; }
+
+    [Required]
+    [DataType(DataType.Time)]
+    public TimeOnly AppointmentTime { get; set; }
     
     [Required]
     public string Symptoms { get; set; } = string.Empty;

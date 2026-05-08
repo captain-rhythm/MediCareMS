@@ -35,9 +35,7 @@ if (string.IsNullOrWhiteSpace(mediCareConn))
     throw new InvalidOperationException("Connection string 'MediCareDb' not found.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        mediCareConn,
-        sql => sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null)));
+    options.UseSqlite(mediCareConn));
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -66,10 +64,27 @@ builder.Services.AddHttpContextAccessor();
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ListenAnyIP(5001);
+    serverOptions.ListenAnyIP(5002);
 });
 
 var app = builder.Build();
+
+// Auto-migrate database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while migrating the database. Exception: {Message}. Inner: {InnerMessage}", ex.Message, ex.InnerException?.Message);
+    }
+}
+
 
 if (!app.Environment.IsDevelopment())
 {

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MediCareMS.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Super Admin,Hospital Admin,Doctor,Receptionist,Nurse")]
 public class DoctorController : Controller
 {
     private readonly AppDbContext _db;

@@ -8,12 +8,14 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
-        return View();
-    }
-
-    public IActionResult Privacy()
-    {
-        return View();
+        // Root route redirects to Login (or Dashboard if already authenticated)
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            if (User.IsInRole("Patient"))
+                return RedirectToAction("Dashboard", "User");
+            return RedirectToAction("Dashboard", "Admin");
+        }
+        return RedirectToAction("Login", "Auth");
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
