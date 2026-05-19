@@ -41,6 +41,7 @@ public class DashboardViewModel
     public int CompletedAppointments { get; set; }
     public decimal TodayRevenue { get; set; }
     public decimal MonthRevenue { get; set; }
+    public int PendingRegistrationRequests { get; set; }
     public List<RecentAppointmentItem> RecentAppointments { get; set; } = new();
     public List<DoctorAvailabilityItem> AvailableDoctors { get; set; } = new();
 }
@@ -61,3 +62,4 @@ public class DoctorAvailabilityItem
     public DoctorStatus Status { get; set; }
     public decimal ConsultationFee { get; set; }
 }
+

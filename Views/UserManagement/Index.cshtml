@@ -1,8 +1,177 @@
+@model IEnumerable<MediCareMS.Models.Entities.Auth.Invitation>
 @{
-    ViewData["Title"] = "User Management";
+    ViewData["Title"] = "User Invitations";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="card p-4 text-center">
-    <h3><i class="fas fa-users-cog text-info"></i> User Management</h3>
-    <p class="text-muted mt-3">The User Management module is currently under development. This section will allow administrators to manage staff accounts, roles, and system access.</p>
+<!-- Page Header -->
+<div class="page-header">
+    <h2>
+        Invitations Panel
+        <span>Generate and manage patient invitation links seamlessly.</span>
+    </h2>
 </div>
+
+<div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 24px;">
+    <!-- Create Invitation Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-link"></i> Create Invitation Link</h3>
+        </div>
+        <div class="card-body">
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                Enter the recipient's email address to generate a secure registration link.
+            </p>
+            <form asp-action="SendInvite" method="post" class="search-group" style="max-width: 500px;">
+                @Html.AntiForgeryToken()
+                <input type="email" name="email" class="form-control" placeholder="name@domain.com" required style="flex: 1;" />
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Generate Link
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sent Invitations Table -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-envelope"></i> Sent Invitations
+                <span class="badge badge-light" style="margin-left: 10px; font-size: 11px;">Total: @Model.Count()</span>
+            </h3>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-responsive" style="border: none; border-radius: 0;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Invited By</th>
+                            <th>Expires On</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            foreach (var inv in Model)
+                            {
+                                <tr>
+                                    <td>@inv.Email</td>
+                                    <td>
+                                        @{
+                                            var badgeClass = inv.Status switch {
+                                                "Pending" => "status-pending",
+                                                "Registered" => "status-info",
+                                                "Used" => "status-completed",
+                                                "Accepted" => "status-completed",
+                                                "Declined" => "status-cancelled",
+                                                _ => "status-inactive"
+                                            };
+                                        }
+                                        <span class="status-badge @badgeClass">@inv.Status</span>
+                                        @if (inv.ExpiresAt < DateTime.UtcNow && !inv.IsUsed && inv.Status == "Pending")
+                                        {
+                                            <span class="status-badge status-cancelled" style="margin-left: 6px;">Expired</span>
+                                        }
+                                    </td>
+                                    <td>@(inv.InvitedByUser?.UserName ?? "Admin")</td>
+                                    <td>@inv.ExpiresAt.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <div class="actions-cell" style="justify-content: flex-end;">
+                                            @if (!inv.IsUsed && inv.ExpiresAt > DateTime.UtcNow)
+                                            {
+                                                <button type="button" class="btn btn-outline btn-sm" onclick="copyInviteLink('@inv.Token')" title="Copy Link">
+                                                    <i class="fas fa-copy"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline btn-sm" onclick="showQRCodeModal(@inv.Id)" title="View QR Code">
+                                                    <i class="fas fa-qrcode"></i>
+                                                </button>
+                                            }
+                                            
+                                            @if (inv.Status == "Registered")
+                                            {
+                                                <form asp-action="Approve" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@inv.Id" />
+                                                    <button type="submit" class="btn btn-success btn-sm" title="Approve">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form asp-action="Decline" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@inv.Id" />
+                                                    <button type="submit" class="btn btn-danger btn-sm" title="Decline">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            else if (!inv.IsUsed && inv.Status == "Pending")
+                                            {
+                                                <form asp-action="Resend" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@inv.Id" />
+                                                    <button type="submit" class="btn btn-outline btn-sm" title="Resend">
+                                                        <i class="fas fa-redo"></i>
+                                                    </button>
+                                                </form>
+                                            }
+
+                                            @if (!inv.IsUsed && inv.Status != "Accepted" && inv.Status != "Declined")
+                                            {
+                                                <form asp-action="Delete" method="post" style="display:inline;" onsubmit="return confirm('Delete this invitation?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@inv.Id" />
+                                                    <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>No invitations found. Generate a link above to get started.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("_QRCodeModal")
+
+@section Scripts {
+    <script>
+    function copyInviteLink(token) {
+        const link = `${window.location.protocol}//${window.location.host}/invite/register/${token}`;
+        navigator.clipboard.writeText(link).then(function() {
+            alert("Invitation link copied to clipboard!");
+        }, function(err) {
+            const textarea = document.createElement("textarea");
+            textarea.value = link;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand("copy");
+                alert("Invitation link copied to clipboard!");
+            } catch (e) {
+                console.error("Failed to copy link: ", e);
+            }
+            document.body.removeChild(textarea);
+        });
+    }
+    </script>
+}

@@ -1,3 +1,4 @@
+@inject MediCareMS.Data.AppDbContext DbContext
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,12 +12,17 @@
 </head>
 <body>
 <div class="app-wrapper">
+    <!-- Ambient Background Glows -->
+    <div class="ambient-glows">
+        <div class="glow-1"></div>
+        <div class="glow-2"></div>
+    </div>
+    
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
             <div class="brand-text">
                 <span class="brand-name">MediCare</span>
-                <span class="brand-sub">HMS</span>
             </div>
         </div>
         <nav class="sidebar-nav">
@@ -46,6 +52,13 @@
                 <div class="nav-section-label">System</div>
                 <a asp-controller="UserManagement" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="UserManagement"?"active":"")">
                     <i class="fas fa-users-cog"></i><span>Users</span>
+                    @{
+                        var pendingRequests = DbContext.Invitations.Count(i => i.Status == "Registered");
+                    }
+                    @if (pendingRequests > 0)
+                    {
+                        <span style="background:#f59e0b;color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-left:auto;display:inline-block;line-height:1.2">@pendingRequests</span>
+                    }
                 </a>
                 <a asp-controller="Department" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Department"?"active":"")">
                     <i class="fas fa-hospital"></i><span>Departments</span>
@@ -91,11 +104,25 @@
         <header class="topbar">
             <div class="topbar-left">
                 <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                <span class="page-title">@ViewData["Title"]</span>
+                <div class="topbar-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search everywhere..." />
+                </div>
             </div>
             <div class="topbar-right">
-                <span class="topbar-time" id="topbarTime"></span>
-                <div class="topbar-user"><i class="fas fa-user-circle"></i> @User.Identity?.Name</div>
+                <div class="topbar-notifications" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-dot"></span>
+                </div>
+                <div class="topbar-user">
+                    <div class="topbar-user-info">
+                        <span class="topbar-user-name">@User.Identity?.Name</span>
+                        <span class="topbar-user-role">@(User.IsInRole("Patient") ? "Patient" : "Admin")</span>
+                    </div>
+                    <div class="topbar-user-avatar">
+                        @(string.IsNullOrEmpty(User.Identity?.Name) ? "A" : User.Identity?.Name?.Substring(0, 1).ToUpper())
+                    </div>
+                </div>
             </div>
         </header>
         <div class="alert-container">
@@ -121,3 +148,4 @@
 @RenderSection("Scripts", required: false)
 </body>
 </html>
+

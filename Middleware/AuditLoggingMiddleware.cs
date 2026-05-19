@@ -1,5 +1,7 @@
 using MediCareMS.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
 namespace MediCareMS.Middleware;
 

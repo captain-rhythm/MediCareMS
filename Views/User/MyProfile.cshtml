@@ -3,79 +3,216 @@
     ViewData["Title"] = "My Profile";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card shadow-sm border-0" style="border-radius: 12px;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-user-edit text-primary"></i> Edit My Profile</h5>
-                <p class="text-muted text-sm mt-1">Keep your contact and medical details up to date.</p>
+<!-- Page Header -->
+<div class="page-header">
+    <h2>
+        Edit My Profile
+        <span>Keep your contact and medical details up to date.</span>
+    </h2>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header">
+        <h3><i class="fas fa-user-edit"></i> Edit Profile Details</h3>
+    </div>
+    <div class="card-body">
+        <form asp-action="MyProfile" method="post" class="form-grid">
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="FullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                    <input asp-for="FullName" class="form-control" required />
+                    <span asp-validation-for="FullName" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="MobileNumber" class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                    <input asp-for="MobileNumber" class="form-control" placeholder="+1234567890" required />
+                    <span asp-validation-for="MobileNumber" class="field-error"></span>
+                </div>
             </div>
-            <div class="card-body p-4">
-                <form asp-action="MyProfile" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6 form-group">
-                            <label asp-for="FullName" class="form-label fw-bold">Full Name <span class="text-danger">*</span></label>
-                            <input asp-for="FullName" class="form-control" required />
-                            <span asp-validation-for="FullName" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label asp-for="MobileNumber" class="form-label fw-bold">Mobile Number <span class="text-danger">*</span></label>
-                            <input asp-for="MobileNumber" class="form-control" placeholder="+1234567890" required />
-                            <span asp-validation-for="MobileNumber" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6 form-group">
-                            <label asp-for="BloodGroup" class="form-label fw-bold">Blood Group <span class="text-danger">*</span></label>
-                            <select asp-for="BloodGroup" class="form-select" asp-items="Html.GetEnumSelectList<MediCareMS.Models.Enums.BloodGroup>()" required>
-                                <option value="">-- Select Blood Group --</option>
-                            </select>
-                            <span asp-validation-for="BloodGroup" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label asp-for="Gender" class="form-label fw-bold">Gender <span class="text-danger">*</span></label>
-                            <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<MediCareMS.Models.Enums.Gender>()" required></select>
-                            <span asp-validation-for="Gender" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6 form-group">
-                            <label asp-for="DateOfBirth" class="form-label fw-bold">Date of Birth <span class="text-danger">*</span></label>
-                            <input asp-for="DateOfBirth" type="date" class="form-control" required />
-                            <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label asp-for="Address" class="form-label fw-bold">Address</label>
-                            <input asp-for="Address" class="form-control" placeholder="123 Main St..." />
-                            <span asp-validation-for="Address" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <hr class="my-4 text-muted" />
-                    <h6 class="fw-bold mb-3">Emergency Contact</h6>
-                    
-                    <div class="row mb-4">
-                        <div class="col-md-6 form-group">
-                            <label asp-for="EmergencyContactName" class="form-label fw-bold">Contact Name</label>
-                            <input asp-for="EmergencyContactName" class="form-control" />
-                            <span asp-validation-for="EmergencyContactName" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label asp-for="EmergencyContactPhone" class="form-label fw-bold">Contact Phone</label>
-                            <input asp-for="EmergencyContactPhone" class="form-control" />
-                            <span asp-validation-for="EmergencyContactPhone" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm"><i class="fas fa-save ms-1"></i> Save Profile</button>
-                    </div>
-                </form>
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="BloodGroup" class="form-label">Blood Group <span class="text-danger">*</span></label>
+                    <select asp-for="BloodGroup" class="form-control" asp-items="Html.GetEnumSelectList<MediCareMS.Models.Enums.BloodGroup>()" required>
+                        <option value="">-- Select Blood Group --</option>
+                    </select>
+                    <span asp-validation-for="BloodGroup" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                    <select asp-for="Gender" class="form-control" asp-items="Html.GetEnumSelectList<MediCareMS.Models.Enums.Gender>()" required></select>
+                    <span asp-validation-for="Gender" class="field-error"></span>
+                </div>
             </div>
-        </div>
+
+            <div class="form-row">
+                <div class="form-group custom-datepicker-container">
+                    <label asp-for="DateOfBirth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                    <div class="custom-datepicker-wrapper">
+                        <input asp-for="DateOfBirth" type="hidden" id="DateOfBirthHidden" required value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" />
+                        <button type="button" class="form-control datepicker-trigger" id="datepickerTrigger">
+                            <span id="selectedDateText">@Model.DateOfBirth.ToString("MMMM dd, yyyy")</span>
+                            <i class="fas fa-calendar-alt"></i>
+                        </button>
+                        <div class="custom-calendar-dropdown" id="calendarDropdown" style="display: none;">
+                            <div class="calendar-header">
+                                <button type="button" class="calendar-nav-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                                <span class="calendar-month-year" id="monthYearTitle">June 2025</span>
+                                <button type="button" class="calendar-nav-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                            <div class="calendar-weekdays">
+                                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                            </div>
+                            <div class="calendar-days" id="calendarDays"></div>
+                        </div>
+                    </div>
+                    <span asp-validation-for="DateOfBirth" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Address" class="form-label">Address</label>
+                    <input asp-for="Address" class="form-control" placeholder="123 Main St..." />
+                    <span asp-validation-for="Address" class="field-error"></span>
+                </div>
+            </div>
+
+            <div class="section-heading"><i class="fas fa-exclamation-triangle text-warning" style="margin-right: 8px;"></i> Emergency Contact</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="EmergencyContactName" class="form-label">Contact Name</label>
+                    <input asp-for="EmergencyContactName" class="form-control" />
+                    <span asp-validation-for="EmergencyContactName" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="EmergencyContactPhone" class="form-label">Contact Phone</label>
+                    <input asp-for="EmergencyContactPhone" class="form-control" />
+                    <span asp-validation-for="EmergencyContactPhone" class="field-error"></span>
+                </div>
+            </div>
+
+            <div class="form-actions" style="justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Profile
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Custom Datepicker Calendar Logic for DOB ---
+            const trigger = document.getElementById('datepickerTrigger');
+            const dropdown = document.getElementById('calendarDropdown');
+            const hiddenInput = document.getElementById('DateOfBirthHidden');
+            const selectedText = document.getElementById('selectedDateText');
+            const monthYearTitle = document.getElementById('monthYearTitle');
+            const calendarDays = document.getElementById('calendarDays');
+            const prevBtn = document.getElementById('prevMonth');
+            const nextBtn = document.getElementById('nextMonth');
+
+            // Parse initial DOB value if present
+            let currentDate = new Date();
+            if (hiddenInput.value) {
+                const initialVal = new Date(hiddenInput.value);
+                if (!isNaN(initialVal.getTime())) {
+                    currentDate = initialVal;
+                }
+            }
+            let selectedDate = new Date(currentDate);
+
+            // Toggle dropdown
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target) && e.target !== trigger) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            prevBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            function renderCalendar() {
+                calendarDays.innerHTML = '';
+                
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+
+                const monthsList = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                ];
+                monthYearTitle.textContent = `${monthsList[month]} ${year}`;
+
+                // Get first day of the month
+                const firstDayIndex = new Date(year, month, 1).getDay();
+
+                // Get number of days in the month
+                const totalDays = new Date(year, month + 1, 0).getDate();
+
+                // Generate empty spaces
+                for (let i = 0; i < firstDayIndex; i++) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.classList.add('calendar-day', 'empty');
+                    calendarDays.appendChild(emptyDiv);
+                }
+
+                // Generate days of the month
+                for (let day = 1; day <= totalDays; day++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.classList.add('calendar-day');
+                    dayDiv.textContent = day;
+
+                    const dateObj = new Date(year, month, day);
+                    dateObj.setHours(0, 0, 0, 0);
+
+                    // For DOB we don't disable past dates, highlight selected date
+                    if (selectedDate && dateObj.getFullYear() === selectedDate.getFullYear() && 
+                        dateObj.getMonth() === selectedDate.getMonth() && 
+                        dateObj.getDate() === selectedDate.getDate()) {
+                        dayDiv.classList.add('selected');
+                    }
+
+                    // Click selection
+                    dayDiv.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        selectedDate = dateObj;
+                        
+                        // Format date for hidden input
+                        const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        hiddenInput.value = formattedDate;
+
+                        // Display formatted string
+                        selectedText.textContent = dateObj.toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'long', day: 'numeric'
+                        });
+
+                        dropdown.style.display = 'none';
+                        renderCalendar();
+                    });
+
+                    calendarDays.appendChild(dayDiv);
+                }
+            }
+
+            renderCalendar();
+        });
+    </script>
+}

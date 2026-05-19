@@ -49,6 +49,9 @@ public class AppDbContext : DbContext
     public DbSet<HospitalProfile> HospitalProfiles => Set<HospitalProfile>();
     public DbSet<Notice> Notices => Set<Notice>();
 
+    // Invitations
+    public DbSet<Invitation> Invitations => Set<Invitation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

@@ -33,6 +33,7 @@ public class AdminController : Controller
             CompletedAppointments = await _db.Appointments.CountAsync(a => a.Status == AppointmentStatus.Completed && !a.IsDeleted),
             TodayRevenue = (decimal)(await _db.Invoices.Where(i => i.CreatedAt >= todayStart && i.CreatedAt < tomorrowStart && !i.IsDeleted).SumAsync(i => (double?)i.PaidAmount) ?? 0),
             MonthRevenue = (decimal)(await _db.Invoices.Where(i => i.DueDate >= monthStart && !i.IsDeleted).SumAsync(i => (double?)i.PaidAmount) ?? 0),
+            PendingRegistrationRequests = await _db.Invitations.CountAsync(i => i.Status == "Registered"),
 
             RecentAppointments = await _db.Appointments
                 .Include(a => a.Patient)
@@ -65,3 +66,4 @@ public class AdminController : Controller
         return View(vm);
     }
 }
+

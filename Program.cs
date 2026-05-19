@@ -1,6 +1,7 @@
 using MediCareMS.Data;
 using MediCareMS.Helpers.Email;
 using MediCareMS.Helpers.Security;
+using MediCareMS.Helpers.QRCode;
 using MediCareMS.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
@@ -60,12 +61,9 @@ builder.Services.AddSession(options =>
 
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IPasswordHashService, Pbkdf2PasswordHashService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IQRCodeService, QRCodeService>();
 builder.Services.AddHttpContextAccessor();
-
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenAnyIP(5002);
-});
 
 var app = builder.Build();
 
@@ -102,5 +100,47 @@ app.UseMiddleware<AuditLoggingMiddleware>();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}");
+
+// Configure Kestrel to handle port conflicts gracefully
+app.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ListenLocalhost(5002, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+    });
+});
+
+if (app.Environment.IsDevelopment())
+{
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        // Dynamically pick the first HTTP URL from app.Urls so this matches launchSettings.json
+        var url = app.Urls.FirstOrDefault(u => u.StartsWith("http://")) ?? "http://localhost:5002";
+        try
+        {
+            if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
+            {
+                System.Diagnostics.Process.Start("open", url);
+            }
+            else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
+            {
+                System.Diagnostics.Process.Start("xdg-open", url);
+            }
+        }
+        catch (Exception ex)
+        {
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning(ex, "Failed to auto-launch browser on startup.");
+        }
+    });
+}
 
 app.Run();

@@ -5,69 +5,88 @@
     var doctors = ViewBag.Doctors as List<MediCareMS.Models.Entities.Doctor.DoctorProfile>;
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0" style="border-radius: 12px;">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 px-4">
-                <h5 class="mb-0 fw-bold"><i class="fas fa-calendar-plus text-primary"></i> Book an Appointment</h5>
-                <p class="text-muted mt-2 text-sm">Fill out the form below to request an appointment with one of our specialists.</p>
+<div class="page-header">
+    <h2>
+        Book an Appointment
+        <span>Fill out the form below to request an appointment with one of our specialists.</span>
+    </h2>
+</div>
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-header">
+        <h3><i class="fas fa-calendar-plus"></i> New Booking</h3>
+    </div>
+    <div class="card-body">
+        <form asp-action="BookAppointment" method="post" class="form-grid">
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="DepartmentId" class="form-label">Select Department <span class="text-danger">*</span></label>
+                    <select asp-for="DepartmentId" class="form-control" id="departmentSelect" required>
+                        <option value="">-- Choose Department --</option>
+                        @if (departments != null)
+                        {
+                            foreach (var dept in departments)
+                            {
+                                <option value="@dept.Id">@dept.Name</option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="DepartmentId" class="field-error"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="DoctorId" class="form-label">Select Doctor <span class="text-danger">*</span></label>
+                    <select asp-for="DoctorId" class="form-control" id="doctorSelect" required>
+                        <option value="">-- Choose Doctor --</option>
+                        @if (doctors != null)
+                        {
+                            foreach (var doc in doctors)
+                            {
+                                <option value="@doc.Id" data-dept="@doc.DepartmentId">Dr. @doc.FullName (@doc.ConsultationFee.ToString("C0"))</option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="DoctorId" class="field-error"></span>
+                </div>
             </div>
-            <div class="card-body p-4">
-                <form asp-action="BookAppointment" method="post">
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6 form-group">
-                            <label asp-for="DepartmentId" class="form-label fw-bold">Select Department <span class="text-danger">*</span></label>
-                            <select asp-for="DepartmentId" class="form-select border-light-subtle shadow-sm" id="departmentSelect" required>
-                                <option value="">-- Choose Department --</option>
-                                @if (departments != null)
-                                {
-                                    foreach (var dept in departments)
-                                    {
-                                        <option value="@dept.Id">@dept.Name</option>
-                                    }
-                                }
-                            </select>
-                            <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+            <div class="form-group custom-datepicker-container">
+                <label asp-for="AppointmentDate" class="form-label">Preferred Date <span class="text-danger">*</span></label>
+                <div class="custom-datepicker-wrapper">
+                    <input asp-for="AppointmentDate" type="hidden" id="AppointmentDateHidden" required />
+                    <button type="button" class="form-control datepicker-trigger" id="datepickerTrigger">
+                        <span id="selectedDateText" style="color: var(--text-muted);">Select Preferred Date</span>
+                        <i class="fas fa-calendar-alt"></i>
+                    </button>
+                    <div class="custom-calendar-dropdown" id="calendarDropdown" style="display: none;">
+                        <div class="calendar-header">
+                            <button type="button" class="calendar-nav-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                            <span class="calendar-month-year" id="monthYearTitle">June 2025</span>
+                            <button type="button" class="calendar-nav-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
                         </div>
-                        <div class="col-md-6 form-group">
-                            <label asp-for="DoctorId" class="form-label fw-bold">Select Doctor <span class="text-danger">*</span></label>
-                            <select asp-for="DoctorId" class="form-select border-light-subtle shadow-sm" id="doctorSelect" required>
-                                <option value="">-- Choose Doctor --</option>
-                                @if (doctors != null)
-                                {
-                                    foreach (var doc in doctors)
-                                    {
-                                        <option value="@doc.Id" data-dept="@doc.DepartmentId">Dr. @doc.FullName (@doc.ConsultationFee.ToString("C0"))</option>
-                                    }
-                                }
-                            </select>
-                            <span asp-validation-for="DoctorId" class="text-danger small"></span>
+                        <div class="calendar-weekdays">
+                            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
                         </div>
+                        <div class="calendar-days" id="calendarDays"></div>
                     </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-12 form-group">
-                            <label asp-for="AppointmentDate" class="form-label fw-bold">Preferred Date <span class="text-danger">*</span></label>
-                            <input asp-for="AppointmentDate" type="date" class="form-control border-light-subtle shadow-sm" required min="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                            <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
-                        </div>
-                    </div>
-
-                    <div class="form-group mb-4">
-                        <label asp-for="Symptoms" class="form-label fw-bold">Symptoms / Reason for Visit <span class="text-danger">*</span></label>
-                        <textarea asp-for="Symptoms" class="form-control border-light-subtle shadow-sm" rows="3" placeholder="Briefly describe your symptoms..." required></textarea>
-                        <span asp-validation-for="Symptoms" class="text-danger small"></span>
-                    </div>
-
-                    <div class="d-flex justify-content-end">
-                        <a asp-action="MyAppointments" class="btn btn-light rounded-pill px-4 me-2 border text-muted">Cancel</a>
-                        <button type="submit" class="btn btn-primary rounded-pill px-5 shadow-sm">Confirm Booking <i class="fas fa-check ms-1"></i></button>
-                    </div>
-                </form>
+                </div>
+                <span asp-validation-for="AppointmentDate" class="field-error"></span>
             </div>
-        </div>
+
+            <div class="form-group">
+                <label asp-for="Symptoms" class="form-label">Symptoms / Reason for Visit <span class="text-danger">*</span></label>
+                <textarea asp-for="Symptoms" class="form-control" rows="4" placeholder="Briefly describe your symptoms..." required></textarea>
+                <span asp-validation-for="Symptoms" class="field-error"></span>
+            </div>
+
+            <div class="form-actions" style="justify-content: flex-end;">
+                <a asp-action="MyAppointments" class="btn btn-outline">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    Confirm Booking <i class="fas fa-check"></i>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -90,6 +109,123 @@
                     }
                 });
             });
+
+            // --- Custom Datepicker Calendar Logic ---
+            const trigger = document.getElementById('datepickerTrigger');
+            const dropdown = document.getElementById('calendarDropdown');
+            const hiddenInput = document.getElementById('AppointmentDateHidden');
+            const selectedText = document.getElementById('selectedDateText');
+            const monthYearTitle = document.getElementById('monthYearTitle');
+            const calendarDays = document.getElementById('calendarDays');
+            const prevBtn = document.getElementById('prevMonth');
+            const nextBtn = document.getElementById('nextMonth');
+
+            let currentDate = new Date();
+            let selectedDate = null;
+
+            // Today's date with zeroed time for comparison
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Toggle dropdown
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target) && e.target !== trigger) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            prevBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            function renderCalendar() {
+                calendarDays.innerHTML = '';
+                
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+
+                const monthsList = [
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+                ];
+                monthYearTitle.textContent = `${monthsList[month]} ${year}`;
+
+                // Get first day of the month (0 = Sunday, 1 = Monday...)
+                const firstDayIndex = new Date(year, month, 1).getDay();
+
+                // Get number of days in the month
+                const totalDays = new Date(year, month + 1, 0).getDate();
+
+                // Generate empty spaces for preceding days
+                for (let i = 0; i < firstDayIndex; i++) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.classList.add('calendar-day', 'empty');
+                    calendarDays.appendChild(emptyDiv);
+                }
+
+                // Generate days of the month
+                for (let day = 1; day <= totalDays; day++) {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.classList.add('calendar-day');
+                    dayDiv.textContent = day;
+
+                    const dateObj = new Date(year, month, day);
+                    dateObj.setHours(0, 0, 0, 0);
+
+                    // Disable past dates
+                    if (dateObj < today) {
+                        dayDiv.classList.add('disabled');
+                    } else {
+                        // Highlight today
+                        if (dateObj.getTime() === today.getTime()) {
+                            dayDiv.classList.add('today');
+                        }
+
+                        // Highlight selected date
+                        if (selectedDate && dateObj.getTime() === selectedDate.getTime()) {
+                            dayDiv.classList.add('selected');
+                        }
+
+                        // Click to select date
+                        dayDiv.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            selectedDate = dateObj;
+                            
+                            // Format date for C# model (yyyy-MM-dd)
+                            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                            hiddenInput.value = formattedDate;
+
+                            // Display date on trigger button
+                            const displayDate = dateObj.toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric'
+                            });
+                            selectedText.textContent = displayDate;
+                            selectedText.style.color = '#fff';
+
+                            dropdown.style.display = 'none';
+                            renderCalendar(); // Refresh selection visual
+                        });
+                    }
+
+                    calendarDays.appendChild(dayDiv);
+                }
+            }
+
+            renderCalendar();
         });
     </script>
 }

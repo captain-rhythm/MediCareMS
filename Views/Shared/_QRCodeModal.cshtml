@@ -1,0 +1,288 @@
+<!-- Custom QR Code Modal styles -->
+<style>
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s ease-out;
+}
+
+.custom-modal.show {
+    display: flex;
+    opacity: 1;
+}
+
+.custom-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1;
+}
+
+.custom-modal-container {
+    position: relative;
+    background: #ffffff;
+    width: 95%;
+    max-width: 450px;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    z-index: 2;
+    transform: scale(0.92);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.custom-modal.show .custom-modal-container {
+    transform: scale(1);
+}
+
+.custom-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.custom-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.custom-modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #64748b;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.custom-modal-close-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.custom-modal-body {
+    padding: 24px;
+    text-align: center;
+}
+
+.custom-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+    gap: 12px;
+}
+
+.custom-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #f1f5f9;
+    border-top: 4px solid #1a73e8;
+    border-radius: 50%;
+    animation: custom-spin 1s linear infinite;
+    margin: 40px auto;
+}
+
+@@keyframes custom-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<!-- QR Code Modal -->
+<div class="custom-modal" id="qrCodeModal" role="dialog" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="custom-modal-overlay"></div>
+    <div class="custom-modal-container">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title" id="qrCodeModalLabel">
+                <i class="fas fa-qrcode" style="color: #1a73e8;"></i>Invitation QR Code
+            </h5>
+            <button type="button" class="custom-modal-close-btn" onclick="closeCustomModal()">&times;</button>
+        </div>
+        <div class="custom-modal-body">
+            <div id="qrCodeContainer" style="margin-bottom: 20px; min-height: 250px; display: flex; align-items: center; justify-content: center;">
+                <div class="custom-spinner"></div>
+            </div>
+
+            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin-bottom: 16px; text-align: left;">
+                <label style="font-size: 12px; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 8px;">Invitation Link</label>
+                <div style="display: flex; gap: 8px; align-items: stretch;">
+                    <input type="text" id="invitationLinkInput" readonly style="flex: 1; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; background: #fff; color: #4a5568; word-break: break-all;" />
+                    <button type="button" id="copyLinkBtn" style="padding: 10px 16px; background: #1a73e8; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s ease;">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <small style="color: #a0aec0; display: block; margin-top: 8px;">
+                    <i class="fas fa-info-circle"></i> Share this link or QR code with the invitee
+                </small>
+            </div>
+
+            <div style="background: #fffbeb; border-left: 4px solid #fbbf24; padding: 12px 16px; border-radius: 8px; text-align: left;">
+                <small style="color: #92400e; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>QR codes are valid until invitation expires</span>
+                </small>
+            </div>
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" id="downloadQRBtn" style="padding: 10px 20px; background: #28a745; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                <i class="fas fa-download"></i> Download QR Code
+            </button>
+            <button type="button" onclick="closeCustomModal()" style="padding: 10px 20px; background: #6c757d; color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables to store current invitation ID and QR code data
+let currentInvitationId = null;
+let currentQRCodeData = null;
+
+// Function to close the modal
+function closeCustomModal() {
+    const modal = document.getElementById('qrCodeModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 250);
+}
+
+// Function to show QR code modal
+function showQRCodeModal(invitationId) {
+    currentInvitationId = invitationId;
+    const modal = document.getElementById('qrCodeModal');
+    const container = document.getElementById('qrCodeContainer');
+
+    // Show loading spinner
+    container.innerHTML = '<div class="custom-spinner"></div>';
+    document.getElementById('invitationLinkInput').value = '';
+
+    // Show modal container
+    modal.style.display = 'flex';
+    // Trigger reflow
+    modal.offsetHeight;
+    modal.classList.add('show');
+
+    // Fetch QR code data
+    fetch(`/UserManagement/GetQRCodeBase64/${invitationId}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to generate QR code');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                currentQRCodeData = data.qrCode;
+                container.innerHTML = `
+                    <div style="padding: 20px; background: #fff; border-radius: 8px; display: inline-block;">
+                        <img src="data:image/png;base64,${data.qrCode}" alt="QR Code" style="width: 250px; height: 250px; border: 2px solid #e2e8f0; border-radius: 8px;" />
+                    </div>
+                `;
+                document.getElementById('invitationLinkInput').value = data.invitationLink;
+            } else {
+                container.innerHTML = `<div class="alert alert-error" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:12px;border-radius:8px;font-size:13px;width:100%"><i class="fas fa-exclamation-circle"></i> ${data.message}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = `<div class="alert alert-error" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;padding:12px;border-radius:8px;font-size:13px;width:100%"><i class="fas fa-exclamation-circle"></i> Error generating QR code: ${error.message}</div>`;
+        });
+}
+
+// Event listener to close modal when clicking outside the modal container
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('qrCodeModal');
+    const overlay = modal.querySelector('.custom-modal-overlay');
+    
+    if (overlay) {
+        overlay.addEventListener('click', closeCustomModal);
+    }
+
+    // Copy to clipboard functionality
+    const copyBtn = document.getElementById('copyLinkBtn');
+    const linkInput = document.getElementById('invitationLinkInput');
+
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            if (!linkInput.value) return;
+            
+            // Modern Clipboard API
+            navigator.clipboard.writeText(linkInput.value).then(() => {
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyBtn.style.background = '#28a745';
+
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.style.background = '#1a73e8';
+                }, 2000);
+            }).catch(err => {
+                // Fallback for older browsers
+                linkInput.select();
+                document.execCommand('copy');
+                
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyBtn.style.background = '#28a745';
+
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.style.background = '#1a73e8';
+                }, 2000);
+            });
+        });
+    }
+
+    // Download QR code functionality
+    const downloadBtn = document.getElementById('downloadQRBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            if (currentQRCodeData) {
+                const link = document.createElement('a');
+                link.href = `data:image/png;base64,${currentQRCodeData}`;
+                link.download = `invitation-qr-${currentInvitationId}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
+    }
+});
+</script>
+

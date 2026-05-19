@@ -1,0 +1,29 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Invalid Invitation";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invalid Link - MediCare HMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        body { background:linear-gradient(135deg,#fff5f5,#fee2e2); min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; }
+        .card { background:#fff; border-radius:16px; padding:52px 44px; text-align:center; max-width:420px; box-shadow:0 8px 40px rgba(0,0,0,.10); }
+        .icon { font-size:64px; }
+        h2 { color:#c53030; font-weight:800; margin:16px 0 8px; }
+        p { color:#718096; line-height:1.7; }
+        a { color:#1a73e8; font-weight:600; text-decoration:none; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="icon">❌</div>
+    <h2>Invalid Invitation Link</h2>
+    <p>@(ViewBag.Error ?? "This invitation link is invalid or has expired.")</p>
+    <p style="margin-top:20px">Please contact your administrator for a new invitation link.</p>
+    <p style="margin-top:16px"><a href="/Auth/Login">← Back to Login</a></p>
+</div>
+</body>
+</html>

@@ -42,8 +42,6 @@ public class AuthController : Controller
         var user = await _db.Users
             .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u =>
-                u.Status == Models.Enums.AccountStatus.Active &&
-                u.IsEmailConfirmed &&
                 !u.IsDeleted &&
                 (u.UserName == model.UserNameOrEmail || u.Email == model.UserNameOrEmail),
                 cancellationToken);
@@ -51,6 +49,24 @@ public class AuthController : Controller
         if (user == null || !_passwordHash.VerifyPassword(model.Password, user.PasswordHash))
         {
             ModelState.AddModelError(string.Empty, "Invalid username or password.");
+            return View(model);
+        }
+
+        if (user.Status == Models.Enums.AccountStatus.Inactive)
+        {
+            ModelState.AddModelError(string.Empty, "Your account is pending administrator approval.");
+            return View(model);
+        }
+
+        if (user.Status == Models.Enums.AccountStatus.Suspended)
+        {
+            ModelState.AddModelError(string.Empty, "Your account has been suspended. Please contact support.");
+            return View(model);
+        }
+
+        if (!user.IsEmailConfirmed)
+        {
+            ModelState.AddModelError(string.Empty, "Please confirm your email address before logging in.");
             return View(model);
         }
 
@@ -81,6 +97,87 @@ public class AuthController : Controller
         }
         
         return RedirectToAction("Dashboard", "User");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Register(string token, string email, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
+            return RedirectToAction("Login");
+
+        var invitation = await _db.Invitations
+            .FirstOrDefaultAsync(i => i.Token == token && i.Email == email
+                && !i.IsUsed && i.ExpiresAt > DateTime.UtcNow, cancellationToken);
+
+        if (invitation == null)
+        {
+            ViewBag.Error = "This invitation link is invalid or has expired. Please contact your administrator.";
+            return View("InviteError");
+        }
+
+        return View(new InviteRegisterViewModel { Token = token, Email = email });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(InviteRegisterViewModel model, CancellationToken cancellationToken = default)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var invitation = await _db.Invitations
+            .FirstOrDefaultAsync(i => i.Token == model.Token && i.Email == model.Email
+                && !i.IsUsed && i.ExpiresAt > DateTime.UtcNow, cancellationToken);
+
+        if (invitation == null)
+        {
+            ModelState.AddModelError("", "Invitation is invalid or has expired.");
+            return View(model);
+        }
+
+        if (await _db.Users.AnyAsync(u => u.Email == model.Email, cancellationToken))
+        {
+            ModelState.AddModelError("", "This email is already registered.");
+            return View(model);
+        }
+
+        // Build unique username from full name
+        var baseUsername = model.FullName.ToLower().Replace(" ", ".");
+        var username = baseUsername;
+        var suffix = 1;
+        while (await _db.Users.AnyAsync(u => u.UserName == username, cancellationToken))
+            username = $"{baseUsername}{suffix++}";
+
+        var user = new MediCareMS.Models.Entities.Auth.ApplicationUser
+        {
+            UserName = username,
+            Email = model.Email,
+            PasswordHash = _passwordHash.HashPassword(model.Password),
+            PhoneNumber = model.Phone,
+            Status = Models.Enums.AccountStatus.Inactive, // Awaits admin approval
+            IsEmailConfirmed = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.Users.Add(user);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        // Assign role by name
+        var role = await _db.Roles.FirstOrDefaultAsync(r => r.Name == model.Role, cancellationToken);
+        if (role != null)
+        {
+            _db.UserRoles.Add(new MediCareMS.Models.Entities.Auth.UserRole { UserId = user.Id, RoleId = role.Id });
+        }
+
+        // Update invitation
+        invitation.IsUsed = true;
+        invitation.Status = "Registered";
+        invitation.RegisteredFullName = model.FullName;
+        invitation.RegisteredPhone = model.Phone;
+        invitation.RequestedRole = model.Role;
+
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return View("RegisterSuccess");
     }
 
     [HttpGet]

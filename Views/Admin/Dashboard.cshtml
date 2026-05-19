@@ -24,8 +24,15 @@
     </div>
     <div class="stat-card stat-red">
         <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
-        <div class="stat-info"><div class="stat-value">৳@Model.TodayRevenue.ToString("N0")</div><div class="stat-label">Today Revenue</div></div>
+        <div class="stat-info"><div class="stat-value">৳ @Model.TodayRevenue.ToString("N0")</div><div class="stat-label">Today Revenue</div></div>
     </div>
+    <a asp-controller="UserManagement" asp-action="Index" class="stat-card stat-purple" style="text-decoration: none;">
+        <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">@Model.PendingRegistrationRequests</div>
+            <div class="stat-label">Reg. Requests</div>
+        </div>
+    </a>
 </div>
 
 <div class="dashboard-grid">
@@ -67,7 +74,7 @@
                     <span class="doctor-avail-name">@d.DoctorName</span>
                     <span class="doctor-avail-dept">@d.Department</span>
                 </div>
-                <div class="doctor-avail-fee">৳@d.ConsultationFee.ToString("N0")</div>
+                <div class="doctor-avail-fee">৳ @d.ConsultationFee.ToString("N0")</div>
                 <span class="status-badge status-available">Available</span>
             </div>
         }
@@ -92,3 +99,4 @@
         </a>
     </div>
 </div>
+
