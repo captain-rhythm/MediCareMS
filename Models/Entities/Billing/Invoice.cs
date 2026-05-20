@@ -27,4 +27,5 @@ public class Invoice
     public Patient.Patient Patient { get; set; } = null!;
     public Doctor.DoctorProfile Doctor { get; set; } = null!;
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    public ICollection<InvoiceItem> Items { get; set; } = new List<InvoiceItem>();
 }

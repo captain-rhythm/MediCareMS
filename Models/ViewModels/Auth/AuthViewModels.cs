@@ -23,6 +23,9 @@ public class ForgotPasswordViewModel
 public class ResetPasswordViewModel
 {
     [Required]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
     public string Token { get; set; } = string.Empty;
 
     [Required, MinLength(6)]

@@ -4,6 +4,7 @@ using MediCareMS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MediCareMS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520184449_InitialSqlServer")]
+    partial class InitialSqlServer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -157,12 +160,6 @@ namespace MediCareMS.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ResetToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ResetTokenExpiry")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -2329,38 +2326,6 @@ namespace MediCareMS.Migrations
                         });
                 });
 
-            modelBuilder.Entity("MediCareMS.Models.Entities.Billing.InvoiceItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.ToTable("InvoiceItems");
-                });
-
             modelBuilder.Entity("MediCareMS.Models.Entities.Billing.Payment", b =>
                 {
                     b.Property<int>("Id")
@@ -2379,9 +2344,6 @@ namespace MediCareMS.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<string>("FailureReason")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int");
 
@@ -2390,30 +2352,6 @@ namespace MediCareMS.Migrations
 
                     b.Property<DateTime>("PaidAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("SslBankTransactionId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SslCardIssuer")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SslCardType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SslGwVersion")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SslSessionKey")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SslStatus")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SslTransactionId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SslValidationId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TransactionReference")
                         .HasColumnType("nvarchar(max)");
@@ -3422,17 +3360,6 @@ namespace MediCareMS.Migrations
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("MediCareMS.Models.Entities.Billing.InvoiceItem", b =>
-                {
-                    b.HasOne("MediCareMS.Models.Entities.Billing.Invoice", "Invoice")
-                        .WithMany("Items")
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Invoice");
-                });
-
             modelBuilder.Entity("MediCareMS.Models.Entities.Billing.Payment", b =>
                 {
                     b.HasOne("MediCareMS.Models.Entities.Billing.Invoice", "Invoice")
@@ -3573,8 +3500,6 @@ namespace MediCareMS.Migrations
 
             modelBuilder.Entity("MediCareMS.Models.Entities.Billing.Invoice", b =>
                 {
-                    b.Navigation("Items");
-
                     b.Navigation("Payments");
                 });
 

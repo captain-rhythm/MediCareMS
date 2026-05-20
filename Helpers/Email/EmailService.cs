@@ -146,6 +146,61 @@ public class EmailService : IEmailService
         _logger.LogInformation("Invitation email successfully sent to {Email}", toEmail);
     }
 
+    public async Task SendPasswordResetAsync(string toEmail, string resetLink)
+    {
+        _logger.LogInformation("Starting password reset email send to {Email}", toEmail);
+        ValidateConfiguration();
+        ValidateEmailInput(toEmail, resetLink);
+
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress("MediCare Hospital System", _opts.From));
+        message.To.Add(MailboxAddress.Parse(toEmail));
+        message.Subject = "Reset Your Password - MediCare Hospital System";
+
+        var builder = new BodyBuilder
+        {
+            HtmlBody = $@"
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<style>
+  body{{font-family:'Segoe UI',sans-serif;background:#f0f4f8;margin:0;padding:0}}
+  .wrap{{max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.10)}}
+  .hdr{{background:linear-gradient(135deg,#3B82F6,#8B5CF6);padding:36px;text-align:center}}
+  .hdr h1{{color:#fff;margin:0;font-size:26px;letter-spacing:1px}}
+  .hdr p{{color:rgba(255,255,255,.85);margin:6px 0 0;font-size:14px}}
+  .body{{padding:36px;color:#333}}
+  .body p{{line-height:1.7;font-size:15px;margin:0 0 16px}}
+  .btn{{display:inline-block;margin:8px 0 24px;padding:14px 40px;background:#3B82F6;color:#fff!important;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;letter-spacing:.5px}}
+  .note{{background:#fff8e1;border-left:4px solid #ffc107;padding:12px 16px;border-radius:4px;font-size:13px;color:#7a5c00;margin-top:4px}}
+  .footer{{background:#f8f9fa;padding:16px 36px;font-size:12px;color:#999;text-align:center}}
+</style>
+</head>
+<body>
+<div class='wrap'>
+  <div class='hdr'>
+    <h1>🏥 MediCare HMS</h1>
+    <p>Password Reset Request</p>
+  </div>
+  <div class='body'>
+    <p>Hello,</p>
+    <p>We received a request to reset the password for your MediCare HMS account. If you made this request, please click the button below to choose a new password:</p>
+    <a href='{resetLink}' class='btn'>Reset Password</a>
+    <div class='note'>⏱️ This link is valid for <strong>30 minutes</strong>.</div>
+    <p style='margin-top:20px;font-size:13px;color:#666'>If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
+  </div>
+  <div class='footer'>MediCare Hospital System &mdash; Please do not reply to this email.</div>
+</div>
+</body>
+</html>"
+        };
+
+        message.Body = builder.ToMessageBody();
+        await SendWithRetryAsync(message, toEmail);
+        _logger.LogInformation("Password reset email successfully sent to {Email}", toEmail);
+    }
+
     /// <summary>
     /// Sends email with retry logic and detailed error logging.
     /// </summary>

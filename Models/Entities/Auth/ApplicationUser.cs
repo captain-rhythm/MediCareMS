@@ -13,6 +13,8 @@ public class ApplicationUser
     public bool IsEmailConfirmed { get; set; }
     public string? ActivationToken { get; set; }
     public DateTime? ActivationTokenExpiry { get; set; }
+    public string? ResetToken { get; set; }
+    public DateTime? ResetTokenExpiry { get; set; }
     public DateTime? LastLoginAt { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime CreatedAt { get; set; }

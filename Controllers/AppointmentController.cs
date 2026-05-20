@@ -124,7 +124,7 @@ public class AppointmentController : Controller
     {
         vm.Patients = await _db.Patients.Where(p => !p.IsDeleted)
             .Select(p => new SelectListItem { Value = p.Id.ToString(), Text = $"{p.PatientNo} - {p.FullName}" }).ToListAsync();
-        vm.Doctors = await _db.Doctors.Where(d => !d.IsDeleted && d.Status == DoctorStatus.Available)
+        vm.Doctors = await _db.Doctors.Where(d => !d.IsDeleted)
             .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = $"{d.FullName} ({d.DoctorNo})" }).ToListAsync();
         return vm;
     }

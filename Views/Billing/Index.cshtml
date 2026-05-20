@@ -1,8 +1,222 @@
+@model IEnumerable<MediCareMS.Models.ViewModels.Billing.InvoiceListViewModel>
 @{
-    ViewData["Title"] = "Billing";
+    ViewData["Title"] = "Billing Management";
+    Layout = "_Layout";
 }
 
-<div class="card p-4 text-center">
-    <h3><i class="fas fa-file-invoice-dollar text-primary"></i> Billing Module</h3>
-    <p class="text-muted mt-3">The Billing module is currently under development. Here you will be able to manage patient invoices, generate bills, and process charges.</p>
+<style>
+    /* Page specific custom styles for enhanced layer separation */
+    .billing-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding-bottom: 24px;
+    }
+    
+    .billing-header-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24px 32px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+    }
+    .billing-header-card h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.5px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .billing-header-card h2 span {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-muted);
+        letter-spacing: 0;
+    }
+
+    .filter-card {
+        position: sticky;
+        top: calc(var(--topbar-h) + 24px);
+        z-index: 40;
+    }
+    
+    .filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-bar .form-control {
+        min-width: 200px;
+        background: rgba(255,255,255,0.5) !important;
+    }
+    
+    .table-card {
+        padding: 0;
+    }
+    
+    .table-custom th {
+        background: rgba(248, 250, 252, 0.8) !important;
+        border-bottom: 1px solid rgba(0,0,0,0.06) !important;
+        padding: 18px 24px !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.5px;
+    }
+    .table-custom td {
+        padding: 18px 24px !important;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(0,0,0,0.04) !important;
+    }
+    
+    /* Alternating rows and hover */
+    .table-custom tbody tr:nth-child(even) {
+        background: rgba(248, 250, 252, 0.4);
+    }
+    .table-custom tbody tr:hover {
+        background: rgba(59, 130, 246, 0.04) !important;
+        transform: scale(1.001);
+        transition: all 0.2s;
+    }
+    
+    .amount-cell {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+    }
+</style>
+
+<div class="billing-dashboard">
+
+    <!-- 1. HEADER CARD -->
+    <div class="card billing-header-card">
+        <h2>
+            <div class="d-flex align-items-center gap-2">
+                <div class="brand-icon" style="width:40px;height:40px;font-size:20px;border-radius:12px;box-shadow:none;"><i class="fas fa-file-invoice-dollar"></i></div>
+                Billing Management
+            </div>
+            <span>Overview, track, and manage all patient invoices seamlessly.</span>
+        </h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Invoice
+        </a>
+    </div>
+
+    <!-- 2. FILTER/SEARCH CARD -->
+    <div class="card filter-card">
+        <div class="card-body py-3 px-4">
+            <form method="get" class="filter-bar m-0">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                    <h5 class="m-0 text-muted" style="font-size:14px;font-weight:600;"><i class="fas fa-filter me-2"></i>Filters</h5>
+                    <input type="text" name="search" class="form-control m-0" placeholder="Search by Invoice No, Patient..." value="@ViewBag.Search" style="max-width:300px;" />
+                    <select name="status" class="form-select m-0" style="max-width:200px;">
+                        <option value="">All Statuses</option>
+                        <option value="Unpaid" selected="@(ViewBag.Status == "Unpaid")">Unpaid</option>
+                        <option value="Partial" selected="@(ViewBag.Status == "Partial")">Partial</option>
+                        <option value="Paid" selected="@(ViewBag.Status == "Paid")">Paid</option>
+                        <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">Cancelled</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Apply</button>
+                    @if(!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.Status))
+                    {
+                        <a asp-action="Index" class="btn btn-outline text-danger border-danger-subtle" title="Clear Filters"><i class="fas fa-times"></i> Clear</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. INVOICE TABLE CARD -->
+    <div class="card table-card">
+        <div class="table-responsive m-0">
+            <table class="table table-custom m-0">
+                <thead>
+                    <tr>
+                        <th>INVOICE NO</th>
+                        <th>PATIENT DETAILS</th>
+                        <th>ASSIGNED DOCTOR</th>
+                        <th>AMOUNT</th>
+                        <th>PAYMENT SPLIT</th>
+                        <th>STATUS</th>
+                        <th>DATE</th>
+                        <th class="text-end">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var invoice in Model)
+                    {
+                        <tr>
+                            <td>
+                                <span class="badge badge-light border" style="font-family:monospace;font-size:13px;color:var(--text);">@invoice.InvoiceNo</span>
+                            </td>
+                            <td>
+                                <div style="font-weight:600;color:var(--text);">@invoice.PatientName</div>
+                            </td>
+                            <td>
+                                <div style="color:var(--text-muted);font-size:13px;"><i class="fas fa-user-md me-1"></i>@invoice.DoctorName</div>
+                            </td>
+                            <td class="amount-cell">
+                                ৳@invoice.TotalAmount.ToString("N2")
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <div class="d-flex justify-content-between align-items-center" style="font-size:12px;gap:12px;">
+                                        <span class="text-muted">Paid:</span>
+                                        <span class="badge badge-info bg-opacity-10 text-primary border-0" style="padding:2px 8px;">৳@invoice.PaidAmount.ToString("N2")</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center" style="font-size:12px;gap:12px;">
+                                        <span class="text-muted">Due:</span>
+                                        <span class="badge badge-warning bg-opacity-10 text-warning border-0" style="padding:2px 8px;">৳@invoice.BalanceDue.ToString("N2")</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (invoice.Status == MediCareMS.Models.Enums.PaymentStatus.Paid)
+                                {
+                                    <span class="status-badge status-paid"><i class="fas fa-check-circle me-1"></i> Paid</span>
+                                }
+                                else if (invoice.Status == MediCareMS.Models.Enums.PaymentStatus.Partial)
+                                {
+                                    <span class="status-badge status-partial"><i class="fas fa-adjust me-1"></i> Partial</span>
+                                }
+                                else if (invoice.Status == MediCareMS.Models.Enums.PaymentStatus.Cancelled)
+                                {
+                                    <span class="status-badge status-cancelled"><i class="fas fa-times-circle me-1"></i> Cancelled</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-unpaid"><i class="fas fa-exclamation-circle me-1"></i> Unpaid</span>
+                                }
+                            </td>
+                            <td style="color:var(--text-muted);font-size:13px;">
+                                @invoice.CreatedAt.ToString("MMM dd, yyyy")
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@invoice.Id" class="btn btn-sm btn-outline">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center" style="padding:60px 20px;">
+                                <div style="font-size:40px;color:var(--border);margin-bottom:16px;"><i class="fas fa-file-invoice"></i></div>
+                                <h4 style="color:var(--text-muted);font-weight:600;">No Invoices Found</h4>
+                                <p style="color:var(--border);">Try adjusting your search filters or create a new invoice.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>

@@ -1,0 +1,260 @@
+@model MediCareMS.Models.ViewModels.Billing.InvoiceDetailsViewModel
+@{
+    ViewData["Title"] = $"Invoice {Model.InvoiceNo}";
+    Layout = "_Layout";
+}
+
+<div class="page-header">
+    <h2><i class="fas fa-file-invoice"></i> Invoice Details</h2>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back to List</a>
+        <a asp-action="DownloadPdf" asp-route-id="@Model.Id" class="btn btn-primary" target="_blank"><i class="fas fa-download"></i> Download PDF</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body p-5">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-5 border-bottom pb-4">
+                    <div>
+                        <h2 class="text-primary font-weight-bold mb-0">MediCare HMS</h2>
+                        <p class="text-muted mb-0">123 Health Avenue, Medical City</p>
+                    </div>
+                    <div class="text-right">
+                        <h3 class="font-weight-bold mb-1">INVOICE</h3>
+                        <h5 class="text-muted">#@Model.InvoiceNo</h5>
+                        <div class="mt-3">
+                            <div class="mb-1"><strong>Date:</strong> @Model.CreatedAt.ToString("dd MMM yyyy")</div>
+                            <div><strong>Due Date:</strong> @Model.DueDate.ToString("dd MMM yyyy")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info -->
+                <div class="row mb-5">
+                    <div class="col-sm-6">
+                        <h6 class="text-muted text-uppercase font-weight-bold">Bill To:</h6>
+                        <h5 class="font-weight-bold">@Model.PatientName</h5>
+                        <p class="text-muted mb-0"><i class="fas fa-phone fa-fw"></i> @Model.PatientPhone</p>
+                    </div>
+                    <div class="col-sm-6 text-right">
+                        <h6 class="text-muted text-uppercase font-weight-bold">Consulting Doctor:</h6>
+                        <h5 class="font-weight-bold">@Model.DoctorName</h5>
+                        <p class="text-muted mb-0">@Model.Department - @Model.DoctorSpecialization</p>
+                        <p class="text-muted mb-0 small">Apt: @Model.AppointmentNo (@Model.AppointmentDate.ToString("dd MMM yyyy"))</p>
+                    </div>
+                </div>
+
+                <!-- Items -->
+                <div class="table-responsive mb-4">
+                    <table class="table table-striped invoice-items-table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-right">Unit Price</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if(Model.ConsultationFee > 0) {
+                                <tr>
+                                    <td>Consultation Fee</td>
+                                    <td class="text-right">৳@Model.ConsultationFee.ToString("N2")</td>
+                                    <td class="text-center">1</td>
+                                    <td class="text-right">৳@Model.ConsultationFee.ToString("N2")</td>
+                                </tr>
+                            }
+                            @if(Model.TestFee > 0) {
+                                <tr>
+                                    <td>Lab / Test Fee</td>
+                                    <td class="text-right">৳@Model.TestFee.ToString("N2")</td>
+                                    <td class="text-center">1</td>
+                                    <td class="text-right">৳@Model.TestFee.ToString("N2")</td>
+                                </tr>
+                            }
+                            @if(Model.OtherCharges > 0) {
+                                <tr>
+                                    <td>Other Charges</td>
+                                    <td class="text-right">৳@Model.OtherCharges.ToString("N2")</td>
+                                    <td class="text-center">1</td>
+                                    <td class="text-right">৳@Model.OtherCharges.ToString("N2")</td>
+                                </tr>
+                            }
+                            @foreach(var item in Model.Items) {
+                                <tr>
+                                    <td>@item.Description</td>
+                                    <td class="text-right">৳@item.UnitPrice.ToString("N2")</td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-right">৳@((item.UnitPrice * item.Quantity).ToString("N2"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals -->
+                <div class="row justify-content-end">
+                    <div class="col-sm-6 col-md-5">
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                @{
+                                    var subTotal = Model.ConsultationFee + Model.TestFee + Model.OtherCharges + Model.Items.Sum(x => x.UnitPrice * x.Quantity);
+                                }
+                                <tr>
+                                    <td class="text-right font-weight-bold">Sub Total:</td>
+                                    <td class="text-right">৳@subTotal.ToString("N2")</td>
+                                </tr>
+                                @if(Model.Discount > 0) {
+                                    <tr>
+                                        <td class="text-right font-weight-bold text-success">Discount:</td>
+                                        <td class="text-right text-success">- ৳@Model.Discount.ToString("N2")</td>
+                                    </tr>
+                                }
+                                <tr class="invoice-total-row">
+                                    <td class="text-right">Total Amount:</td>
+                                    <td class="text-right text-primary">৳@Model.TotalAmount.ToString("N2")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right font-weight-bold">Paid Amount:</td>
+                                    <td class="text-right text-success">৳@Model.PaidAmount.ToString("N2")</td>
+                                </tr>
+                                <tr class="invoice-total-row">
+                                    <td class="text-right">Balance Due:</td>
+                                    <td class="text-right text-danger">৳@Model.BalanceDue.ToString("N2")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                @if(!string.IsNullOrEmpty(Model.Notes)) {
+                    <div class="mt-4 pt-4 border-top">
+                        <h6 class="text-muted font-weight-bold">Notes:</h6>
+                        <p class="text-muted small">@Model.Notes</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Status Box -->
+        <div class="card mb-4 invoice-summary-box">
+            <h6 class="text-uppercase mb-0 opacity-75">Payment Status</h6>
+            <h2>
+                @if (Model.Status == MediCareMS.Models.Enums.PaymentStatus.Paid) { <text><i class="fas fa-check-circle"></i> PAID</text> }
+                else if (Model.Status == MediCareMS.Models.Enums.PaymentStatus.Partial) { <text><i class="fas fa-adjust"></i> PARTIAL</text> }
+                else if (Model.Status == MediCareMS.Models.Enums.PaymentStatus.Cancelled) { <text><i class="fas fa-times-circle"></i> CANCELLED</text> }
+                else { <text><i class="fas fa-exclamation-circle"></i> UNPAID</text> }
+            </h2>
+            <p class="mb-0">Balance Due: <strong>৳@Model.BalanceDue.ToString("N2")</strong></p>
+        </div>
+
+        @if(User.IsInRole("Patient") && Model.BalanceDue > 0 && Model.Status != MediCareMS.Models.Enums.PaymentStatus.Cancelled)
+        {
+            <div class="card mb-4 border-primary shadow-sm">
+                <div class="card-body">
+                    <h5 class="font-weight-bold text-primary mb-3"><i class="fas fa-credit-card"></i> Pay Online</h5>
+                    <form asp-controller="Payment" asp-action="Initiate" method="post">
+                        <input type="hidden" name="invoiceId" value="@Model.Id" />
+                        <div class="form-group mb-3">
+                            <label class="form-label">Amount to Pay (৳)</label>
+                            <input type="number" name="amount" class="form-control font-weight-bold" value="@Model.BalanceDue" max="@Model.BalanceDue" min="1" step="0.01" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2"><i class="fas fa-lock"></i> Pay via SSLCommerz</button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if(User.IsInRole("Super Admin") || User.IsInRole("Hospital Admin") || User.IsInRole("Receptionist"))
+        {
+            @if(Model.BalanceDue > 0 && Model.Status != MediCareMS.Models.Enums.PaymentStatus.Cancelled)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3><i class="fas fa-cash-register"></i> Record Payment</h3>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="RecordPayment" method="post">
+                            <input type="hidden" name="InvoiceId" value="@Model.Id" />
+                            <div class="form-group mb-3">
+                                <label class="form-label">Amount (৳)</label>
+                                <input type="number" name="Amount" class="form-control" value="@Model.BalanceDue" max="@Model.BalanceDue" min="1" step="0.01" required />
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="form-label">Payment Method</label>
+                                <select name="Method" class="form-control" required>
+                                    <option value="0">Cash</option>
+                                    <option value="1">Card</option>
+                                    <option value="3">Insurance</option>
+                                    <option value="2">Online Transfer</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="form-label">Reference (Optional)</label>
+                                <input type="text" name="Reference" class="form-control" placeholder="Transaction ID, Check No, etc." />
+                            </div>
+                            <button type="submit" class="btn btn-success w-100"><i class="fas fa-save"></i> Save Payment</button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            @if(Model.Status != MediCareMS.Models.Enums.PaymentStatus.Paid && Model.Status != MediCareMS.Models.Enums.PaymentStatus.Cancelled)
+            {
+                <form asp-action="Cancel" method="post" class="mb-4" onsubmit="return confirm('Are you sure you want to cancel this invoice?');">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline text-danger w-100"><i class="fas fa-ban"></i> Cancel Invoice</button>
+                </form>
+            }
+        }
+
+        <!-- Payment History -->
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-history"></i> Payment History</h3>
+            </div>
+            <div class="card-body p-0">
+                @if(Model.Payments.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach(var p in Model.Payments.OrderByDescending(x => x.PaidAt))
+                        {
+                            <li class="list-group-item p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-success">৳@p.Amount.ToString("N2")</strong>
+                                    <small class="text-muted">@p.PaidAt.ToString("dd MMM, hh:mm tt")</small>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge badge-light">@p.Method</span>
+                                    @if(p.Method == MediCareMS.Models.Enums.PaymentMethod.Online)
+                                    {
+                                        if(p.SslStatus == MediCareMS.Models.Enums.SSLCommerzStatus.Success) {
+                                            <span class="badge badge-info"><i class="fas fa-check"></i> SSLCommerz</span>
+                                        } else {
+                                            <span class="badge badge-light text-danger"><i class="fas fa-times"></i> @p.SslStatus</span>
+                                        }
+                                    }
+                                </div>
+                                @if(!string.IsNullOrEmpty(p.TransactionReference)) {
+                                    <div class="small text-muted mt-1">Ref: @p.TransactionReference</div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="p-4 text-center text-muted">
+                        No payments recorded yet.
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>

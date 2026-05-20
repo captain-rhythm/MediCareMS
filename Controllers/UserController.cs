@@ -242,4 +242,19 @@ public class UserController : Controller
         TempData["Success"] = $"Appointment booked! Token #{appointment.TokenNumber}. Waiting for confirmation.";
         return RedirectToAction(nameof(MyAppointments));
     }
+
+    public async Task<IActionResult> MyInvoices(CancellationToken ct = default)
+    {
+        var patient = await GetCurrentPatientAsync();
+        if (patient == null) return RedirectToAction("Login", "Auth");
+
+        var invoices = await _db.Invoices
+            .Include(i => i.Doctor)
+            .Include(i => i.Appointment)
+            .Where(i => i.PatientId == patient.Id && !i.IsDeleted)
+            .OrderByDescending(i => i.CreatedAt)
+            .ToListAsync(ct);
+
+        return View(invoices);
+    }
 }

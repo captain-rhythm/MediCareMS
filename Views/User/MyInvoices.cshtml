@@ -1,0 +1,88 @@
+@model IEnumerable<MediCareMS.Models.Entities.Billing.Invoice>
+@{
+    ViewData["Title"] = "My Invoices";
+    Layout = "_Layout";
+}
+
+<div class="page-header">
+    <h2><i class="fas fa-file-invoice-dollar"></i> My Invoices <span>View and pay your medical bills</span></h2>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive" style="border:none;">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice No</th>
+                        <th>Date</th>
+                        <th>Doctor</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var invoice in Model)
+                    {
+                        <tr>
+                            <td class="font-weight-bold" style="color:var(--text);">@invoice.InvoiceNo</td>
+                            <td>
+                                <div>@invoice.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                <small class="text-muted">Due: @invoice.DueDate.ToString("MMM dd")</small>
+                            </td>
+                            <td>
+                                <div>@invoice.Doctor.FullName</div>
+                                <small class="text-muted">@invoice.Doctor.Department?.Name</small>
+                            </td>
+                            <td>
+                                <div><strong class="text-primary">৳@invoice.TotalAmount.ToString("N2")</strong></div>
+                                @if (invoice.TotalAmount - invoice.PaidAmount > 0)
+                                {
+                                    <small class="text-danger">Due: ৳@((invoice.TotalAmount - invoice.PaidAmount).ToString("N2"))</small>
+                                }
+                            </td>
+                            <td>
+                                @if (invoice.Status == MediCareMS.Models.Enums.PaymentStatus.Paid)
+                                {
+                                    <span class="status-badge status-paid">Paid</span>
+                                }
+                                else if (invoice.Status == MediCareMS.Models.Enums.PaymentStatus.Partial)
+                                {
+                                    <span class="status-badge status-partial">Partial</span>
+                                }
+                                else if (invoice.Status == MediCareMS.Models.Enums.PaymentStatus.Cancelled)
+                                {
+                                    <span class="status-badge status-cancelled">Cancelled</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-unpaid">Unpaid</span>
+                                }
+                            </td>
+                            <td class="actions-cell">
+                                <a asp-controller="Billing" asp-action="Details" asp-route-id="@invoice.Id" class="btn btn-sm btn-outline"><i class="fas fa-eye"></i> View</a>
+                                @if (invoice.Status != MediCareMS.Models.Enums.PaymentStatus.Paid && invoice.Status != MediCareMS.Models.Enums.PaymentStatus.Cancelled)
+                                {
+                                    <a asp-controller="Billing" asp-action="Details" asp-route-id="@invoice.Id" class="btn btn-sm btn-primary"><i class="fas fa-credit-card"></i> Pay</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center p-5">
+                                <div class="empty-state">
+                                    <i class="fas fa-receipt mb-3"></i>
+                                    <h5>No invoices found</h5>
+                                    <p class="text-muted">You do not have any billing history.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

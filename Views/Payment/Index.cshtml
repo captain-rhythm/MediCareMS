@@ -1,8 +1,97 @@
+@model IEnumerable<MediCareMS.Models.Entities.Billing.Payment>
 @{
-    ViewData["Title"] = "Payments";
+    ViewData["Title"] = "Payment Ledger";
+    Layout = "_Layout";
 }
 
-<div class="card p-4 text-center">
-    <h3><i class="fas fa-money-bill-wave text-success"></i> Payment Tracking</h3>
-    <p class="text-muted mt-3">The Payments module is currently under development. This section will allow you to track transactions, process refunds, and view revenue streams.</p>
+<div class="page-header">
+    <h2><i class="fas fa-money-bill-wave"></i> Payment Ledger <span>View all received payments</span></h2>
+</div>
+
+<div class="stats-grid mb-4">
+    <div class="stat-card stat-blue">
+        <div class="stat-header">
+            <span class="stat-label">Total Revenue</span>
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        </div>
+        <div class="stat-value">৳@(((decimal)ViewBag.TotalRevenue).ToString("N2"))</div>
+        <div class="stat-change up"><i class="fas fa-arrow-up"></i> Lifetime</div>
+    </div>
+    <div class="stat-card stat-green">
+        <div class="stat-header">
+            <span class="stat-label">Today's Revenue</span>
+            <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        </div>
+        <div class="stat-value">৳@(((decimal)ViewBag.TodayRevenue).ToString("N2"))</div>
+        <div class="stat-change up"><i class="fas fa-arrow-up"></i> Today</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fas fa-list"></i> Transaction History</h3>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive" style="border:none;">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Invoice</th>
+                        <th>Patient</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status / Ref</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var payment in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="font-weight-bold" style="color:var(--text);">@payment.PaidAt.ToString("MMM dd, yyyy")</div>
+                                <div class="small text-muted">@payment.PaidAt.ToString("hh:mm tt")</div>
+                            </td>
+                            <td><a asp-controller="Billing" asp-action="Details" asp-route-id="@payment.InvoiceId" class="font-weight-bold">@payment.Invoice.InvoiceNo</a></td>
+                            <td>@payment.Invoice.Patient.FullName</td>
+                            <td><strong class="text-success">৳@payment.Amount.ToString("N2")</strong></td>
+                            <td><span class="badge badge-light">@payment.Method</span></td>
+                            <td>
+                                @if (payment.Method == MediCareMS.Models.Enums.PaymentMethod.Online)
+                                {
+                                    if (payment.SslStatus == MediCareMS.Models.Enums.SSLCommerzStatus.Success)
+                                    {
+                                        <div class="badge badge-info"><i class="fas fa-check"></i> SSLCommerz Success</div>
+                                    }
+                                    else if (payment.SslStatus == MediCareMS.Models.Enums.SSLCommerzStatus.Pending)
+                                    {
+                                        <div class="badge badge-light text-warning"><i class="fas fa-clock"></i> SSL Pending</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="badge badge-light text-danger"><i class="fas fa-times"></i> @payment.SslStatus</div>
+                                    }
+                                    <div class="small text-muted mt-1" style="font-size: 10px;">@payment.TransactionReference</div>
+                                }
+                                else
+                                {
+                                    <div class="badge badge-info"><i class="fas fa-check"></i> Recorded</div>
+                                    @if (!string.IsNullOrEmpty(payment.TransactionReference))
+                                    {
+                                        <div class="small text-muted mt-1" style="font-size: 10px;">@payment.TransactionReference</div>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center p-5 text-muted">No transactions found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>

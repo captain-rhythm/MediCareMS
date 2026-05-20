@@ -43,6 +43,7 @@ public class AppDbContext : DbContext
 
     // Billing
     public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
     public DbSet<Payment> Payments => Set<Payment>();
 
     // System
