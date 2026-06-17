@@ -424,9 +424,10 @@ public class AuthController : Controller
             {
                 await _emailService.SendPasswordResetAsync(user.Email, resetLink);
             }
-            catch 
+            catch (Exception ex)
             {
-                // Silently fail or log if email fails, so we don't leak user existence
+                TempData["Error"] = ex.ToString();
+                return View(model);
             }
         }
 

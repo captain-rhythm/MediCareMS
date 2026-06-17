@@ -6,7 +6,7 @@ using MediCareMS.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 var builder = WebApplication.CreateBuilder(args);
 
 // Data Protection
@@ -84,7 +84,8 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.ListenLocalhost(5002, listenOptions =>
     {
-        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+        listenOptions.Protocols =
+            Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
     });
 });
 

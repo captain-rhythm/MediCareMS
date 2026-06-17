@@ -28,7 +28,7 @@ public class UserManagementController : Controller
         _qrCode = qrCode;
     }
 
-    // GET: /UserManagement/Index â€” list all invitations
+    // GET: /UserManagement/Index — list all invitations
     public async Task<IActionResult> Index()
     {
         var invitations = await _db.Invitations
@@ -86,7 +86,7 @@ public class UserManagementController : Controller
         }
         catch (Exception ex)
         {
-            // Still saved the invite, just couldn't email â€” show the link
+            // Still saved the invite, just couldn't email — show the link
             TempData["Warning"] = $"Invitation saved but email failed: {ex.Message}. Manual link: {link}";
         }
 
