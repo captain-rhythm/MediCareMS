@@ -1,12 +1,14 @@
 using MediCareMS.Data;
+using MediCareMS.Helpers;
 using MediCareMS.Helpers.Email;
 using MediCareMS.Helpers.Security;
 using MediCareMS.Helpers.QRCode;
 using MediCareMS.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Data Protection
@@ -36,13 +38,17 @@ if (string.IsNullOrWhiteSpace(mediCareConn))
     throw new InvalidOperationException("Connection string 'MediCareDb' not found.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(mediCareConn));
+{
+    if (builder.Environment.IsProduction())
+        options.UseNpgsql(mediCareConn,
+            b => b.MigrationsAssembly("MediCareMS")
+                  .MigrationsHistoryTable("__EFMigrationsHistory"));
+    else
+        options.UseSqlServer(mediCareConn,
+            b => b.MigrationsAssembly("MediCareMS"));
+});
 
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    })
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
     {
         options.LoginPath = "/Auth/Login";
@@ -54,12 +60,16 @@ builder.Services.AddAuthentication(options =>
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     })
-    .AddCookie("ExternalCookie")
-    .AddGoogle(options =>
+    .AddCookie("ExternalCookie", options =>
     {
-        options.SignInScheme = "ExternalCookie";
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
+        options.Cookie.HttpOnly = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(10);
+    })
+    .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+    {
+        options.ClientId     = builder.Configuration["Authentication:Google:ClientId"] ?? "";
         options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+        options.SignInScheme = "ExternalCookie";
     });
 
 builder.Services.AddAuthorization();
@@ -71,23 +81,13 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
-builder.Services.Configure<MediCareMS.Helpers.SslCommerzOptions>(builder.Configuration.GetSection("SslCommerz"));
-builder.Services.AddHttpClient();
+builder.Services.Configure<SslCommerzOptions>(builder.Configuration.GetSection("SslCommerz"));
 builder.Services.AddScoped<IPasswordHashService, Pbkdf2PasswordHashService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IQRCodeService, QRCodeService>();
-builder.Services.AddScoped<MediCareMS.Helpers.ISslCommerzService, MediCareMS.Helpers.SslCommerzService>();
+builder.Services.AddScoped<ISslCommerzService, SslCommerzService>();
+builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
-
-// Configure Kestrel to handle port conflicts gracefully
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenLocalhost(5002, listenOptions =>
-    {
-        listenOptions.Protocols =
-            Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
-    });
-});
 
 var app = builder.Build();
 
@@ -124,8 +124,6 @@ app.UseMiddleware<AuditLoggingMiddleware>();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}");
-
-// Kestrel configured on builder.WebHost
 
 if (app.Environment.IsDevelopment())
 {

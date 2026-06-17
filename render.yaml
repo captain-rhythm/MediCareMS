@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: medicare-ms
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /Auth/Login
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+      - key: ConnectionStrings__MediCareDb
+        fromDatabase:
+          name: medicare-db
+          property: connectionString
+      - key: Authentication__Google__ClientId
+        sync: false   # Set manually in Render dashboard
+      - key: Authentication__Google__ClientSecret
+        sync: false   # Set manually in Render dashboard
+      - key: Email__Host
+        value: smtp.gmail.com
+      - key: Email__Port
+        value: 587
+      - key: Email__EnableSsl
+        value: true
+      - key: Email__UserName
+        sync: false   # Set manually in Render dashboard
+      - key: Email__Password
+        sync: false   # Set manually in Render dashboard
+      - key: Email__From
+        sync: false   # Set manually in Render dashboard
+      - key: Email__BaseUrl
+        sync: false   # Set to https://your-app.onrender.com after deploy
+      - key: SslCommerz__StoreId
+        sync: false
+      - key: SslCommerz__StorePassword
+        sync: false
+      - key: SslCommerz__BaseUrl
+        value: https://sandbox.sslcommerz.com
+      - key: SslCommerz__IsSandbox
+        value: true
+      - key: SslCommerz__AppBaseUrl
+        sync: false   # Set to https://your-app.onrender.com after deploy
+
+databases:
+  - name: medicare-db
+    plan: free
+    databaseName: medicaredb
+    user: medicareuser

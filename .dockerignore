@@ -1,0 +1,28 @@
+# Build artifacts
+bin/
+obj/
+
+# Visual Studio / IDE files
+.vs/
+.vscode/
+*.user
+
+# Git
+.git/
+.gitattributes
+.gitignore
+
+# Local database files
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets / local config
+appsettings.Development.json
+App_Data/
+
+# Documentation
+*.md
+
+# Test output
+TestResults/
