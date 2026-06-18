@@ -368,4 +368,13 @@ FodyWeavers.xsd
 *.db-wal
 
 # VS Code
-.vscode/
+.vscode/
+
+# Secrets
+appsettings.Development.json
+appsettings.Production.json
+
+# Local secrets - never commit
+appsettings.json
+appsettings.*.json
+!appsettings.example.json

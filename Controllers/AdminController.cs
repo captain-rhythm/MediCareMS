@@ -53,6 +53,7 @@ public class AdminController : Controller
             AvailableDoctors = await _db.Doctors
                 .Include(d => d.Department)
                 .Where(d => !d.IsDeleted && d.Status == DoctorStatus.Available)
+                .OrderBy(d => d.FullName)
                 .Take(6)
                 .Select(d => new DoctorAvailabilityItem
                 {

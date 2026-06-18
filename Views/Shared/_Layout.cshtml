@@ -1,4 +1,5 @@
 @inject MediCareMS.Data.AppDbContext DbContext
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,10 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - MediCare HMS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/chatbot.css" asp-append-version="true" />
 </head>
 <body>
 <div class="app-wrapper">
@@ -20,11 +22,28 @@
     </div>
     
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
-            <div class="brand-text">
-                <span class="brand-name">MediCare</span>
+        <!-- Animated Brand Logo -->
+        <div class="sidebar-brand-animated">
+            <div class="brand-icon-animated">
+                <div class="brand-icon-sheen"></div>
+                <svg class="brand-heart-svg" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13 22s-8.5-5.2-8.5-11a5 5 0 0 1 8.5-3.54A5 5 0 0 1 21.5 11c0 5.8-8.5 11-8.5 11z" fill="white" opacity="0.93"/>
+                    <path d="M8 13h2.2l1.3-2.8 1.8 5 1.4-2.5H17" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
             </div>
+            <div class="brand-text-group">
+                <div class="brand-name-animated"><span class="m">Medi</span><span class="c">Care</span></div>
+                <div class="brand-tagline-animated">Your Health, Our Priority</div>
+            </div>
+        </div>
+        <!-- Animated ECG strip -->
+        <div class="brand-ecg">
+            <svg viewBox="0 0 220 32" height="32">
+                <line class="ecg-line-left"  x1="0"   y1="16" x2="60"  y2="16"/>
+                <path class="ecg-pulse-path" d="M60 16 L74 16 L80 4 L87 28 L93 2 L99 28 L104 16 L118 16"/>
+                <line class="ecg-line-right" x1="118" y1="16" x2="220" y2="16"/>
+            </svg>
+            <div class="brand-ecg-dot"></div>
         </div>
         <nav class="sidebar-nav">
             @if (User.IsInRole("Super Admin") || User.IsInRole("Hospital Admin") || User.IsInRole("Doctor") || User.IsInRole("Receptionist") || User.IsInRole("Nurse"))
@@ -80,6 +99,9 @@
                 <a asp-controller="User" asp-action="BookAppointment" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="BookAppointment"?"active":"")">
                     <i class="fas fa-calendar-plus"></i><span>Book Appointment</span>
                 </a>
+                <a asp-controller="User" asp-action="FamilyPatients" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="FamilyPatients"?"active":"")">
+                    <i class="fas fa-user-friends"></i><span>My Family</span>
+                </a>
                 <a asp-controller="User" asp-action="MyPrescriptions" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="MyPrescriptions"?"active":"")">
                     <i class="fas fa-file-medical"></i><span>My Prescriptions</span>
                 </a>
@@ -104,6 +126,9 @@
             </form>
         </div>
     </aside>
+    <!-- Overlay backdrop for mobile -->
+    <div id="sidebarOverlay"></div>
+
     <div class="main-content" id="mainContent">
         <header class="topbar">
             <div class="topbar-left">
@@ -114,6 +139,7 @@
                 </div>
             </div>
             <div class="topbar-right">
+                <div class="topbar-time" id="topbarTime" style="display:flex;font-size:12.5px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;"></div>
                 <div class="topbar-notifications" title="Notifications">
                     <i class="fas fa-bell"></i>
                     <span class="notification-dot"></span>
@@ -143,14 +169,74 @@
     </div>
 </div>
 <script>
+    // Clock
     function updateClock(){const e=document.getElementById('topbarTime');if(e)e.textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});}
-    updateClock();setInterval(updateClock,1000);
-    document.getElementById('sidebarToggle')?.addEventListener('click',()=>{document.getElementById('sidebar')?.classList.toggle('collapsed');document.getElementById('mainContent')?.classList.toggle('expanded');});
-    document.querySelectorAll('.alert-close').forEach(b=>b.addEventListener('click',()=>b.closest('.alert')?.remove()));
-    setTimeout(()=>document.querySelectorAll('.alert').forEach(a=>a.style.opacity='0'),5000);
+    updateClock(); setInterval(updateClock, 1000);
+
+    // Smart sidebar toggle
+    const sidebar    = document.getElementById('sidebar');
+    const mainContent= document.getElementById('mainContent');
+    const overlay    = document.getElementById('sidebarOverlay');
+    const toggleBtn  = document.getElementById('sidebarToggle');
+
+    function isMobile() { return window.innerWidth <= 900; }
+
+    function openMobile() {
+        sidebar.classList.add('mobile-open');
+        overlay.classList.add('visible');
+        requestAnimationFrame(() => overlay.classList.add('show'));
+        toggleBtn.classList.add('sb-active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeMobile() {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.classList.remove('visible'), 350);
+        toggleBtn.classList.remove('sb-active');
+        document.body.style.overflow = '';
+    }
+    function toggleDesktop() {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+        toggleBtn.classList.toggle('sb-active');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    }
+
+    toggleBtn?.addEventListener('click', () => {
+        if (isMobile()) {
+            sidebar.classList.contains('mobile-open') ? closeMobile() : openMobile();
+        } else {
+            toggleDesktop();
+        }
+    });
+
+    // Close on overlay click
+    overlay?.addEventListener('click', closeMobile);
+
+    // Close on ESC
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobile(); });
+
+    // Restore desktop state
+    if (!isMobile() && localStorage.getItem('sidebarCollapsed') === 'true') {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('expanded');
+    }
+
+    // Handle resize
+    window.addEventListener('resize', () => { if (!isMobile()) closeMobile(); });
+
+    // Alerts
+    document.querySelectorAll('.alert-close').forEach(b => b.addEventListener('click', () => b.closest('.alert')?.remove()));
+    setTimeout(() => document.querySelectorAll('.alert').forEach(a => a.style.opacity = '0'), 5000);
 </script>
 @RenderSection("Scripts", required: false)
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <partial name="_ChatBot" />
+    <script src="~/js/chatbot.js" asp-append-version="true"></script>
+}
 </body>
 </html>
 

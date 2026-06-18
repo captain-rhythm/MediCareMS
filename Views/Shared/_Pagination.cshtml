@@ -1,0 +1,148 @@
+@* Reusable Premium Pagination Partial *@
+@{
+    int pageIndex   = (int)(ViewData["PageIndex"] ?? 1);
+    int totalPages  = (int)(ViewData["TotalPages"] ?? 1);
+    int totalCount  = (int)(ViewData["TotalCount"] ?? 0);
+    int pageSize    = (int)(ViewData["PageSize"]   ?? 10);
+    string action   = (string)(ViewData["PagAction"] ?? "Index");
+    string? search  = ViewData["PagSearch"] as string;
+    object? extra   = ViewData["PagExtra"];
+
+    bool hasPrev = pageIndex > 1;
+    bool hasNext = pageIndex < totalPages;
+
+    int from = totalCount == 0 ? 0 : (pageIndex - 1) * pageSize + 1;
+    int to   = Math.Min(pageIndex * pageSize, totalCount);
+
+    // Compute page window (max 5 visible pages)
+    int start = Math.Max(1, pageIndex - 2);
+    int end   = Math.Min(totalPages, start + 4);
+    if (end - start < 4) start = Math.Max(1, end - 4);
+
+    Func<int, string> buildUrl = (p) =>
+    {
+        var qs = new System.Text.StringBuilder($"?page={p}");
+        if (!string.IsNullOrEmpty(search)) qs.Append($"&search={Uri.EscapeDataString(search)}");
+        if (extra is IDictionary<string, string?> dict)
+            foreach (var kv in dict)
+                if (!string.IsNullOrEmpty(kv.Value))
+                    qs.Append($"&{kv.Key}={Uri.EscapeDataString(kv.Value!)}");
+        return qs.ToString();
+    };
+}
+
+@if (totalPages > 1)
+{
+<div class="pagination-wrap">
+    <div class="pagination-info">
+        Showing <strong>@from–@to</strong> of <strong>@totalCount</strong>
+    </div>
+
+    <nav class="pagination-nav" aria-label="Page navigation">
+        @* Previous *@
+        @if (hasPrev)
+        {
+            <a href="@(Url.Action(action) + buildUrl(pageIndex - 1))"
+               class="pg-btn pg-arrow" aria-label="Previous" title="Previous">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </a>
+        }
+        else
+        {
+            <span class="pg-btn pg-arrow disabled">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </span>
+        }
+
+        @* First page + ellipsis *@
+        @if (start > 1)
+        {
+            <a href="@(Url.Action(action) + buildUrl(1))" class="pg-btn">1</a>
+            @if (start > 2) { <span class="pg-ellipsis">…</span> }
+        }
+
+        @* Page numbers *@
+        @for (int p = start; p <= end; p++)
+        {
+            if (p == pageIndex)
+            {
+                <span class="pg-btn pg-active" aria-current="page">@p</span>
+            }
+            else
+            {
+                <a href="@(Url.Action(action) + buildUrl(p))" class="pg-btn">@p</a>
+            }
+        }
+
+        @* Last page + ellipsis *@
+        @if (end < totalPages)
+        {
+            @if (end < totalPages - 1) { <span class="pg-ellipsis">…</span> }
+            <a href="@(Url.Action(action) + buildUrl(totalPages))" class="pg-btn">@totalPages</a>
+        }
+
+        @* Next *@
+        @if (hasNext)
+        {
+            <a href="@(Url.Action(action) + buildUrl(pageIndex + 1))"
+               class="pg-btn pg-arrow" aria-label="Next" title="Next">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </a>
+        }
+        else
+        {
+            <span class="pg-btn pg-arrow disabled">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </span>
+        }
+    </nav>
+</div>
+}
+
+<style>
+.pagination-wrap {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 4px;
+    flex-wrap: wrap; gap: 10px;
+}
+.pagination-info {
+    font-size: 13px; color: #6B7280; font-family: 'Inter', sans-serif;
+}
+.pagination-info strong { color: #374151; }
+
+.pagination-nav {
+    display: flex; align-items: center; gap: 5px;
+}
+.pg-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 36px; height: 36px; padding: 0 10px;
+    border-radius: 10px; font-size: 13px; font-weight: 500;
+    font-family: 'Inter', sans-serif; text-decoration: none;
+    border: 1px solid #E5E7EB; background: #fff; color: #374151;
+    transition: all 0.18s ease; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    line-height: 1;
+}
+.pg-btn:hover:not(.disabled):not(.pg-active) {
+    background: #F5F3FF; border-color: #8B5CF6;
+    color: #7C3AED; transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(139,92,246,0.15);
+}
+.pg-btn.pg-active {
+    background: linear-gradient(135deg, #8B5CF6, #A855F7);
+    border-color: transparent; color: #fff;
+    box-shadow: 0 4px 14px rgba(139,92,246,0.38);
+    cursor: default;
+}
+.pg-btn.pg-arrow { padding: 0; }
+.pg-btn.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+.pg-ellipsis { color: #9CA3AF; font-size: 13px; padding: 0 2px; }
+</style>

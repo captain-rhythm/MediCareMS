@@ -1,4 +1,5 @@
 using MediCareMS.Data;
+using MediCareMS.Helpers;
 using MediCareMS.Models.Entities.Doctor;
 using MediCareMS.Models.ViewModels.Doctor;
 using Microsoft.AspNetCore.Authorization;
@@ -20,8 +21,9 @@ public class DoctorController : Controller
         _env = env;
     }
 
-    public async Task<IActionResult> Index(string? search, int? deptId)
+    public async Task<IActionResult> Index(string? search, int? deptId, int page = 1)
     {
+        const int pageSize = 9;
         var query = _db.Doctors
             .Include(d => d.Department)
             .Include(d => d.Specialization)
@@ -33,20 +35,21 @@ public class DoctorController : Controller
         if (deptId.HasValue)
             query = query.Where(d => d.DepartmentId == deptId.Value);
 
-        var doctors = await query
-            .Select(d => new DoctorListViewModel
-            {
-                Id = d.Id,
-                DoctorNo = d.DoctorNo,
-                FullName = d.FullName,
-                Department = d.Department.Name,
-                Specialization = d.Specialization.Name,
-                Qualification = d.Qualification,
-                ExperienceYears = d.ExperienceYears,
-                ConsultationFee = d.ConsultationFee,
-                Status = d.Status,
-                ProfileImagePath = d.ProfileImagePath
-            }).ToListAsync();
+        var projected = query.OrderBy(d => d.FullName).Select(d => new DoctorListViewModel
+        {
+            Id = d.Id,
+            DoctorNo = d.DoctorNo,
+            FullName = d.FullName,
+            Department = d.Department.Name,
+            Specialization = d.Specialization.Name,
+            Qualification = d.Qualification,
+            ExperienceYears = d.ExperienceYears,
+            ConsultationFee = d.ConsultationFee,
+            Status = d.Status,
+            ProfileImagePath = d.ProfileImagePath
+        });
+
+        var paged = await PaginatedList<DoctorListViewModel>.CreateAsync(projected, page, pageSize);
 
         ViewBag.Departments = await _db.Departments
             .Where(d => d.IsActive)
@@ -54,8 +57,14 @@ public class DoctorController : Controller
             .ToListAsync();
         ViewBag.Search = search;
         ViewBag.DeptId = deptId;
-
-        return View(doctors);
+        ViewData["PageIndex"]  = paged.PageIndex;
+        ViewData["TotalPages"] = paged.TotalPages;
+        ViewData["TotalCount"] = paged.TotalCount;
+        ViewData["PageSize"]   = paged.PageSize;
+        ViewData["PagAction"]  = "Index";
+        ViewData["PagSearch"]  = search;
+        ViewData["PagExtra"]   = new Dictionary<string,string?> {{ "deptId", deptId?.ToString() }};
+        return View(paged.Items);
     }
 
     [HttpGet]

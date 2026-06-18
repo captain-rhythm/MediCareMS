@@ -1,0 +1,154 @@
+@* Aletta AI — Premium SaaS Chatbot *@
+@using System.Security.Claims
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var isAuth = Context.User.Identity?.IsAuthenticated ?? false;
+    var firstName = Context.User.FindFirst(ClaimTypes.GivenName)?.Value
+                 ?? Context.User.FindFirst(ClaimTypes.Name)?.Value
+                 ?? Context.User.Identity?.Name ?? "there";
+    firstName = firstName.Split(' ')[0];
+}
+
+@if (isAuth)
+{
+    <input type="hidden" id="chatAntiforgery" name="__RequestVerificationToken"
+           value="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+
+    <!-- ── Floating Trigger Button ──────────────────────── -->
+    <button id="chatFloatBtn" title="Aletta AI" aria-label="Open Aletta">
+        <div class="fab-orb">
+            <div class="fab-glow"></div>
+            <div class="fab-shine"></div>
+            <span class="fab-label">Aletta</span>
+        </div>
+        <span id="chatUnreadBadge"></span>
+    </button>
+
+    <!-- ── Chat Popup ─────────────────────────────────── -->
+    <div id="chatPopup" role="dialog" aria-label="Aletta AI" aria-modal="true">
+
+        <!-- HEADER -->
+        <div class="cp-header">
+            <div class="cp-avatar">
+                <div class="cpa-orb">
+                    <div class="cpa-shine"></div>
+                </div>
+            </div>
+            <div class="cp-info">
+                <span class="cp-name">Aletta</span>
+                <span class="cp-status">
+                    <span class="cp-dot"></span>
+                    Online
+                </span>
+            </div>
+            <div class="cp-actions">
+                <button class="cp-btn" id="chatSearchToggle" title="Search">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="6" cy="6" r="5"/><line x1="11" y1="11" x2="14" y2="14"/>
+                    </svg>
+                </button>
+                <button class="cp-btn" id="chatExportBtn" title="Export">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </button>
+                <button class="cp-btn" id="chatClearBtn" title="New chat">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                </button>
+                <button class="cp-btn cp-btn-close" id="chatCloseBtn" title="Close">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="cp-search" id="chatSearchBar">
+            <svg width="14" height="14" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round">
+                <circle cx="6" cy="6" r="5"/><line x1="11" y1="11" x2="14" y2="14"/>
+            </svg>
+            <input type="text" id="chatSearchInput" placeholder="Search conversations..." autocomplete="off" />
+        </div>
+
+        <!-- SESSIONS -->
+        <div class="cp-sessions" id="chatSessionsBar">
+            <div class="cp-chip cp-chip-new" id="newChatChip">+ New Chat</div>
+        </div>
+
+        <!-- MESSAGES -->
+        <div class="cp-body" id="chatMessages">
+
+            <!-- WELCOME STATE -->
+            <div class="cp-welcome" id="chatWelcome">
+
+                <div class="cpw-orb-wrap">
+                    <div class="cpw-glow"></div>
+                    <div class="cpw-sphere">
+                        <div class="cpw-shine"></div>
+                        <div class="cpw-core"></div>
+                    </div>
+                </div>
+
+                <div class="cpw-text">
+                    <p class="cpw-greeting">Hello, @firstName</p>
+                    <h2 class="cpw-question">How can I assist you today?</h2>
+                    <p class="cpw-sub">Your personal health AI — always here to help.</p>
+                </div>
+
+                <div class="cpw-chips">
+                    <div class="cpw-chip" data-text="I have a headache for 3 days. What specialist should I see?">🤕 Headache advice</div>
+                    <div class="cpw-chip" data-text="I have stomach pain after eating. What could it be?">🤢 Stomach pain</div>
+                    <div class="cpw-chip" data-text="I feel anxious and stressed lately. What should I do?">😟 Mental health</div>
+                    <div class="cpw-chip" data-text="My child has fever and cold. Which doctor to visit?">👶 Child fever</div>
+                    <div class="cpw-chip" data-text="I have joint pain in my knees for weeks.">🦵 Joint pain</div>
+                    <div class="cpw-chip" data-text="আমার মাথা ঘোরাচ্ছে এবং বমি বমি ভাব হচ্ছে।">🇧🇩 বাংলায়</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TYPING -->
+        <div class="cp-typing" id="chatTyping" style="display:none;">
+            <div class="cpt-avatar">
+                <div class="cpt-orb"><div class="cpt-shine"></div></div>
+            </div>
+            <div class="cpt-dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <!-- INPUT -->
+        <div class="cp-input-wrap">
+            <div class="cp-input-glass">
+                <textarea id="chatInput"
+                          placeholder="Ask anything about your health..."
+                          rows="1" maxlength="2000"
+                          aria-label="Message Aletta"></textarea>
+                <div class="cpi-actions">
+                    <button class="cpi-voice" id="chatVoiceBtn" title="Voice">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                    </button>
+                    <button class="cpi-send" id="chatSendBtn" title="Send">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="cp-meta">
+                <span id="charCounter" class="cp-counter">0/2000</span>
+                <span class="cp-disclaimer">Not medical advice · Educational only</span>
+            </div>
+        </div>
+
+    </div>
+}

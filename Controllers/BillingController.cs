@@ -111,9 +111,9 @@ public class BillingController : Controller
         var invoice = new Invoice
         {
             InvoiceNo = $"INV-{DateTime.Today.Year}-{count:D4}",
-            AppointmentId = model.AppointmentId.Value,
-            PatientId = model.PatientId.Value,
-            DoctorId = model.DoctorId.Value,
+            AppointmentId = model.AppointmentId ?? 0,
+            PatientId = model.PatientId ?? 0,
+            DoctorId = model.DoctorId ?? 0,
             ConsultationFee = model.ConsultationFee,
             TestFee = model.TestFee,
             OtherCharges = model.OtherCharges,

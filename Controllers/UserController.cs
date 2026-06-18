@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using MediCareMS.Data;
+using MediCareMS.Helpers;
 using MediCareMS.Models.Enums;
 using MediCareMS.Models.ViewModels.User;
 using Microsoft.AspNetCore.Authorization;
@@ -256,5 +257,80 @@ public class UserController : Controller
             .ToListAsync(ct);
 
         return View(invoices);
+    }
+
+    // ── Family Patient Manager ────────────────────────────────────────────────
+
+    public async Task<IActionResult> FamilyPatients()
+    {
+        var userId = GetCurrentUserId();
+        if (userId == 0) return RedirectToAction("Login", "Auth");
+
+        var patients = await _db.Patients
+            .Where(p => p.CreatedBy == userId && !p.IsDeleted)
+            .OrderBy(p => p.CreatedAt)
+            .ToListAsync();
+
+        var vm = new FamilyPatientManagerViewModel
+        {
+            Patients = patients.Select(p => new FamilyPatientItem
+            {
+                Id              = p.Id,
+                FullName        = p.FullName,
+                DateOfBirth     = p.DateOfBirth,
+                Gender          = p.Gender.ToString(),
+                FatherMotherName = p.EmergencyContactName,
+                District        = p.Address?.Split(',').ElementAtOrDefault(0)?.Trim(),
+                Thana           = p.Address?.Split(',').ElementAtOrDefault(1)?.Trim()
+            }).ToList()
+        };
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddFamilyPatient(AddFamilyPatientViewModel model)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == 0) return RedirectToAction("Login", "Auth");
+
+        // Enforce 5-patient limit
+        var existing = await _db.Patients.CountAsync(p => p.CreatedBy == userId && !p.IsDeleted);
+        if (existing >= 5)
+        {
+            TempData["Error"] = "Maximum 5 patients allowed per account.";
+            return RedirectToAction(nameof(FamilyPatients));
+        }
+
+        if (!Enum.TryParse<MediCareMS.Models.Enums.Gender>(model.Gender, out var gender))
+            gender = MediCareMS.Models.Enums.Gender.Male;
+
+        var count = await _db.Patients.CountAsync() + 1;
+        var patient = new MediCareMS.Models.Entities.Patient.Patient
+        {
+            PatientNo            = $"PAT-{DateTime.Today.Year}-{count:D4}",
+            FullName             = model.FullName,
+            DateOfBirth          = model.DateOfBirth,
+            Gender               = gender,
+            EmergencyContactName = model.FatherMotherName,
+            Address              = $"{model.District}, {model.Thana}",
+            CreatedBy            = userId,
+            CreatedAt            = DateTime.UtcNow
+        };
+
+        _db.Patients.Add(patient);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = $"Patient '{patient.FullName}' added successfully."
+;
+        return RedirectToAction(nameof(FamilyPatients));
+    }
+
+    [HttpGet]
+    public IActionResult GetThanas(string district)
+    {
+        var thanas = BangladeshGeoData.GetThanas(district);
+        return Json(thanas);
     }
 }

@@ -1,0 +1,478 @@
+@model MediCareMS.Models.ViewModels.User.FamilyPatientManagerViewModel
+@using MediCareMS.Helpers
+@{
+    ViewData["Title"] = "My Family Patients";
+    Layout = "_Layout";
+    var districts = BangladeshGeoData.GetDistricts();
+}
+
+<style>
+    /* ── Page Banner ────────────────────────────────── */
+    .family-banner {
+        background: linear-gradient(135deg, #3b82f6 0%, #6d28d9 100%);
+        border-radius: 16px;
+        padding: 28px 32px 20px;
+        margin-bottom: 24px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .family-banner::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 160px; height: 160px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+    .family-banner .banner-icon {
+        font-size: 36px;
+        margin-bottom: 8px;
+        display: block;
+    }
+    .family-banner h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0 0 4px;
+    }
+    .family-banner p {
+        font-size: 13px;
+        opacity: 0.85;
+        margin: 0;
+    }
+    /* ── Tab Bar ────────────────────────────────────── */
+    .fm-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    .fm-tab {
+        padding: 9px 22px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s;
+        border: 2px solid transparent;
+    }
+    .fm-tab.active {
+        background: linear-gradient(135deg, #3b82f6, #6d28d9);
+        color: #fff;
+        border-color: transparent;
+    }
+    .fm-tab:not(.active) {
+        background: var(--card-bg, #1e293b);
+        color: var(--text-muted, #94a3b8);
+        border-color: rgba(255,255,255,0.08);
+    }
+    .fm-tab:not(.active):hover { border-color: #3b82f6; color: #fff; }
+    /* ── Patient Table Card ─────────────────────────── */
+    .fm-card {
+        background: var(--card-bg, #1e293b);
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.07);
+        overflow: hidden;
+    }
+    .fm-table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .fm-table-header label {
+        font-size: 13px;
+        color: var(--text-muted, #94a3b8);
+    }
+    .fm-table-header select {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff;
+        border-radius: 6px;
+        padding: 3px 8px;
+        font-size: 13px;
+        margin-left: 6px;
+    }
+    .fm-table { width: 100%; border-collapse: collapse; }
+    .fm-table th {
+        background: rgba(255,255,255,0.04);
+        padding: 12px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: var(--text-muted, #94a3b8);
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .fm-table td {
+        padding: 13px 16px;
+        font-size: 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        vertical-align: middle;
+    }
+    .fm-table tr:last-child td { border-bottom: none; }
+    .fm-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .fm-idx {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        background: linear-gradient(135deg,#3b82f6,#6d28d9);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .fm-empty {
+        text-align: center;
+        padding: 48px 20px;
+        color: var(--text-muted, #94a3b8);
+    }
+    .fm-empty i { font-size: 40px; margin-bottom: 12px; opacity:.4; display:block; }
+    /* ── Footer bar ─────────────────────────────────── */
+    .fm-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .btn-create {
+        background: linear-gradient(135deg, #3b82f6 0%, #6d28d9 100%);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity .2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-create:hover { opacity: .88; }
+    .btn-create:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-book {
+        background: rgba(52,211,153,0.12);
+        color: #34d399;
+        border: 1px solid rgba(52,211,153,0.3);
+        border-radius: 7px;
+        padding: 5px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .2s;
+    }
+    .btn-book:hover { background: rgba(52,211,153,0.22); color: #34d399; }
+    /* ── Modal ───────────────────────────────────────── */
+    .fm-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.6);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .fm-overlay.open { display: flex; }
+    .fm-modal {
+        background: #1e293b;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 16px;
+        width: 620px;
+        max-width: 95vw;
+        overflow: hidden;
+        animation: modalIn .2s ease;
+    }
+    @@keyframes modalIn { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
+    .fm-modal-header {
+        background: linear-gradient(135deg,#3b82f6,#6d28d9);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .fm-modal-header h5 { color:#fff; margin:0; font-weight:700; font-size:16px; }
+    .fm-modal-close {
+        background: rgba(255,255,255,.15);
+        border: none;
+        color: #fff;
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .fm-modal-body { padding: 24px 24px 8px; }
+    .fm-modal-footer { padding: 12px 24px 20px; display:flex; justify-content:flex-end; gap:10px; }
+    .fm-form-row { display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+    .fm-form-group { flex:1; min-width:140px; }
+    .fm-form-group label { display:block; font-size:12px; font-weight:600; color:var(--text-muted,#94a3b8); margin-bottom:6px; text-transform:uppercase; letter-spacing:.05em; }
+    .fm-form-group input, .fm-form-group select {
+        width:100%;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius:8px;
+        padding: 9px 12px;
+        color:#fff;
+        font-size:14px;
+        transition: border-color .2s;
+    }
+    .fm-form-group input:focus, .fm-form-group select:focus {
+        outline:none;
+        border-color: #3b82f6;
+        background: rgba(59,130,246,.08);
+    }
+    .fm-form-group select option { background:#1e293b; }
+    .btn-cancel {
+        background: rgba(255,255,255,.07);
+        color: var(--text-muted,#94a3b8);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius:8px;
+        padding:9px 20px;
+        font-size:14px;
+        cursor:pointer;
+        transition: all .2s;
+    }
+    .btn-cancel:hover { background: rgba(255,255,255,.12); color:#fff; }
+    .limit-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .limit-ok   { background: rgba(52,211,153,.12); color:#34d399; border:1px solid rgba(52,211,153,.3); }
+    .limit-warn { background: rgba(251,191,36,.12);  color:#fbbf24; border:1px solid rgba(251,191,36,.3); }
+    .limit-full { background: rgba(248,113,113,.12); color:#f87171; border:1px solid rgba(248,113,113,.3); }
+</style>
+
+<!-- Banner -->
+<div class="family-banner">
+    <span class="banner-icon">👥</span>
+    <h2>Add Patient Form <small style="font-size:14px;opacity:.8;font-weight:400;">(Maximum Five Patients Can Be Added)</small></h2>
+    <p>Manage your family members' patient accounts and book appointments on their behalf.</p>
+</div>
+
+<!-- Tabs -->
+<div class="fm-tabs">
+    <a href="#" class="fm-tab active" id="tabPatients" onclick="showTab('patients'); return false;">
+        <i class="fas fa-user-friends"></i> Patients
+    </a>
+    <a asp-action="BookAppointment" class="fm-tab" id="tabAppointment">
+        <i class="fas fa-calendar-plus"></i> Appointment
+    </a>
+</div>
+
+<!-- Patient Table Card -->
+<div class="fm-card" id="panelPatients">
+    <div class="fm-table-header">
+        <div>
+            <label>
+                Row count:
+                <select id="rowCountSelect" onchange="filterRows()">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+        </div>
+        <div>
+            @{
+                int count = Model.Patients.Count;
+                string badgeClass = count == 0 ? "limit-ok" : count < 5 ? "limit-warn" : "limit-full";
+                string badgeIcon = count < 5 ? "fa-check-circle" : "fa-exclamation-circle";
+            }
+            <span class="limit-badge @badgeClass">
+                <i class="fas @badgeIcon"></i> @count / 5 Patients
+            </span>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="fm-table" id="patientTable">
+            <thead>
+                <tr>
+                    <th>A</th>
+                    <th>Full Name</th>
+                    <th>Date of Birth</th>
+                    <th>Gender</th>
+                    <th>Father/Mother Name</th>
+                    <th>Book Appointment</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Patients.Any())
+                {
+                    <tr>
+                        <td colspan="6">
+                            <div class="fm-empty">
+                                <i class="fas fa-users"></i>
+                                <p>No data available!</p>
+                                <small>Click "Create Patient Account" to add your first patient.</small>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    int idx = 1;
+                    foreach (var p in Model.Patients)
+                    {
+                        <tr class="patient-row">
+                            <td><span class="fm-idx">@idx</span></td>
+                            <td><strong>@p.FullName</strong></td>
+                            <td>@p.DateOfBirth.ToString("dd MMM yyyy")</td>
+                            <td>@p.Gender</td>
+                            <td>@(p.FatherMotherName ?? "—")</td>
+                            <td>
+                                <a asp-action="BookAppointment" class="btn-book">
+                                    <i class="fas fa-calendar-plus"></i> Book
+                                </a>
+                            </td>
+                        </tr>
+                        idx++;
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="fm-footer">
+        <span style="font-size:13px;color:var(--text-muted);">
+            Showing @Model.Patients.Count patient(s)
+        </span>
+        <button class="btn-create"
+                id="btnCreate"
+                onclick="openModal()"
+                @(!Model.CanAddMore ? "disabled title=\"Maximum 5 patients reached\"" : "")>
+            <i class="fas fa-user-plus"></i> Create Patient Account
+        </button>
+    </div>
+</div>
+
+<!-- Add Patient Modal -->
+<div class="fm-overlay" id="patientModal">
+    <div class="fm-modal">
+        <div class="fm-modal-header">
+            <h5><i class="fas fa-user-plus"></i> New Patient</h5>
+            <button class="fm-modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <form asp-action="AddFamilyPatient" method="post" id="addPatientForm">
+            @Html.AntiForgeryToken()
+            <div class="fm-modal-body">
+                <div class="fm-form-row">
+                    <div class="fm-form-group" style="flex:2; min-width:180px;">
+                        <label>Full Name <span style="color:#f87171">*</span></label>
+                        <input type="text" name="FullName" id="fFullName" placeholder="Enter full name" required />
+                    </div>
+                    <div class="fm-form-group">
+                        <label>Date of Birth <span style="color:#f87171">*</span></label>
+                        <input type="date" name="DateOfBirth" id="fDob"
+                               max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                               value="@DateTime.Today.AddYears(-20).ToString("yyyy-MM-dd")" required />
+                    </div>
+                    <div class="fm-form-group">
+                        <label>Gender</label>
+                        <select name="Gender" id="fGender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="fm-form-row">
+                    <div class="fm-form-group" style="flex:2; min-width:180px;">
+                        <label>Father / Mother Name</label>
+                        <input type="text" name="FatherMotherName" id="fParent" placeholder="Father or mother name" />
+                    </div>
+                    <div class="fm-form-group">
+                        <label>District</label>
+                        <select name="District" id="fDistrict" onchange="loadThanas()">
+                            <option value="">-- Select District --</option>
+                            @foreach (var d in districts)
+                            {
+                                <option value="@d">@d</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="fm-form-group">
+                        <label>Thana / Upazila</label>
+                        <select name="Thana" id="fThana">
+                            <option value="">-- Select Thana --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="fm-modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn-create">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // ── Modal ──────────────────────────────────────────────────────
+    function openModal() {
+        document.getElementById('patientModal').classList.add('open');
+        document.getElementById('fFullName').focus();
+    }
+    function closeModal() {
+        document.getElementById('patientModal').classList.remove('open');
+        document.getElementById('addPatientForm').reset();
+        document.getElementById('fThana').innerHTML = '<option value="">-- Select Thana --</option>';
+    }
+    // Close on overlay click
+    document.getElementById('patientModal').addEventListener('click', function (e) {
+        if (e.target === this) closeModal();
+    });
+
+    // ── Thana cascading dropdown ───────────────────────────────────
+    function loadThanas() {
+        const district = document.getElementById('fDistrict').value;
+        const thanaEl = document.getElementById('fThana');
+        thanaEl.innerHTML = '<option value="">Loading...</option>';
+        if (!district) {
+            thanaEl.innerHTML = '<option value="">-- Select Thana --</option>';
+            return;
+        }
+        fetch(`/User/GetThanas?district=${encodeURIComponent(district)}`)
+            .then(r => r.json())
+            .then(data => {
+                thanaEl.innerHTML = '<option value="">-- Select Thana --</option>';
+                data.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t; opt.textContent = t;
+                    thanaEl.appendChild(opt);
+                });
+            })
+            .catch(() => {
+                thanaEl.innerHTML = '<option value="">-- Error loading --</option>';
+            });
+    }
+
+    // ── Row count filter ───────────────────────────────────────────
+    function filterRows() {
+        const max = parseInt(document.getElementById('rowCountSelect').value);
+        const rows = document.querySelectorAll('#patientTable tbody .patient-row');
+        rows.forEach((r, i) => r.style.display = i < max ? '' : 'none');
+    }
+
+    // ── Tab (future extension) ─────────────────────────────────────
+    function showTab(tab) {
+        // Only the Patients tab is rendered here; Appointment tab navigates
+        document.querySelectorAll('.fm-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tabPatients').classList.add('active');
+    }
+</script>
+}

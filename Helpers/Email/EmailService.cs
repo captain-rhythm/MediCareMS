@@ -180,14 +180,14 @@ public class EmailService : IEmailService
 <body>
 <div class='wrap'>
   <div class='hdr'>
-    <h1>?? MediCare HMS</h1>
+    <h1>🏥 MediCare HMS</h1>
     <p>Password Reset Request</p>
   </div>
   <div class='body'>
     <p>Hello,</p>
     <p>We received a request to reset the password for your MediCare HMS account. If you made this request, please click the button below to choose a new password:</p>
     <a href='{resetLink}' class='btn'>Reset Password</a>
-    <div class='note'>?? This link is valid for <strong>30 minutes</strong>.</div>
+    <div class='note'>⏱️ This link is valid for <strong>30 minutes</strong>.</div>
     <p style='margin-top:20px;font-size:13px;color:#666'>If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
   </div>
   <div class='footer'>MediCare Hospital System &mdash; Please do not reply to this email.</div>

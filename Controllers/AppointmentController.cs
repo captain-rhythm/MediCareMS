@@ -1,4 +1,5 @@
 using MediCareMS.Data;
+using MediCareMS.Helpers;
 using MediCareMS.Models.Entities.Appointment;
 using MediCareMS.Models.Enums;
 using MediCareMS.Models.ViewModels.Appointment;
@@ -19,8 +20,9 @@ public class AppointmentController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index(string? search, AppointmentStatus? status, DateOnly? date)
+    public async Task<IActionResult> Index(string? search, AppointmentStatus? status, DateOnly? date, int page = 1)
     {
+        const int pageSize = 10;
         var query = _db.Appointments
             .Include(a => a.Patient)
             .Include(a => a.Doctor).ThenInclude(d => d.Department)
@@ -35,7 +37,7 @@ public class AppointmentController : Controller
         if (date.HasValue)
             query = query.Where(a => a.AppointmentDate == date.Value);
 
-        var appointments = await query
+        var projected = query
             .OrderByDescending(a => a.AppointmentDate)
             .Select(a => new AppointmentListViewModel
             {
@@ -49,12 +51,25 @@ public class AppointmentController : Controller
                 TokenNumber = a.TokenNumber,
                 Status = a.Status,
                 ChiefComplaint = a.ChiefComplaint
-            }).ToListAsync();
+            });
+
+        var paged = await PaginatedList<AppointmentListViewModel>.CreateAsync(projected, page, pageSize);
 
         ViewBag.Search = search;
         ViewBag.Status = status;
-        ViewBag.Date = date;
-        return View(appointments);
+        ViewBag.Date   = date;
+        ViewData["PageIndex"]  = paged.PageIndex;
+        ViewData["TotalPages"] = paged.TotalPages;
+        ViewData["TotalCount"] = paged.TotalCount;
+        ViewData["PageSize"]   = paged.PageSize;
+        ViewData["PagAction"]  = "Index";
+        ViewData["PagSearch"]  = search;
+        ViewData["PagExtra"]   = new Dictionary<string,string?>
+        {
+            { "status", status.HasValue ? ((int)status.Value).ToString() : null },
+            { "date",   date.HasValue   ? date.Value.ToString("yyyy-MM-dd") : null }
+        };
+        return View(paged.Items);
     }
 
     [HttpGet]

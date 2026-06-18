@@ -6,6 +6,7 @@ using MediCareMS.Models.Entities.Appointment;
 using MediCareMS.Models.Entities.Prescription;
 using MediCareMS.Models.Entities.Billing;
 using MediCareMS.Models.Entities.System;
+using MediCareMS.Models.Entities.Chat;
 
 namespace MediCareMS.Data;
 
@@ -53,6 +54,10 @@ public class AppDbContext : DbContext
     // Invitations
     public DbSet<Invitation> Invitations => Set<Invitation>();
 
+    // Chat / AI
+    public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -60,6 +65,23 @@ public class AppDbContext : DbContext
         // Composite keys
         modelBuilder.Entity<UserRole>().HasKey(x => new { x.UserId, x.RoleId });
         modelBuilder.Entity<RolePermission>().HasKey(x => new { x.RoleId, x.PermissionId });
+
+        // Chat relationships
+        modelBuilder.Entity<ChatSession>()
+            .HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasOne(m => m.Session)
+            .WithMany(s => s.Messages)
+            .HasForeignKey(m => m.SessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ChatMessage>()
+            .Property(m => m.Sender)
+            .HasConversion<string>();
 
         // Unique indexes
         modelBuilder.Entity<ApplicationUser>().HasIndex(x => x.UserName).IsUnique();

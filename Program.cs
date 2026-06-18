@@ -3,6 +3,8 @@ using MediCareMS.Helpers;
 using MediCareMS.Helpers.Email;
 using MediCareMS.Helpers.Security;
 using MediCareMS.Helpers.QRCode;
+using MediCareMS.Helpers.AI;
+using MediCareMS.Hubs;
 using MediCareMS.Middleware;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -89,6 +91,13 @@ builder.Services.AddScoped<ISslCommerzService, SslCommerzService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 
+// ── AI Chatbot & Agent Services ────────────────────────────────────────────
+builder.Services.AddSignalR();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IAIService, GroqAIService>();
+builder.Services.AddScoped<IAgentActionService, AgentActionService>();
+builder.Services.AddScoped<AgentAIService>();
+
 var app = builder.Build();
 
 // Auto-migrate database
@@ -124,6 +133,8 @@ app.UseMiddleware<AuditLoggingMiddleware>();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Auth}/{action=Login}/{id?}");
+
+app.MapHub<ChatHub>("/chatHub");
 
 if (app.Environment.IsDevelopment())
 {

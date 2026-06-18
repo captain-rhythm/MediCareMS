@@ -7,102 +7,724 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - MediCare HMS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <title>Sign In &#8212; MediCare HMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        .lp-shell { min-height:100vh; display:grid; grid-template-columns:1fr 480px; font-family:'Inter',sans-serif; }
+
+        /* ══ LEFT HERO ═══════════════════════════════════════════════ */
+        .lp-hero { position:relative; display:flex; flex-direction:column; justify-content:center; padding:64px 72px; overflow:hidden; background:linear-gradient(145deg,#3730A3 0%,#4F46E5 38%,#6D28D9 68%,#0E7490 100%); }
+        .lp-hero::before { content:''; position:absolute; inset:0; background-image:radial-gradient(rgba(255,255,255,.15) 1px,transparent 1px); background-size:28px 28px; pointer-events:none; z-index:0; }
+        .lp-hero::after  { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 50% at 90% 5%,rgba(99,102,241,.55) 0%,transparent 70%),radial-gradient(ellipse 50% 60% at 5% 95%,rgba(14,116,144,.45) 0%,transparent 70%); pointer-events:none; z-index:0; }
+        .lp-hero > * { position:relative; z-index:2; }
+        .lp-orb { position:absolute; border-radius:50%; pointer-events:none; z-index:1; }
+        .lp-orb-1 { width:320px;height:320px;background:radial-gradient(circle,rgba(167,139,250,.32) 0%,transparent 70%);top:-80px;right:-80px;animation:orbF1 8s ease-in-out infinite; }
+        .lp-orb-2 { width:240px;height:240px;background:radial-gradient(circle,rgba(6,182,212,.28) 0%,transparent 70%);bottom:-60px;left:-60px;animation:orbF2 10s ease-in-out infinite; }
+        .lp-orb-3 { width:160px;height:160px;background:radial-gradient(circle,rgba(244,63,94,.18) 0%,transparent 70%);bottom:28%;right:8%;animation:orbF3 7s ease-in-out infinite; }
+        @@keyframes orbF1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(20px,-26px) scale(1.08)} }
+        @@keyframes orbF2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-16px,22px) scale(1.06)} }
+        @@keyframes orbF3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(14px,-18px) scale(1.10)} }
+        .lp-ring { position:absolute; border-radius:50%; border:1.5px solid rgba(255,255,255,.10); pointer-events:none; z-index:1; }
+        .lp-ring-1 { width:480px;height:480px;top:-150px;right:-150px;animation:ringP 5s ease-in-out infinite; }
+        .lp-ring-2 { width:300px;height:300px;top:-80px;right:-80px;border-color:rgba(255,255,255,.07);animation:ringP 5s ease-in-out infinite 1.5s; }
+        .lp-ring-3 { width:380px;height:380px;bottom:-130px;left:-130px;animation:ringP 6s ease-in-out infinite .8s; }
+        @@keyframes ringP { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
+        .lp-cross { position:absolute; pointer-events:none; z-index:1; color:#fff; opacity:.10; }
+        .lp-cross-1 { top:14%;right:12%;font-size:52px;animation:crossF 7s ease-in-out infinite; }
+        .lp-cross-2 { bottom:20%;left:14%;font-size:36px;animation:crossF 9s ease-in-out infinite 2s; }
+        @@keyframes crossF { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-14px) rotate(10deg)} }
+        .lp-plus { position:absolute; pointer-events:none; z-index:1; }
+        .lp-plus::before,.lp-plus::after { content:''; position:absolute; background:rgba(255,255,255,.13); border-radius:2px; }
+        .lp-plus::before { width:100%;height:30%;top:35%;left:0; }
+        .lp-plus::after  { width:30%;height:100%;top:0;left:35%; }
+        .lp-plus-1 { width:26px;height:26px;top:22%;left:20%;animation:crossF 8s ease-in-out infinite .3s; }
+        .lp-plus-2 { width:18px;height:18px;bottom:32%;right:22%;animation:crossF 7s ease-in-out infinite 1.8s; }
+        .lp-logo { display:flex;align-items:center;gap:13px;margin-bottom:40px;animation:fadeUp .5s ease both; }
+        .lp-logo-box { width:48px;height:48px;background:rgba(255,255,255,.18);backdrop-filter:blur(10px);border:1.5px solid rgba(255,255,255,.3);border-radius:15px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.2);flex-shrink:0; }
+        .lp-logo-box .sheen { position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.28) 0%,transparent 55%);pointer-events:none; }
+        .lp-logo-heart { width:26px;height:26px;position:relative;z-index:1;animation:heartbeat 1.8s ease-in-out infinite; }
+        .lp-logo-name  { font-size:24px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:-.5px;color:#fff; }
+        .lp-logo-name .c { color:rgba(196,181,253,1); }
+        @@keyframes heartbeat { 0%,100%{transform:scale(1)} 15%{transform:scale(1.22)} 30%{transform:scale(1)} 45%{transform:scale(1.1)} 60%{transform:scale(1)} }
+        @@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+        .lp-headline { margin-bottom:10px;animation:fadeUp .5s ease both .1s; }
+        .lp-headline h1 { font-size:44px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;color:#fff;letter-spacing:-1.5px;line-height:1.12; }
+        .lp-headline h1 em { font-style:normal;color:rgba(196,181,253,1); }
+        .lp-features { display:flex;flex-direction:column;gap:11px;margin-top:28px; }
+        .lp-feature { display:flex;align-items:center;gap:14px;padding:13px 18px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.20);border-radius:14px;backdrop-filter:blur(12px);transition:all .25s;max-width:460px;animation:fadeUp .5s ease both;cursor:default; }
+        .lp-feature:nth-child(1){animation-delay:.15s}.lp-feature:nth-child(2){animation-delay:.25s}.lp-feature:nth-child(3){animation-delay:.35s}.lp-feature:nth-child(4){animation-delay:.45s}
+        .lp-feature:hover { background:rgba(255,255,255,.18);transform:translateX(6px);border-color:rgba(255,255,255,.32); }
+        .lp-feat-icon { width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff; }
+        .lp-feat-icon.blue  { background:rgba(99,102,241,.40); }.lp-feat-icon.teal { background:rgba(6,182,212,.40); }
+        .lp-feat-icon.amber { background:rgba(245,158,11,.40); }.lp-feat-icon.rose { background:rgba(244,63,94,.40); }
+        .lp-feat-text strong { display:block;font-size:13.5px;font-weight:700;color:#fff;margin-bottom:1px; }
+        .lp-feat-text span   { font-size:11.5px;color:rgba(255,255,255,.65); }
+        /* ECG */
+        .lp-ecg-strip { position:absolute;bottom:0;left:0;right:0;height:80px;overflow:hidden;z-index:3;-webkit-mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.4) 30%,rgba(0,0,0,.85) 100%);mask-image:linear-gradient(to bottom,transparent 0%,rgba(0,0,0,.4) 30%,rgba(0,0,0,.85) 100%); }
+        .lp-ecg-track { display:flex;width:300%;height:100%;animation:ecgScroll 8s linear infinite; }
+        @@keyframes ecgScroll { from{transform:translateX(0)} to{transform:translateX(-33.333%)} }
+        .lp-ecg-svg { flex:1;height:100%;overflow:visible; }
+        .ecg-wave { fill:none;stroke:#EF4444;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(239,68,68,.70)) drop-shadow(0 0 8px rgba(239,68,68,.35)); }
+        .lp-ecg-dot-wrap { position:absolute;bottom:0;left:0;right:0;height:80px;pointer-events:none;z-index:4;overflow:hidden; }
+        .lp-ecg-dot-mover { position:absolute;bottom:36px;left:-12px;width:12px;height:12px;animation:dotSweep 8s linear infinite; }
+        .lp-ecg-dot-mover::after { content:'';display:block;width:10px;height:10px;background:#EF4444;border-radius:50%;box-shadow:0 0 0 3px rgba(239,68,68,.25),0 0 14px rgba(239,68,68,.7); }
+        @@keyframes dotSweep { 0%{left:-12px;bottom:36px}16%{left:calc(16% - 6px);bottom:36px}18%{left:calc(18% - 6px);bottom:48px}20%{left:calc(20% - 6px);bottom:36px}26%{left:calc(26% - 6px);bottom:66px}28%{left:calc(28% - 6px);bottom:10px}30%{left:calc(30% - 6px);bottom:36px}39%{left:calc(39% - 6px);bottom:50px}43%{left:calc(43% - 6px);bottom:36px}100%{left:calc(100% + 12px);bottom:36px} }
+        .lp-ecg-strip::after { content:'';position:absolute;top:0;bottom:0;width:60px;background:linear-gradient(to right,transparent,rgba(239,68,68,.08),transparent);animation:scanLine 8s linear infinite;pointer-events:none;z-index:5; }
+        @@keyframes scanLine { from{left:-60px} to{left:100%} }
+
+        /* ══ RIGHT FORM PANEL ════════════════════════════════════════ */
+        .lp-panel { background:#fff;display:flex;flex-direction:column;justify-content:center;padding:48px 48px 40px;box-shadow:-6px 0 48px rgba(0,0,0,.10);position:relative;z-index:5;animation:slideIn .45s ease both; }
+        @@keyframes slideIn { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+        .lp-panel-head { margin-bottom:20px; }
+        .lp-panel-head h2 { font-size:24px;font-weight:800;font-family:'Plus Jakarta Sans',sans-serif;color:#0F172A;letter-spacing:-.5px;margin-bottom:4px; }
+        .lp-panel-head p  { font-size:13.5px;color:#64748B; }
+        .lp-form { display:flex;flex-direction:column;gap:14px; }
+        .lp-field { display:flex;flex-direction:column;gap:6px; }
+        .lp-field label { font-size:12px;font-weight:700;color:#1E293B;text-transform:uppercase;letter-spacing:.5px; }
+        .lp-input-wrap { position:relative; }
+        .lp-input-wrap > i { position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#94A3B8;font-size:14px;pointer-events:none; }
+        .lp-input { width:100%;padding:12px 14px 12px 40px;border:1.5px solid #E2E8F0;border-radius:13px;font-size:14px;font-family:'Inter',sans-serif;color:#0F172A;background:#F8FAFF;outline:none;transition:all .25s; }
+        .lp-input::placeholder { color:#94A3B8; }
+        .lp-input:focus { border-color:#4F46E5;background:#fff;box-shadow:0 0 0 4px rgba(79,70,229,.10); }
+        .lp-toggle { position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94A3B8;padding:4px;transition:color .2s; }
+        .lp-toggle:hover { color:#4F46E5; }
+        .lp-pass-wrap .lp-input { padding-right:42px; }
+        /* Make password bullets bigger & visible */
+        .lp-pass-wrap .lp-input[type="password"] {
+            font-size: 20px;
+            letter-spacing: 4px;
+            font-family: Verdana, sans-serif;
+        }
+        .lp-pass-wrap .lp-input[type="password"]::placeholder {
+            font-size: 14px;
+            letter-spacing: normal;
+            font-family: 'Inter', sans-serif;
+        }
+        /* text mode (show password) - reset to normal */
+        .lp-pass-wrap .lp-input[type="text"] {
+            font-size: 14px;
+            letter-spacing: normal;
+            font-family: 'Inter', sans-serif;
+        }
+        .lp-row { display:flex;align-items:center;justify-content:space-between; }
+        .lp-check { display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#475569;cursor:pointer; }
+        .lp-check input[type="checkbox"] { width:16px;height:16px;accent-color:#4F46E5;cursor:pointer; }
+        .lp-forgot { font-size:13px;font-weight:600;color:#4F46E5;text-decoration:none;transition:color .2s; }
+        .lp-forgot:hover { color:#3730A3; }
+        .lp-btn { width:100%;padding:13px;background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 100%);color:#fff;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;border:none;border-radius:14px;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 8px 24px rgba(79,70,229,.35);margin-top:2px; }
+        .lp-btn:hover { box-shadow:0 12px 32px rgba(79,70,229,.48);transform:translateY(-2px); }
+        .lp-btn:active { transform:translateY(0); }
+        .lp-divider { display:flex;align-items:center;gap:10px;color:#94A3B8;font-size:12.5px;margin:4px 0; }
+        .lp-divider::before,.lp-divider::after { content:'';flex:1;height:1.5px;background:#E2E8F0; }
+        .lp-google { width:100%;padding:11px;background:#fff;color:#374151;border:1.5px solid #E2E8F0;border-radius:13px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;transition:all .2s;box-shadow:0 1px 4px rgba(0,0,0,.04); }
+        .lp-google:hover { background:#F9FAFB;border-color:#D1D5DB;box-shadow:0 4px 14px rgba(0,0,0,.08);transform:translateY(-1px); }
+        .lp-hint { background:linear-gradient(135deg,rgba(79,70,229,.05),rgba(124,58,237,.05));border:1.5px dashed rgba(79,70,229,.22);border-radius:12px;padding:10px 14px;font-size:12px;color:#64748B;text-align:center; }
+        .lp-signup { text-align:center;font-size:13px;color:#64748B;margin-top:2px; }
+        .lp-signup a { color:#4F46E5;font-weight:700;text-decoration:none; }
+        .lp-signup a:hover { color:#3730A3; }
+        .alert-sm { padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;border:1.5px solid transparent;margin-bottom:8px; }
+        .alert-sm.success { background:#ECFDF5;color:#065F46;border-color:rgba(16,185,129,.3); }
+        .alert-sm.error   { background:#FEF2F2;color:#991B1B;border-color:rgba(239,68,68,.3); }
+
+        /* ══ BLOB MASCOTS ════════════════════════════════════════════ */
+        .blob-stage {
+            position: relative;
+            height: 152px;
+            margin-bottom: 6px;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        /* Confetti canvas sits above blobs */
+        #confettiCanvas {
+            position: absolute;
+            top: -30px; left: 0;
+            width: 100%; height: 210px;
+            pointer-events: none;
+            z-index: 50;
+        }
+        /* The SVG is auto-sized from its viewBox */
+        .blob-svg {
+            display: block;
+            height: 152px;
+            width: auto;
+            overflow: visible;
+            pointer-events: none;
+        }
+        /* Smooth pupil movement */
+        .bp { transition: cx .13s ease, cy .13s ease; }
+        /* Hidden helper */
+        .bh { display: none; }
+
+        @@keyframes sparkPop {
+            0%  { opacity:0; transform:scale(0.4); }
+            55% { opacity:1; transform:scale(1.15); }
+            100%{ opacity:1; transform:scale(1); }
+        }
+
+        @@media (max-width:900px) { .lp-shell{grid-template-columns:1fr} .lp-hero{display:none} .lp-panel{padding:44px 28px 36px} }
+        @@media (max-width:480px) { .blob-stage{height:128px} .blob-svg{height:128px} }
+    </style>
 </head>
-<body class="login-page">
-<div class="login-wrapper">
-    <div class="login-left">
-        <div class="login-brand">
-            <div class="login-brand-icon"><i class="fas fa-heartbeat"></i></div>
-            <h1>MediCare</h1>
-            <p>Hospital Management System</p>
+<body style="margin:0;padding:0;">
+<div class="lp-shell">
+
+    <!-- LEFT HERO -->
+    <div class="lp-hero">
+        <div class="lp-orb lp-orb-1"></div><div class="lp-orb lp-orb-2"></div><div class="lp-orb lp-orb-3"></div>
+        <div class="lp-ring lp-ring-1"></div><div class="lp-ring lp-ring-2"></div><div class="lp-ring lp-ring-3"></div>
+        <i class="fas fa-plus lp-cross lp-cross-1"></i><i class="fas fa-plus lp-cross lp-cross-2"></i>
+        <div class="lp-plus lp-plus-1"></div><div class="lp-plus lp-plus-2"></div>
+        <div class="lp-logo">
+            <div class="lp-logo-box"><div class="sheen"></div>
+                <svg class="lp-logo-heart" viewBox="0 0 26 26" fill="none">
+                    <path d="M13 22s-8.5-5.2-8.5-11a5 5 0 0 1 8.5-3.54A5 5 0 0 1 21.5 11c0 5.8-8.5 11-8.5 11z" fill="white" opacity="0.95"/>
+                    <path d="M8 13h2.2l1.3-2.8 1.8 5 1.4-2.5H17" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="lp-logo-name">Medi<span class="c">Care</span></div>
         </div>
-        <div class="login-features">
-            <div class="login-feature"><i class="fas fa-calendar-check"></i><span>Smart Appointment Booking</span></div>
-            <div class="login-feature"><i class="fas fa-user-md"></i><span>Doctor Management</span></div>
-            <div class="login-feature"><i class="fas fa-file-medical"></i><span>Digital Prescriptions</span></div>
-            <div class="login-feature"><i class="fas fa-chart-line"></i><span>Real-Time Analytics</span></div>
+        <div class="lp-headline"><h1>Smarter<br/>Healthcare<br/><em>Management</em></h1></div>
+        <div class="lp-features">
+            <div class="lp-feature"><div class="lp-feat-icon blue"><i class="fas fa-calendar-check"></i></div><div class="lp-feat-text"><strong>Smart Appointments</strong><span>Book &amp; track patient visits in real time</span></div></div>
+            <div class="lp-feature"><div class="lp-feat-icon teal"><i class="fas fa-user-md"></i></div><div class="lp-feat-text"><strong>Doctor Management</strong><span>Schedules, availability &amp; specializations</span></div></div>
+            <div class="lp-feature"><div class="lp-feat-icon amber"><i class="fas fa-file-invoice-dollar"></i></div><div class="lp-feat-text"><strong>Billing &amp; Payments</strong><span>Invoices, SSLCommerz online payments</span></div></div>
+            <div class="lp-feature"><div class="lp-feat-icon rose"><i class="fas fa-file-medical"></i></div><div class="lp-feat-text"><strong>Digital Prescriptions</strong><span>Paperless, searchable patient records</span></div></div>
+        </div>
+        <div class="lp-ecg-strip">
+            <div class="lp-ecg-track">
+                <svg class="lp-ecg-svg" viewBox="0 0 800 80" preserveAspectRatio="none"><path class="ecg-wave" d="M 0,40 L 80,40 L 95,34 L 105,40 L 130,40 L 140,12 L 148,72 L 153,8 L 160,40 L 185,40 L 200,28 L 215,40 L 400,40 L 415,34 L 425,40 L 450,40 L 460,12 L 468,72 L 473,8 L 480,40 L 505,40 L 520,28 L 535,40 L 800,40"/></svg>
+                <svg class="lp-ecg-svg" viewBox="0 0 800 80" preserveAspectRatio="none"><path class="ecg-wave" d="M 0,40 L 80,40 L 95,34 L 105,40 L 130,40 L 140,12 L 148,72 L 153,8 L 160,40 L 185,40 L 200,28 L 215,40 L 400,40 L 415,34 L 425,40 L 450,40 L 460,12 L 468,72 L 473,8 L 480,40 L 505,40 L 520,28 L 535,40 L 800,40"/></svg>
+                <svg class="lp-ecg-svg" viewBox="0 0 800 80" preserveAspectRatio="none"><path class="ecg-wave" d="M 0,40 L 80,40 L 95,34 L 105,40 L 130,40 L 140,12 L 148,72 L 153,8 L 160,40 L 185,40 L 200,28 L 215,40 L 400,40 L 415,34 L 425,40 L 450,40 L 460,12 L 468,72 L 473,8 L 480,40 L 505,40 L 520,28 L 535,40 L 800,40"/></svg>
+            </div>
+            <div class="lp-ecg-dot-wrap"><div class="lp-ecg-dot-mover"></div></div>
         </div>
     </div>
-    <div class="login-right">
-        <div class="login-card">
-            <div class="login-header">
-                <h2>Welcome Back</h2>
-                <p>Sign in to your account to continue</p>
-            </div>
-            <form asp-controller="Auth" asp-action="Login" method="post" class="login-form">
-                @if (TempData["Success"] != null)
-                {
-                    <div class="alert alert-success" style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9rem;">
-                        <i class="fas fa-check-circle"></i> @TempData["Success"]
-                    </div>
-                }
-                @if (TempData["Error"] != null)
-                {
-                    <div class="alert alert-danger" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9rem;">
-                        <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
-                    </div>
-                }
-                <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
-                <div class="form-group">
-                    <label class="form-label"><i class="fas fa-user"></i> Username or Email</label>
-                    <input asp-for="UserNameOrEmail" class="form-control" placeholder="Enter username or email" autocomplete="username" />
-                    <span asp-validation-for="UserNameOrEmail" class="field-error"></span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label"><i class="fas fa-lock"></i> Password</label>
-                    <div class="password-wrapper">
-                        <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" id="passwordInput" autocomplete="current-password" />
-                        <button type="button" class="password-toggle" onclick="togglePassword()"><i class="fas fa-eye" id="eyeIcon"></i></button>
-                    </div>
-                    <span asp-validation-for="Password" class="field-error"></span>
-                </div>
-                <div class="form-group form-check-row" style="display: flex; justify-content: space-between; align-items: center;">
-                    <label class="check-label">
-                        <input asp-for="RememberMe" type="checkbox" /> Remember me
-                    </label>
-                    <a asp-controller="Auth" asp-action="ForgotPassword" style="font-size: 0.875rem; color: var(--primary); text-decoration: none; font-weight: 500;">Forgot Password?</a>
-                </div>
-                <button type="submit" class="btn btn-primary btn-login">
-                    <i class="fas fa-sign-in-alt"></i> Sign In
-                </button>
-            </form>
 
-            <div class="social-login-separator" style="display: flex; align-items: center; text-align: center; margin: 15px 0; color: #888;">
-                <div style="flex: 1; border-bottom: 1px solid #e0e0e0;"></div>
-                <span style="padding: 0 10px; font-size: 0.85rem;">or</span>
-                <div style="flex: 1; border-bottom: 1px solid #e0e0e0;"></div>
-            </div>
+    <!-- RIGHT FORM PANEL -->
+    <div class="lp-panel">
 
-            <a asp-controller="Auth" asp-action="GoogleLogin" class="btn btn-google" style="display: flex; align-items: center; justify-content: center; background-color: #ffffff; color: #757575; border: 1px solid #dadce0; padding: 10px 16px; border-radius: 6px; font-weight: 500; text-decoration: none; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; margin-bottom: 15px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48" style="margin-right: 10px;">
-                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-                    <path fill="#4285F4" d="M46.5 24c0-1.63-.15-3.2-.43-4.75H24v9h12.75c-.55 2.92-2.2 5.4-4.69 7.07l7.25 5.62C43.58 36.43 46.5 30.73 46.5 24z"/>
-                    <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"/>
-                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.25-5.62c-2.03 1.37-4.63 2.18-8.64 2.18-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-                </svg>
-                Sign in with Google
-            </a>
+        <!-- ════════════════════════════════════════════
+             BLOB MASCOT STAGE
+             ViewBox: 290 × 152. All blobs bottom-aligned to y=152.
+             Orange dome  : cx=52 cy=168 rx=78 ry=62  (dome top≈y106, left 72px clear of purple)
+             Purple pill  : x=72  y=8   w=58 h=144 rx=29
+             Pink pill    : x=128 y=44  w=50 h=108 rx=25
+             Yellow round : x=178 y=82  w=44 h=70  rx=22
+        ════════════════════════════════════════════ -->
+        <div class="blob-stage">
+            <canvas id="confettiCanvas"></canvas>
+            <svg class="blob-svg" id="blobSVG"
+                 viewBox="0 0 290 152"
+                 xmlns="http://www.w3.org/2000/svg"
+                 preserveAspectRatio="xMidYMax meet">
+                <defs>
+                    <filter id="bSh" x="-15%" y="-15%" width="130%" height="135%">
+                        <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="rgba(0,0,0,0.14)"/>
+                    </filter>
+                </defs>
 
-            <div class="login-hint">
-                <i class="fas fa-info-circle"></i> Default: <strong>admin</strong> / <strong>Admin@12345</strong>
-            </div>
-            <div style="text-align: center; margin-top: 15px; color: var(--text-muted); font-size: 0.9rem;">
-                Don't have an account? <a asp-controller="Auth" asp-action="SignUp" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign Up</a>
-            </div>
+                <!-- ── Orange dome (behind everything, wide dome visible left of purple) ── -->
+                <g id="gO">
+                    <!-- large dome: center pushed below stage so we see a nice round dome top -->
+                    <ellipse cx="52" cy="168" rx="78" ry="62" fill="#FB923C" filter="url(#bSh)"/>
+                    <!-- specular -->  
+                    <ellipse cx="30" cy="118" rx="20" ry="13" fill="rgba(255,255,255,0.20)" transform="rotate(-18,30,118)"/>
+                    <!-- dot eyes (visible in the dome top area) -->
+                    <circle cx="28" cy="132" r="6" fill="#1C1C1E"/>
+                    <circle cx="52" cy="138" r="6" fill="#1C1C1E"/>
+                    <circle cx="30" cy="129" r="2.2" fill="rgba(255,255,255,0.6)"/>
+                    <circle cx="54" cy="135" r="2.2" fill="rgba(255,255,255,0.6)"/>
+                    <!-- happy eyes -->
+                    <g id="oHappy" class="bh">
+                        <path d="M21 134 Q28 125 35 134" fill="none" stroke="#1C1C1E" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M45 140 Q52 131 59 140" fill="none" stroke="#1C1C1E" stroke-width="2.5" stroke-linecap="round"/>
+                    </g>
+                    <!-- sad eyes -->
+                    <g id="oSad" class="bh">
+                        <circle cx="28" cy="133" r="5.5" fill="#1C1C1E"/>
+                        <circle cx="52" cy="139" r="5.5" fill="#1C1C1E"/>
+                        <path d="M22 126 Q28 130 34 126" fill="none" stroke="#1C1C1E" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M46 132 Q52 136 58 132" fill="none" stroke="#1C1C1E" stroke-width="1.8" stroke-linecap="round"/>
+                    </g>
+                </g>
+
+                <!-- ── Purple tall pill (shifted right 26px from old x=46 → now x=72) ── -->
+                <g id="gP" filter="url(#bSh)">
+                    <rect x="72" y="8" width="58" height="144" rx="29" fill="#7B61FF"/>
+                    <rect x="108" y="8" width="22" height="144" rx="11" fill="rgba(0,0,0,0.07)"/>
+                    <ellipse cx="89" cy="40" rx="12" ry="20" fill="rgba(255,255,255,0.17)" transform="rotate(-14,89,40)"/>
+                    <!-- antenna -->
+                    <rect x="98" y="0" width="7" height="16" rx="3.5" fill="#1C1C1E"/>
+                    <circle cx="101" cy="0" r="4.5" fill="#1C1C1E"/>
+                    <!-- eye whites -->
+                    <circle cx="93" cy="50" r="10" fill="white"/>
+                    <circle cx="115" cy="50" r="10" fill="white"/>
+                    <!-- pupils -->
+                    <circle id="ppL" class="bp" cx="94" cy="51" r="4.5" fill="#1C1C1E"/>
+                    <circle id="ppR" class="bp" cx="116" cy="51" r="4.5" fill="#1C1C1E"/>
+                    <circle cx="96" cy="48" r="1.6" fill="white"/>
+                    <circle cx="118" cy="48" r="1.6" fill="white"/>
+                    <!-- blink -->
+                    <g id="pBlink" class="bh">
+                        <rect x="83" y="46" width="20" height="8" rx="4" fill="#7B61FF"/>
+                        <rect x="105" y="46" width="20" height="8" rx="4" fill="#7B61FF"/>
+                    </g>
+                    <!-- password cover -->
+                    <g id="pCover" class="bh">
+                        <rect x="83" y="42" width="20" height="16" rx="7" fill="#7B61FF"/>
+                        <rect x="105" y="42" width="20" height="16" rx="7" fill="#7B61FF"/>
+                    </g>
+                    <!-- happy ^ -->
+                    <g id="pHappy" class="bh">
+                        <path d="M83 55 Q93 43 103 55" fill="none" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+                        <path d="M105 55 Q115 43 125 55" fill="none" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+                    </g>
+                    <!-- sad -->
+                    <g id="pSad" class="bh">
+                        <circle cx="93" cy="51" r="8" fill="white"/>
+                        <circle cx="115" cy="51" r="8" fill="white"/>
+                        <circle cx="93" cy="53" r="3.5" fill="#1C1C1E"/>
+                        <circle cx="115" cy="53" r="3.5" fill="#1C1C1E"/>
+                        <path d="M86 44 Q93 48 100 44" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M108 44 Q115 48 122 44" fill="none" stroke="#1C1C1E" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+                </g>
+
+                <!-- ── Pink medium pill (shifted right 26px → x=128) ── -->
+                <g id="gPk" filter="url(#bSh)">
+                    <rect x="128" y="44" width="50" height="108" rx="25" fill="#FF4D8D"/>
+                    <rect x="158" y="44" width="20" height="108" rx="10" fill="rgba(0,0,0,0.06)"/>
+                    <ellipse cx="142" cy="68" rx="10" ry="16" fill="rgba(255,255,255,0.15)" transform="rotate(-12,142,68)"/>
+                    <!-- eye whites -->
+                    <circle cx="143" cy="82" r="9" fill="white"/>
+                    <circle cx="163" cy="82" r="9" fill="white"/>
+                    <!-- pupils -->
+                    <circle id="pkL" class="bp" cx="144" cy="83" r="4" fill="#1C1C1E"/>
+                    <circle id="pkR" class="bp" cx="164" cy="83" r="4" fill="#1C1C1E"/>
+                    <circle cx="146" cy="80" r="1.4" fill="white"/>
+                    <circle cx="166" cy="80" r="1.4" fill="white"/>
+                    <!-- blink -->
+                    <g id="pkBlink" class="bh">
+                        <rect x="134" y="78" width="18" height="8" rx="4" fill="#FF4D8D"/>
+                        <rect x="154" y="78" width="18" height="8" rx="4" fill="#FF4D8D"/>
+                    </g>
+                    <!-- cover -->
+                    <g id="pkCover" class="bh">
+                        <rect x="134" y="75" width="18" height="14" rx="6" fill="#FF4D8D"/>
+                        <rect x="154" y="75" width="18" height="14" rx="6" fill="#FF4D8D"/>
+                    </g>
+                    <!-- happy -->
+                    <g id="pkHappy" class="bh">
+                        <path d="M134 87 Q143 77 152 87" fill="none" stroke="#1C1C1E" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M154 87 Q163 77 172 87" fill="none" stroke="#1C1C1E" stroke-width="3" stroke-linecap="round"/>
+                    </g>
+                    <!-- sad -->
+                    <g id="pkSad" class="bh">
+                        <circle cx="143" cy="83" r="7" fill="white"/>
+                        <circle cx="163" cy="83" r="7" fill="white"/>
+                        <circle cx="143" cy="85" r="3" fill="#1C1C1E"/>
+                        <circle cx="163" cy="85" r="3" fill="#1C1C1E"/>
+                    </g>
+                </g>
+
+                <!-- ── Yellow small rounded (shifted right 26px → x=178) ── -->
+                <g id="gY" filter="url(#bSh)">
+                    <rect x="178" y="82" width="44" height="70" rx="22" fill="#FFD15C"/>
+                    <rect x="204" y="82" width="18" height="70" rx="9" fill="rgba(0,0,0,0.05)"/>
+                    <ellipse cx="190" cy="98" rx="8" ry="13" fill="rgba(255,255,255,0.19)" transform="rotate(-10,190,98)"/>
+                    <!-- default sleepy dash -->
+                    <g id="yDash">
+                        <line x1="187" y1="108" x2="209" y2="110" stroke="#1C1C1E" stroke-width="3" stroke-linecap="round"/>
+                    </g>
+                    <!-- open eyes (focus) -->
+                    <g id="yOpen" class="bh">
+                        <circle cx="191" cy="106" r="7" fill="white"/>
+                        <circle cx="209" cy="107" r="7" fill="white"/>
+                        <circle id="ypL" class="bp" cx="192" cy="107" r="3" fill="#1C1C1E"/>
+                        <circle id="ypR" class="bp" cx="210" cy="108" r="3" fill="#1C1C1E"/>
+                        <circle cx="194" cy="104.5" r="1.1" fill="white"/>
+                        <circle cx="212" cy="105.5" r="1.1" fill="white"/>
+                    </g>
+                    <!-- blink -->
+                    <g id="yBlink" class="bh">
+                        <rect x="184" y="103" width="14" height="7" rx="3.5" fill="#FFD15C"/>
+                        <rect x="202" y="104" width="14" height="7" rx="3.5" fill="#FFD15C"/>
+                    </g>
+                    <!-- cover -->
+                    <g id="yCover" class="bh">
+                        <rect x="184" y="100" width="14" height="13" rx="5" fill="#FFD15C"/>
+                        <rect x="202" y="101" width="14" height="13" rx="5" fill="#FFD15C"/>
+                    </g>
+                    <!-- happy -->
+                    <g id="yHappy" class="bh">
+                        <path d="M184 112 Q200 103 216 112" fill="none" stroke="#1C1C1E" stroke-width="2.8" stroke-linecap="round"/>
+                    </g>
+                    <!-- sad -->
+                    <g id="ySad" class="bh">
+                        <path d="M184 114 Q200 108 216 114" fill="none" stroke="#1C1C1E" stroke-width="2.5" stroke-linecap="round"/>
+                    </g>
+                </g>
+
+                <!-- Sparkles -->
+                <g id="bSparks" class="bh" style="opacity:0">
+                    <text x="56"  y="26" font-size="14" fill="#7B61FF" font-weight="bold">&#10022;</text>
+                    <text x="222" y="36" font-size="11" fill="#FF4D8D">&#10022;</text>
+                    <text x="6"   y="55" font-size="9"  fill="#FFD15C">&#10022;</text>
+                    <text x="258" y="68" font-size="8"  fill="#FB923C">&#10022;</text>
+                    <text x="144" y="14" font-size="7"  fill="#7B61FF">&#10022;</text>
+                </g>
+
+                <!-- Question marks -->
+                <g id="bQmark" class="bh" style="opacity:0">
+                    <circle cx="58"  cy="16" r="13" fill="white" stroke="#7B61FF" stroke-width="1.5"/>
+                    <text x="52" y="22" font-size="15" font-family="'Courier New',monospace" fill="#7B61FF" font-weight="900">?</text>
+                    <circle cx="236" cy="28" r="11" fill="white" stroke="#FF4D8D" stroke-width="1.5"/>
+                    <text x="230" y="33.5" font-size="13" font-family="'Courier New',monospace" fill="#FF4D8D" font-weight="900">?</text>
+                </g>
+            </svg>
         </div>
+        <!-- END BLOB STAGE -->
+
+        <div class="lp-panel-head">
+            <h2>Welcome back &#x1F44B;</h2>
+            <p>Sign in to your account to continue</p>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert-sm success" id="loginSuccess"><i class="fas fa-check-circle"></i>&nbsp;@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert-sm error" id="loginError"><i class="fas fa-exclamation-circle"></i>&nbsp;@TempData["Error"]</div>
+        }
+
+        <form asp-controller="Auth" asp-action="Login" method="post" class="lp-form">
+            <div asp-validation-summary="ModelOnly" class="alert-sm error" style="display:@(ViewData.ModelState.IsValid ? "none" : "flex");"></div>
+            <div class="lp-field">
+                <label>Username or Email</label>
+                <div class="lp-input-wrap">
+                    <i class="fas fa-user"></i>
+                    <input asp-for="UserNameOrEmail" id="emailInput" class="lp-input" placeholder="Enter username or email" autocomplete="username"/>
+                </div>
+                <span asp-validation-for="UserNameOrEmail" style="color:#DC2626;font-size:12px;"></span>
+            </div>
+            <div class="lp-field">
+                <label>Password</label>
+                <div class="lp-input-wrap lp-pass-wrap">
+                    <i class="fas fa-lock"></i>
+                    <input asp-for="Password" type="password" class="lp-input" placeholder="Enter your password" id="lpPassword" autocomplete="current-password"/>
+                    <button type="button" class="lp-toggle" onclick="togglePwd()"><i class="fas fa-eye" id="lpEye"></i></button>
+                </div>
+                <span asp-validation-for="Password" style="color:#DC2626;font-size:12px;"></span>
+            </div>
+            <div class="lp-row">
+                <label class="lp-check"><input asp-for="RememberMe" type="checkbox"/> Remember me</label>
+                <a asp-controller="Auth" asp-action="ForgotPassword" class="lp-forgot">Forgot Password?</a>
+            </div>
+            <button type="submit" class="lp-btn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+        </form>
+
+        <div style="height:14px;"></div>
+        <div class="lp-divider">or continue with</div>
+        <div style="height:10px;"></div>
+        <a asp-controller="Auth" asp-action="GoogleLogin" class="lp-google">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.5 24c0-1.63-.15-3.2-.43-4.75H24v9h12.75c-.55 2.92-2.2 5.4-4.69 7.07l7.25 5.62C43.58 36.43 46.5 30.73 46.5 24z"/>
+                <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.25-5.62c-2.03 1.37-4.63 2.18-8.64 2.18-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            Sign in with Google
+        </a>
+        <div style="height:12px;"></div>
+        <div class="lp-signup">Don't have an account? <a asp-controller="Auth" asp-action="SignUp">Sign Up</a></div>
     </div>
 </div>
+
 <script>
-    function togglePassword(){
-        const i=document.getElementById('passwordInput');
-        const e=document.getElementById('eyeIcon');
-        if(i.type==='password'){i.type='text';e.classList.replace('fa-eye','fa-eye-slash');}
-        else{i.type='password';e.classList.replace('fa-eye-slash','fa-eye');}
+/* ── password toggle ── */
+function togglePwd() {
+    var inp = document.getElementById('lpPassword');
+    var eye = document.getElementById('lpEye');
+    if (inp.type === 'password') {
+        // SHOW password
+        inp.type = 'text';
+        inp.style.fontSize      = '14px';
+        inp.style.letterSpacing = 'normal';
+        inp.style.fontFamily    = "'Inter', sans-serif";
+        eye.classList.replace('fa-eye', 'fa-eye-slash');
+        B.go('pwd-visible');
+    } else {
+        // HIDE password
+        inp.type = 'password';
+        inp.style.fontSize      = '20px';
+        inp.style.letterSpacing = '4px';
+        inp.style.fontFamily    = 'Verdana, sans-serif';
+        eye.classList.replace('fa-eye-slash', 'fa-eye');
+        B.go(document.activeElement === inp ? 'pwd' : 'idle');
     }
+}
+
+/* ══ BLOB STATE MACHINE ══════════════════════════════════════════ */
+var B=(function(){
+    var $ = function(id){ return document.getElementById(id); };
+    /* groups */
+    var gO=$('gO'), gP=$('gP'), gPk=$('gPk'), gY=$('gY');
+    /* purple eyes */
+    var ppL=$('ppL'),ppR=$('ppR'),pBlink=$('pBlink'),pCover=$('pCover'),pHappy=$('pHappy'),pSad=$('pSad');
+    /* pink eyes */
+    var pkL=$('pkL'),pkR=$('pkR'),pkBlink=$('pkBlink'),pkCover=$('pkCover'),pkHappy=$('pkHappy'),pkSad=$('pkSad');
+    /* yellow eyes */
+    var yDash=$('yDash'),yOpen=$('yOpen'),ypL=$('ypL'),ypR=$('ypR'),yBlink=$('yBlink'),yCover=$('yCover'),yHappy=$('yHappy'),ySad=$('ySad');
+    /* orange extras */
+    var oHappy=$('oHappy'),oSad=$('oSad');
+    /* overlays */
+    var bSparks=$('bSparks'), bQmark=$('bQmark');
+
+    var state='idle', locked=false, blinkT=null;
+    /* RAF ids for breathing */
+    var rafId=null;
+
+    function S(e){if(e) e.classList.remove('bh');}
+    function H(e){if(e) e.classList.add('bh');}
+
+    /* ── BREATHING (requestAnimationFrame, no transform-box needed) ── */
+    var breathT=0;
+    function breathFrame(ts){
+        breathT=ts||0;
+        /* each blob gets a gentle translateY using SVG transform attribute */
+        var t=breathT/1000;
+        var yo = Math.sin(t*1.7+0.0)*2.8;
+        var yp = Math.sin(t*1.6+0.8)*3.2;
+        var ypk= Math.sin(t*1.5+1.6)*2.8;
+        var yy = Math.sin(t*1.8+2.4)*2.4;
+        if(gO)  gO.setAttribute('transform','translate(0,'+yo.toFixed(2)+')');
+        if(gP)  gP.setAttribute('transform','translate(0,'+yp.toFixed(2)+')');
+        if(gPk) gPk.setAttribute('transform','translate(0,'+ypk.toFixed(2)+')');
+        if(gY)  gY.setAttribute('transform','translate(0,'+yy.toFixed(2)+')');
+        rafId=requestAnimationFrame(breathFrame);
+    }
+    function startBreath(){ if(!rafId) rafId=requestAnimationFrame(breathFrame); }
+    function stopBreath(){ if(rafId){cancelAnimationFrame(rafId);rafId=null;} resetTransforms(); }
+    function resetTransforms(){
+        [gO,gP,gPk,gY].forEach(function(g){ if(g) g.setAttribute('transform','translate(0,0)'); });
+    }
+
+    /* ── BLINK ── */
+    function startBlinks(){
+        if(blinkT){clearInterval(blinkT);blinkT=null;}
+        blinkT=setInterval(function(){
+            if(state==='pwd'||locked) return;
+            S(pBlink);S(pkBlink);S(yBlink);
+            setTimeout(function(){H(pBlink);H(pkBlink);H(yBlink);},150);
+        },3500+Math.random()*2000);
+    }
+
+    /* ── SHOW NORMAL EYES (pupils visible, no covers) ── */
+    function normalEyes(){
+        H(pCover);H(pHappy);H(pSad); S(ppL);S(ppR);
+        H(pkCover);H(pkHappy);H(pkSad);
+        H(yOpen);H(yCover);H(yHappy);H(ySad); S(yDash);
+        H(oHappy);H(oSad);
+        H(bSparks);H(bQmark);
+        bSparks.style.opacity='0'; bQmark.style.opacity='0';
+    }
+
+    /* ══ STATES ══════════════════════════════════════════════════ */
+    function doIdle(){
+        normalEyes(); H(pBlink);H(pkBlink);H(yBlink);
+        startBreath(); startBlinks();
+    }
+    function doEmailFocus(){
+        normalEyes(); H(pBlink);H(pkBlink);H(yBlink);
+        stopBreath();
+        /* yellow opens eyes for curiosity */
+        H(yDash); S(yOpen);
+        /* pupils look slightly downward */
+        ppL.setAttribute('cy','53'); ppR.setAttribute('cy','53');
+        pkL.setAttribute('cy','85'); pkR.setAttribute('cy','85');
+        ypL.setAttribute('cy','109'); ypR.setAttribute('cy','110');
+        startBlinks();
+    }
+    function doPwd(){
+        normalEyes(); H(pBlink);H(pkBlink);H(yBlink);
+        stopBreath();
+        /* all cover eyes */
+        S(pCover); S(pkCover); S(yCover); H(yDash); H(yOpen);
+        if(blinkT){clearInterval(blinkT);blinkT=null;}
+        /* gentle sway still */
+        var t2=0;
+        (function sway(){
+            if(state!=='pwd') return;
+            t2+=0.018;
+            var s=Math.sin(t2)*2;
+            if(gP) gP.setAttribute('transform','translate('+s.toFixed(2)+',0)');
+            if(gPk)gPk.setAttribute('transform','translate('+(s*.7).toFixed(2)+',0)');
+            if(gY) gY.setAttribute('transform','translate('+(s*.5).toFixed(2)+',0)');
+            requestAnimationFrame(sway);
+        })();
+    }
+    function doPwdVisible(){
+        normalEyes(); H(pBlink);H(pkBlink);H(yBlink);
+        stopBreath();
+        H(yDash); S(yOpen);
+        /* pupils look down at password field */
+        ppL.setAttribute('cy','54'); ppR.setAttribute('cy','54');
+        pkL.setAttribute('cy','86'); pkR.setAttribute('cy','86');
+        ypL.setAttribute('cy','110'); ypR.setAttribute('cy','111');
+        startBlinks();
+    }
+    function doWrong(){
+        locked=true;
+        normalEyes(); stopBreath();
+        /* sad eyes */
+        H(pBlink);H(pkBlink);H(yBlink);
+        S(pSad);H(ppL);H(ppR);
+        S(pkSad);
+        S(ySad); H(yDash);
+        S(oSad);
+        /* shake all via JS frames */
+        var st=Date.now(), dur=650;
+        (function shk(){
+            var el=Date.now()-st;
+            if(el>=dur){ resetTransforms(); return; }
+            var s=Math.sin(el/dur*Math.PI*6)*9*(1-el/dur);
+            [gO,gP,gPk,gY].forEach(function(g,i){
+                if(g) g.setAttribute('transform','translate('+(s*(i%2===0?1:-1)).toFixed(1)+',0)');
+            });
+            requestAnimationFrame(shk);
+        })();
+        /* question marks pop */
+        S(bQmark); bQmark.style.opacity='0'; bQmark.style.transition='none';
+        bQmark.style.animation='sparkPop .35s ease both .12s';
+        setTimeout(function(){bQmark.style.opacity='1';},80);
+        /* reset after 2.3s */
+        setTimeout(function(){
+            bQmark.style.transition='opacity .3s'; bQmark.style.opacity='0';
+            setTimeout(function(){ H(bQmark); locked=false; doIdle(); },320);
+        },2300);
+    }
+    function doHappy(){
+        locked=true;
+        normalEyes(); stopBreath();
+        H(pBlink);H(pkBlink);H(yBlink);
+        /* happy eyes */
+        S(pHappy);H(ppL);H(ppR);
+        S(pkHappy);
+        H(yDash); S(yOpen); S(yHappy);
+        S(oHappy);
+        /* bounce */
+        var st=Date.now(), dur=700, reps=2;
+        (function bnc(){
+            var el=Date.now()-st;
+            if(el>=dur*reps){ resetTransforms(); return; }
+            var phase=(el%dur)/dur;
+            var y=-Math.sin(phase*Math.PI)*11;
+            [gO,gP,gPk,gY].forEach(function(g,i){
+                var delay=i*60, t2=(el-delay);
+                var py=t2<0?0:-Math.sin((t2%dur)/dur*Math.PI)*11;
+                if(g) g.setAttribute('transform','translate(0,'+py.toFixed(1)+')');
+            });
+            requestAnimationFrame(bnc);
+        })();
+        /* sparkles */
+        S(bSparks); bSparks.style.opacity='0'; bSparks.style.transition='none';
+        bSparks.style.animation='sparkPop .4s ease both .1s';
+        setTimeout(function(){bSparks.style.opacity='1';},60);
+        /* confetti */
+        confetti();
+    }
+
+    /* ── PUPIL TRACKING ── */
+    var svg=document.getElementById('blobSVG');
+    document.addEventListener('mousemove',function(e){
+        if(state==='pwd'||state==='wrong') return;
+        if(!svg) return;
+        var r=svg.getBoundingClientRect();
+        /* map mouse to viewBox 290×152 */
+        var vx=(e.clientX-r.left)/r.width*290;
+        var vy=(e.clientY-r.top)/r.height*152;
+        var M=3;
+        /* purple: eye centers cx=94 and cx=116, cy=51 */
+        var a1=Math.atan2(vy-51,vx-94);
+        ppL.setAttribute('cx',(Math.max(90,Math.min(98,  94+Math.cos(a1)*M))).toFixed(1));
+        ppL.setAttribute('cy',(Math.max(47,Math.min(55,  51+Math.sin(a1)*M))).toFixed(1));
+        ppR.setAttribute('cx',(Math.max(112,Math.min(120,116+Math.cos(a1)*M))).toFixed(1));
+        ppR.setAttribute('cy',(Math.max(47,Math.min(55,  51+Math.sin(a1)*M))).toFixed(1));
+        /* pink: eye centers cx=144 and cx=164, cy=83 */
+        var a2=Math.atan2(vy-83,vx-144);
+        pkL.setAttribute('cx',(Math.max(140,Math.min(148,144+Math.cos(a2)*M))).toFixed(1));
+        pkL.setAttribute('cy',(Math.max(79, Math.min(87, 83+Math.sin(a2)*M))).toFixed(1));
+        pkR.setAttribute('cx',(Math.max(160,Math.min(168,164+Math.cos(a2)*M))).toFixed(1));
+        pkR.setAttribute('cy',(Math.max(79, Math.min(87, 83+Math.sin(a2)*M))).toFixed(1));
+        /* yellow (when open): eye centers cx=192 and cx=210, cy=107 */
+        if(state==='email-focus'||state==='pwd-visible'){
+            var a3=Math.atan2(vy-107,vx-192);
+            ypL.setAttribute('cx',(Math.max(189,Math.min(195,192+Math.cos(a3)*2)).toFixed(1)));
+            ypL.setAttribute('cy',(Math.max(104,Math.min(110,107+Math.sin(a3)*2)).toFixed(1)));
+            ypR.setAttribute('cx',(Math.max(207,Math.min(213,210+Math.cos(a3)*2)).toFixed(1)));
+            ypR.setAttribute('cy',(Math.max(105,Math.min(111,108+Math.sin(a3)*2)).toFixed(1)));
+        }
+    });
+
+
+    /* ── CONFETTI ── */
+    function confetti(){
+        var c=document.getElementById('confettiCanvas');
+        if(!c) return;
+        c.width=c.offsetWidth||260; c.height=210;
+        var ctx=c.getContext('2d');
+        var cols=['#7B61FF','#FF4D8D','#FB923C','#FFD15C','#4F46E5','#06B6D4','#10B981'];
+        var ps=[];
+        for(var i=0;i<60;i++) ps.push({x:c.width*.5+(Math.random()-.5)*100,y:-5,vx:(Math.random()-.5)*7,vy:Math.random()*3+1.5,rot:Math.random()*360,rv:(Math.random()-.5)*10,w:Math.random()*9+5,h:Math.random()*5+3,col:cols[Math.floor(Math.random()*cols.length)],a:1});
+        var t0=null;
+        (function draw(ts){ if(!t0)t0=ts; var el=ts-t0;
+            ctx.clearRect(0,0,c.width,c.height);
+            ps.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.13;p.rot+=p.rv;p.a=Math.max(0,1-el/2400);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.globalAlpha=p.a;ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});
+            if(el<2600) requestAnimationFrame(draw); else ctx.clearRect(0,0,c.width,c.height);
+        })(0);
+        requestAnimationFrame(function(ts){(function draw(ts2){var el=ts2-(ts);ctx.clearRect(0,0,c.width,c.height);ps.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.vy+=.13;p.rot+=p.rv;p.a=Math.max(0,1-(Date.now()-ts)/2400);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.globalAlpha=Math.max(0,p.a);ctx.fillStyle=p.col;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();});if(p&&p.a>0)requestAnimationFrame(draw);else ctx.clearRect(0,0,c.width,c.height);})(ts);});
+    }
+
+    /* ── PUBLIC ── */
+    function go(s){
+        if(locked&&s!=='wrong'&&s!=='happy') return;
+        state=s;
+        switch(s){
+            case 'idle':        doIdle();        break;
+            case 'email-focus': doEmailFocus();  break;
+            case 'pwd':         doPwd();         break;
+            case 'pwd-visible': doPwdVisible();  break;
+            case 'wrong':       doWrong();       break;
+            case 'happy':       doHappy();       break;
+        }
+    }
+    doIdle();
+    return {go:go};
+})();
+
+/* ── EVENTS ── */
+(function(){
+    var e=document.getElementById('emailInput'), p=document.getElementById('lpPassword');
+    if(e){
+        e.addEventListener('focus',function(){B.go('email-focus');});
+        e.addEventListener('blur', function(){setTimeout(function(){if(document.activeElement!==p)B.go('idle');},200);});
+    }
+    if(p){
+        p.addEventListener('focus',function(){B.go(p.type==='password'?'pwd':'pwd-visible');});
+        p.addEventListener('blur', function(){setTimeout(function(){if(document.activeElement!==e)B.go('idle');},200);});
+    }
+    var err=document.getElementById('loginError');
+    if(err) setTimeout(function(){B.go('wrong');},400);
+    var ok=document.getElementById('loginSuccess');
+    if(ok)  setTimeout(function(){B.go('happy');},400);
+})();
 </script>
 </body>
 </html>

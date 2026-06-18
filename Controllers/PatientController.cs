@@ -1,4 +1,5 @@
 using MediCareMS.Data;
+using MediCareMS.Helpers;
 using MediCareMS.Models.Entities.Patient;
 using MediCareMS.Models.ViewModels.Patient;
 using Microsoft.AspNetCore.Authorization;
@@ -17,14 +18,16 @@ public class PatientController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
+        const int pageSize = 10;
         var query = _db.Patients.Where(p => !p.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(p => p.FullName.Contains(search) || p.PatientNo.Contains(search) || p.MobileNumber!.Contains(search));
 
-        var patients = await query
+        var projected = query
+            .OrderBy(p => p.FullName)
             .Select(p => new PatientListViewModel
             {
                 Id = p.Id,
@@ -35,10 +38,18 @@ public class PatientController : Controller
                 BloodGroup = p.BloodGroup,
                 Age = (int)((DateTime.Today - p.DateOfBirth).TotalDays / 365.25),
                 TotalVisits = p.Appointments.Count(a => !a.IsDeleted)
-            }).ToListAsync();
+            });
+
+        var paged = await PaginatedList<PatientListViewModel>.CreateAsync(projected, page, pageSize);
 
         ViewBag.Search = search;
-        return View(patients);
+        ViewData["PageIndex"]  = paged.PageIndex;
+        ViewData["TotalPages"] = paged.TotalPages;
+        ViewData["TotalCount"] = paged.TotalCount;
+        ViewData["PageSize"]   = paged.PageSize;
+        ViewData["PagAction"]  = "Index";
+        ViewData["PagSearch"]  = search;
+        return View(paged.Items);
     }
 
     [HttpGet]

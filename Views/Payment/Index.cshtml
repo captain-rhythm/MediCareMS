@@ -10,20 +10,18 @@
 
 <div class="stats-grid mb-4">
     <div class="stat-card stat-blue">
-        <div class="stat-header">
-            <span class="stat-label">Total Revenue</span>
-            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">৳@(((decimal)ViewBag.TotalRevenue).ToString("N2"))</div>
+            <div class="stat-label">Total Revenue</div>
         </div>
-        <div class="stat-value">৳@(((decimal)ViewBag.TotalRevenue).ToString("N2"))</div>
-        <div class="stat-change up"><i class="fas fa-arrow-up"></i> Lifetime</div>
     </div>
     <div class="stat-card stat-green">
-        <div class="stat-header">
-            <span class="stat-label">Today's Revenue</span>
-            <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-info">
+            <div class="stat-value">৳@(((decimal)ViewBag.TodayRevenue).ToString("N2"))</div>
+            <div class="stat-label">Today's Revenue</div>
         </div>
-        <div class="stat-value">৳@(((decimal)ViewBag.TodayRevenue).ToString("N2"))</div>
-        <div class="stat-change up"><i class="fas fa-arrow-up"></i> Today</div>
     </div>
 </div>
 
