@@ -32,11 +32,13 @@
     </div>
     <div class="table-responsive">
         <table class="table">
-            <thead><tr><th>No.</th><th>Patient</th><th>Doctor</th><th>Dept</th><th>Date & Time</th><th>Token</th><th>Status</th><th>Actions</th></tr></thead>
+            <thead><tr><th style="width:50px;">#</th><th>No.</th><th>Patient</th><th>Doctor</th><th>Dept</th><th>Date & Time</th><th>Token</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
+            @{ int serialNo = 1; }
             @foreach (var a in Model)
             {
                 <tr>
+                    <td style="color:var(--text-muted);font-weight:600;">@(serialNo++)</td>
                     <td><span class="badge badge-light">@a.AppointmentNo</span></td>
                     <td><strong>@a.PatientName</strong></td>
                     <td>@a.DoctorName</td>
@@ -71,7 +73,7 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="8" class="text-center"><div class="empty-state"><i class="fas fa-calendar-times"></i><p>No appointments found.</p></div></td></tr>
+                <tr><td colspan="9" class="text-center"><div class="empty-state"><i class="fas fa-calendar-times"></i><p>No appointments found.</p></div></td></tr>
             }
             </tbody>
         </table>

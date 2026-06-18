@@ -44,6 +44,7 @@ public class MyAppointmentItem
     public string DepartmentName { get; set; } = string.Empty;
     public DateOnly Date { get; set; }
     public AppointmentStatus Status { get; set; }
+    public int? InvoiceId { get; set; }   // for PendingPayment retry link
 }
 
 public class BookAppointmentViewModel

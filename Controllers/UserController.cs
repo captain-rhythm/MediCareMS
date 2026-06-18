@@ -1,12 +1,13 @@
 using System.Security.Claims;
 using MediCareMS.Data;
 using MediCareMS.Helpers;
+using MediCareMS.Models.Entities.Appointment;
+using MediCareMS.Models.Entities.Billing;
 using MediCareMS.Models.Enums;
 using MediCareMS.Models.ViewModels.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MediCareMS.Models.Entities.Appointment;
 
 namespace MediCareMS.Controllers;
 
@@ -14,10 +15,12 @@ namespace MediCareMS.Controllers;
 public class UserController : Controller
 {
     private readonly AppDbContext _db;
+    private readonly ISslCommerzService _ssl;
+    private readonly ILogger<UserController> _logger;
 
-    public UserController(AppDbContext db)
+    public UserController(AppDbContext db, ISslCommerzService ssl, ILogger<UserController> logger)
     {
-        _db = db;
+        _db = db; _ssl = ssl; _logger = logger;
     }
 
     /// <summary>
@@ -39,38 +42,9 @@ public class UserController : Controller
         return await _db.Patients.FirstOrDefaultAsync(p => p.UserId == userId && !p.IsDeleted);
     }
 
-    public async Task<IActionResult> Dashboard()
+    public IActionResult Dashboard()
     {
-        var patient = await GetCurrentPatientAsync();
-        if (patient == null) return RedirectToAction("Login", "Auth");
-
-        var patientId = patient.Id;
-        var today = DateOnly.FromDateTime(DateTime.Today);
-
-        var vm = new UserDashboardViewModel
-        {
-            TotalAppointments    = await _db.Appointments.CountAsync(a => a.PatientId == patientId && !a.IsDeleted),
-            UpcomingAppointments = await _db.Appointments.CountAsync(a => a.PatientId == patientId && a.AppointmentDate >= today && a.Status != AppointmentStatus.Cancelled && !a.IsDeleted),
-            TotalPrescriptions   = await _db.Prescriptions.CountAsync(p => p.PatientId == patientId),
-            PatientBloodGroup    = patient.BloodGroup?.ToString(),
-            PatientMobile        = patient.MobileNumber,
-            RecentAppointments   = await _db.Appointments
-                .Include(a => a.Doctor).ThenInclude(d => d.Department)
-                .Where(a => a.PatientId == patientId && !a.IsDeleted)
-                .OrderByDescending(a => a.AppointmentDate)
-                .Take(5)
-                .Select(a => new MyAppointmentItem
-                {
-                    Id             = a.Id,
-                    AppointmentNo  = a.AppointmentNo,
-                    DoctorName     = a.Doctor.FullName,
-                    DepartmentName = a.Doctor.Department.Name,
-                    Date           = a.AppointmentDate,
-                    Status         = a.Status
-                }).ToListAsync()
-        };
-
-        return View(vm);
+        return RedirectToAction(nameof(MyAppointments));
     }
 
     [HttpGet]
@@ -137,17 +111,26 @@ public class UserController : Controller
             .Include(a => a.Doctor).ThenInclude(d => d.Department)
             .Where(a => a.PatientId == patient.Id && !a.IsDeleted)
             .OrderByDescending(a => a.AppointmentDate)
-            .Select(a => new MyAppointmentItem
-            {
-                Id             = a.Id,
-                AppointmentNo  = a.AppointmentNo,
-                DoctorName     = a.Doctor.FullName,
-                DepartmentName = a.Doctor.Department.Name,
-                Date           = a.AppointmentDate,
-                Status         = a.Status
-            }).ToListAsync();
+            .ToListAsync();
 
-        return View(appointments);
+        // Fetch invoice IDs for PendingPayment appointments
+        var aptIds = appointments.Select(a => a.Id).ToList();
+        var invoiceMap = await _db.Invoices
+            .Where(i => aptIds.Contains(i.AppointmentId) && !i.IsDeleted)
+            .ToDictionaryAsync(i => i.AppointmentId, i => i.Id);
+
+        var items = appointments.Select(a => new MyAppointmentItem
+        {
+            Id             = a.Id,
+            AppointmentNo  = a.AppointmentNo,
+            DoctorName     = a.Doctor.FullName,
+            DepartmentName = a.Doctor.Department.Name,
+            Date           = a.AppointmentDate,
+            Status         = a.Status,
+            InvoiceId      = invoiceMap.TryGetValue(a.Id, out var iid) ? iid : null
+        }).ToList();
+
+        return View(items);
     }
 
     [HttpPost]
@@ -216,14 +199,22 @@ public class UserController : Controller
         if (!ModelState.IsValid)
         {
             ViewBag.Departments = await _db.Departments.Where(d => !d.IsDeleted).ToListAsync();
-            ViewBag.Doctors     = await _db.Doctors.Where(d => !d.IsDeleted && d.Status == DoctorStatus.Available).ToListAsync();
+            ViewBag.Doctors     = await _db.Doctors
+                .Include(d => d.Department)
+                .Where(d => !d.IsDeleted && d.Status == DoctorStatus.Available).ToListAsync();
             return View(model);
         }
+
+        var doctor = await _db.Doctors.Include(d => d.Department)
+            .FirstOrDefaultAsync(d => d.Id == model.DoctorId && !d.IsDeleted);
+        if (doctor == null) { TempData["Error"] = "Doctor not found."; return RedirectToAction(nameof(BookAppointment)); }
 
         var count      = await _db.Appointments.CountAsync() + 1;
         var tokenCount = await _db.Appointments
             .CountAsync(a => a.DoctorId == model.DoctorId && a.AppointmentDate == model.AppointmentDate && !a.IsDeleted);
+        var userId = GetCurrentUserId();
 
+        // 1. Create appointment with PendingPayment status
         var appointment = new Appointment
         {
             AppointmentNo   = $"APT-{DateTime.Today.Year}-{count:D4}",
@@ -232,16 +223,90 @@ public class UserController : Controller
             AppointmentDate = model.AppointmentDate,
             AppointmentTime = model.AppointmentTime,
             TokenNumber     = tokenCount + 1,
-            Status          = AppointmentStatus.Pending,
+            Status          = AppointmentStatus.PendingPayment,
             ChiefComplaint  = model.Symptoms,
             CreatedAt       = DateTime.UtcNow
         };
-
         _db.Appointments.Add(appointment);
         await _db.SaveChangesAsync();
 
-        TempData["Success"] = $"Appointment booked! Token #{appointment.TokenNumber}. Waiting for confirmation.";
-        return RedirectToAction(nameof(MyAppointments));
+        // 2. Auto-create invoice for consultation fee
+        var invoiceCount = await _db.Invoices.CountAsync() + 1;
+        var invoice = new Invoice
+        {
+            InvoiceNo     = $"INV-{DateTime.Today.Year}-{invoiceCount:D4}",
+            AppointmentId = appointment.Id,
+            PatientId     = patient.Id,
+            DoctorId      = doctor.Id,
+            ConsultationFee = doctor.ConsultationFee,
+            TestFee        = 0,
+            OtherCharges   = 0,
+            Discount       = 0,
+            TotalAmount    = doctor.ConsultationFee,
+            PaidAmount     = 0,
+            Status         = PaymentStatus.Unpaid,
+            DueDate        = DateOnly.FromDateTime(DateTime.Today.AddDays(3)),
+            Notes          = $"Consultation fee for appointment {appointment.AppointmentNo}",
+            CreatedAt      = DateTime.UtcNow,
+            CreatedBy      = userId
+        };
+        _db.Invoices.Add(invoice);
+        await _db.SaveChangesAsync();
+
+        // 3. Create pending payment record
+        var txnId = $"MCR-{appointment.Id}-{DateTime.UtcNow.Ticks}";
+        var pending = new Payment
+        {
+            InvoiceId            = invoice.Id,
+            Amount               = doctor.ConsultationFee,
+            Method               = PaymentMethod.Online,
+            TransactionReference = txnId,
+            SslStatus            = SSLCommerzStatus.Pending,
+            PaidAt               = DateTime.UtcNow,
+            CreatedAt            = DateTime.UtcNow,
+            CreatedBy            = userId
+        };
+        _db.Payments.Add(pending);
+        await _db.SaveChangesAsync();
+
+        // 4. Initiate SSLCommerz payment
+        var success = Url.Action("Success", "Payment", null, Request.Scheme, Request.Host.ToString())!;
+        var fail    = Url.Action("Fail",    "Payment", null, Request.Scheme, Request.Host.ToString())!;
+        var cancel  = Url.Action("Cancel",  "Payment", null, Request.Scheme, Request.Host.ToString())!;
+        var ipn     = Url.Action("Ipn",     "Payment", null, Request.Scheme, Request.Host.ToString())!;
+
+        var initResponse = await _ssl.InitiatePaymentAsync(new SslCommerzInitRequest
+        {
+            TransactionId   = txnId,
+            Amount          = doctor.ConsultationFee,
+            CustomerName    = patient.FullName,
+            CustomerEmail   = User.FindFirstValue(ClaimTypes.Email) ?? "patient@medicare.com",
+            CustomerPhone   = patient.MobileNumber ?? "01700000000",
+            ProductName     = $"Appointment {appointment.AppointmentNo} — Dr. {doctor.FullName}",
+            ProductCategory = "Medical Consultation",
+            SuccessUrl      = success,
+            FailUrl         = fail,
+            CancelUrl       = cancel,
+            IpnUrl          = ipn
+        });
+
+        if (!initResponse.IsSuccess)
+        {
+            // Gateway failed — keep appointment as PendingPayment, let patient retry
+            pending.SslStatus     = SSLCommerzStatus.Failed;
+            pending.FailureReason = initResponse.ErrorMessage;
+            await _db.SaveChangesAsync();
+
+            _logger.LogError("SSLCommerz init failed for appointment {AptNo}: {Reason}", appointment.AppointmentNo, initResponse.ErrorMessage);
+            TempData["Error"] = $"Payment gateway error: {initResponse.ErrorMessage}. Your appointment is reserved — retry payment from My Appointments.";
+            return RedirectToAction(nameof(MyAppointments));
+        }
+
+        pending.SslSessionKey = initResponse.SessionKey;
+        await _db.SaveChangesAsync();
+
+        _logger.LogInformation("Redirecting patient to SSLCommerz for appointment {AptNo} txnId={TxnId}", appointment.AppointmentNo, txnId);
+        return Redirect(initResponse.GatewayUrl!);
     }
 
     public async Task<IActionResult> MyInvoices(CancellationToken ct = default)

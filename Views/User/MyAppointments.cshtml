@@ -15,6 +15,7 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light text-muted">
                         <tr>
+                            <th style="width:50px;">#</th>
                             <th>Appointment No</th>
                             <th>Doctor</th>
                             <th>Department</th>
@@ -24,21 +25,27 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @{ int serialNo = 1; }
                         @foreach (var apt in Model)
                         {
                             <tr>
+                                <td style="color:var(--text-muted);font-weight:600;">@(serialNo++)</td>
                                 <td class="fw-bold text-primary">@apt.AppointmentNo</td>
                                 <td>@apt.DoctorName</td>
                                 <td><span class="badge bg-secondary text-white">@apt.DepartmentName</span></td>
                                 <td>@apt.Date.ToString("dd MMM yyyy")</td>
                                 <td>
-                                    @if (apt.Status == MediCareMS.Models.Enums.AppointmentStatus.Pending)
+                                    @if (apt.Status == MediCareMS.Models.Enums.AppointmentStatus.PendingPayment)
+                                    {
+                                        <span class="badge" style="background:#f59e0b;color:#fff;"><i class="fas fa-clock me-1"></i>Awaiting Payment</span>
+                                    }
+                                    else if (apt.Status == MediCareMS.Models.Enums.AppointmentStatus.Pending)
                                     {
                                         <span class="badge bg-warning text-dark">Pending</span>
                                     }
                                     else if (apt.Status == MediCareMS.Models.Enums.AppointmentStatus.Confirmed)
                                     {
-                                        <span class="badge bg-info text-dark">Confirmed</span>
+                                        <span class="badge bg-info text-dark"><i class="fas fa-check me-1"></i>Confirmed</span>
                                     }
                                     else if (apt.Status == MediCareMS.Models.Enums.AppointmentStatus.Completed)
                                     {
@@ -50,9 +57,22 @@
                                     }
                                 </td>
                                 <td>
-                                    @if (apt.Status == MediCareMS.Models.Enums.AppointmentStatus.Pending || apt.Status == MediCareMS.Models.Enums.AppointmentStatus.Confirmed)
+                                    @if (apt.Status == MediCareMS.Models.Enums.AppointmentStatus.PendingPayment)
                                     {
-                                        <form asp-action="CancelAppointment" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                        <a asp-controller="Billing" asp-action="Details" asp-route-id="@apt.InvoiceId"
+                                           class="btn btn-sm btn-warning rounded-pill px-3 me-1">
+                                            <i class="fas fa-credit-card me-1"></i>Pay Now
+                                        </a>
+                                        <form asp-action="CancelAppointment" method="post" class="d-inline"
+                                              onsubmit="return confirm('Cancel this appointment?');">
+                                            <input type="hidden" name="id" value="@apt.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">Cancel</button>
+                                        </form>
+                                    }
+                                    else if (apt.Status == MediCareMS.Models.Enums.AppointmentStatus.Pending || apt.Status == MediCareMS.Models.Enums.AppointmentStatus.Confirmed)
+                                    {
+                                        <form asp-action="CancelAppointment" method="post" class="d-inline"
+                                              onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
                                             <input type="hidden" name="id" value="@apt.Id" />
                                             <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">Cancel</button>
                                         </form>

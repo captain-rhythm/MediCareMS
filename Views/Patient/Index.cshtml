@@ -19,12 +19,14 @@
     <div class="table-responsive">
         <table class="table">
             <thead>
-                <tr><th>Patient No</th><th>Full Name</th><th>Age / Gender</th><th>Blood Group</th><th>Mobile</th><th>Total Visits</th><th>Actions</th></tr>
+                <tr><th style="width:50px;">#</th><th>Patient No</th><th>Full Name</th><th>Age / Gender</th><th>Blood Group</th><th>Mobile</th><th>Total Visits</th><th>Actions</th></tr>
             </thead>
             <tbody>
+            @{ int serialNo = 1; }
             @foreach (var p in Model)
             {
                 <tr>
+                    <td style="color:var(--text-muted);font-weight:600;">@(serialNo++)</td>
                     <td><span class="badge badge-light">@p.PatientNo</span></td>
                     <td><strong>@p.FullName</strong></td>
                     <td>@p.Age yrs / @p.Gender</td>
@@ -42,7 +44,7 @@
             }
             @if (!Model.Any())
             {
-                <tr><td colspan="7" class="text-center"><div class="empty-state"><i class="fas fa-procedures"></i><p>No patients found.</p></div></td></tr>
+                <tr><td colspan="8" class="text-center"><div class="empty-state"><i class="fas fa-procedures"></i><p>No patients found.</p></div></td></tr>
             }
             </tbody>
         </table>

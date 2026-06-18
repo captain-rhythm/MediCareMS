@@ -1,13 +1,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediCareMS.Helpers.AI;
+using MediCareMS.Helpers;
+using MediCareMS.Data;
+using MediCareMS.Models.Entities.Appointment;
+using MediCareMS.Models.Entities.Billing;
+using MediCareMS.Models.Enums;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 namespace MediCareMS.Controllers;
 
 /// <summary>
-/// REST API for direct agent actions triggered by UI button clicks
-/// (e.g. clicking a slot button, clicking "Book" on a doctor card).
+/// REST API for direct agent actions triggered by UI button clicks.
 /// All endpoints require authentication.
 /// </summary>
 [Authorize]
@@ -16,8 +21,17 @@ namespace MediCareMS.Controllers;
 public class AgentApiController : ControllerBase
 {
     private readonly IAgentActionService _agent;
+    private readonly AppDbContext _db;
+    private readonly ISslCommerzService _ssl;
+    private readonly ILogger<AgentApiController> _logger;
 
-    public AgentApiController(IAgentActionService agent) => _agent = agent;
+    public AgentApiController(IAgentActionService agent, AppDbContext db, ISslCommerzService ssl, ILogger<AgentApiController> logger)
+    {
+        _agent = agent;
+        _db = db;
+        _ssl = ssl;
+        _logger = logger;
+    }
 
     private int UserId()
     {
@@ -57,7 +71,7 @@ public class AgentApiController : ControllerBase
         return Ok(result);
     }
 
-    // POST /api/agent/appointments
+    // POST /api/agent/appointments  (simple — no payment, kept for backward compat)
     [HttpPost("appointments")]
     public async Task<IActionResult> Book([FromBody] BookRequest req)
     {
@@ -69,6 +83,149 @@ public class AgentApiController : ControllerBase
 
         return ok ? Ok(new { success = true, appointment = card })
                   : BadRequest(new { success = false, error = err });
+    }
+
+    // POST /api/agent/book-with-payment  ← chatbot uses this to book + initiate payment
+    [HttpPost("book-with-payment")]
+    public async Task<IActionResult> BookWithPayment([FromBody] BookRequest req)
+    {
+        if (req.DoctorId <= 0 || string.IsNullOrWhiteSpace(req.Date) || string.IsNullOrWhiteSpace(req.Time))
+            return BadRequest(new { success = false, error = "doctorId, date, and time are required." });
+
+        var userId = UserId();
+
+        var patient = await _db.Patients.FirstOrDefaultAsync(p => p.UserId == userId && !p.IsDeleted);
+        if (patient == null)
+            return BadRequest(new { success = false, error = "No patient profile found." });
+
+        var doctor = await _db.Doctors
+            .Include(d => d.Specialization)
+            .Include(d => d.Department)
+            .FirstOrDefaultAsync(d => d.Id == req.DoctorId && !d.IsDeleted);
+        if (doctor == null)
+            return BadRequest(new { success = false, error = "Doctor not found." });
+
+        if (!DateOnly.TryParse(req.Date, out var apptDate))
+            return BadRequest(new { success = false, error = "Invalid date." });
+
+        if (!TimeOnly.TryParse(req.Time, out var apptTime))
+            return BadRequest(new { success = false, error = "Invalid time." });
+
+        // Conflict check
+        var conflict = await _db.Appointments.AnyAsync(a =>
+            a.DoctorId == req.DoctorId &&
+            a.AppointmentDate == apptDate &&
+            a.AppointmentTime == apptTime &&
+            !a.IsDeleted &&
+            a.Status != AppointmentStatus.Cancelled);
+        if (conflict)
+            return BadRequest(new { success = false, error = "This slot is already booked. Please choose another time." });
+
+        // 1. Create appointment (PendingPayment)
+        var count = await _db.Appointments.CountAsync() + 1;
+        var tokenCount = await _db.Appointments
+            .CountAsync(a => a.DoctorId == req.DoctorId && a.AppointmentDate == apptDate && !a.IsDeleted);
+
+        var appointment = new Appointment
+        {
+            AppointmentNo   = $"APT-{DateTime.Today.Year}-{count:D4}",
+            PatientId       = patient.Id,
+            DoctorId        = req.DoctorId,
+            AppointmentDate = apptDate,
+            AppointmentTime = apptTime,
+            TokenNumber     = tokenCount + 1,
+            Status          = AppointmentStatus.PendingPayment,
+            ChiefComplaint  = req.ChiefComplaint,
+            CreatedAt       = DateTime.UtcNow,
+            CreatedBy       = userId
+        };
+        _db.Appointments.Add(appointment);
+        await _db.SaveChangesAsync();
+
+        // 2. Create invoice
+        var invoiceCount = await _db.Invoices.CountAsync() + 1;
+        var invoice = new Invoice
+        {
+            InvoiceNo       = $"INV-{DateTime.Today.Year}-{invoiceCount:D4}",
+            AppointmentId   = appointment.Id,
+            PatientId       = patient.Id,
+            DoctorId        = doctor.Id,
+            ConsultationFee = doctor.ConsultationFee,
+            TestFee         = 0,
+            OtherCharges    = 0,
+            Discount        = 0,
+            TotalAmount     = doctor.ConsultationFee,
+            PaidAmount      = 0,
+            Status          = PaymentStatus.Unpaid,
+            DueDate         = DateOnly.FromDateTime(DateTime.Today.AddDays(3)),
+            Notes           = $"Consultation fee for {appointment.AppointmentNo}",
+            CreatedAt       = DateTime.UtcNow,
+            CreatedBy       = userId
+        };
+        _db.Invoices.Add(invoice);
+        await _db.SaveChangesAsync();
+
+        // 3. Create pending payment record
+        var txnId = $"MCR-{appointment.Id}-{DateTime.UtcNow.Ticks}";
+        var pending = new Payment
+        {
+            InvoiceId            = invoice.Id,
+            Amount               = doctor.ConsultationFee,
+            Method               = PaymentMethod.Online,
+            TransactionReference = txnId,
+            SslStatus            = SSLCommerzStatus.Pending,
+            PaidAt               = DateTime.UtcNow,
+            CreatedAt            = DateTime.UtcNow,
+            CreatedBy            = userId
+        };
+        _db.Payments.Add(pending);
+        await _db.SaveChangesAsync();
+
+        // 4. Initiate SSLCommerz payment
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        var initResponse = await _ssl.InitiatePaymentAsync(new SslCommerzInitRequest
+        {
+            TransactionId   = txnId,
+            Amount          = doctor.ConsultationFee,
+            CustomerName    = patient.FullName,
+            CustomerEmail   = User.FindFirstValue(ClaimTypes.Email) ?? "patient@medicare.com",
+            CustomerPhone   = patient.MobileNumber ?? "01700000000",
+            ProductName     = $"Appointment {appointment.AppointmentNo} — Dr. {doctor.FullName}",
+            ProductCategory = "Medical Consultation",
+            SuccessUrl      = $"{baseUrl}/Payment/Success",
+            FailUrl         = $"{baseUrl}/Payment/Fail",
+            CancelUrl       = $"{baseUrl}/Payment/Cancel",
+            IpnUrl          = $"{baseUrl}/Payment/Ipn"
+        });
+
+        if (!initResponse.IsSuccess)
+        {
+            pending.SslStatus     = SSLCommerzStatus.Failed;
+            pending.FailureReason = initResponse.ErrorMessage;
+            await _db.SaveChangesAsync();
+            _logger.LogError("SSLCommerz init failed for chatbot booking {AptNo}: {Reason}",
+                appointment.AppointmentNo, initResponse.ErrorMessage);
+            return BadRequest(new { success = false, error = $"Payment gateway error: {initResponse.ErrorMessage}. Appointment saved — retry from My Appointments." });
+        }
+
+        pending.SslSessionKey = initResponse.SessionKey;
+        await _db.SaveChangesAsync();
+
+        var card = new AppointmentCardDto
+        {
+            Id             = appointment.Id,
+            AppointmentNo  = appointment.AppointmentNo,
+            DoctorName     = doctor.FullName,
+            Specialization = doctor.Specialization?.Name ?? "",
+            Date           = apptDate.ToString("dddd, MMMM d, yyyy"),
+            Time           = apptTime.ToString("h:mm tt"),
+            Status         = "PendingPayment",
+            ChiefComplaint = req.ChiefComplaint,
+            Fee            = doctor.ConsultationFee,
+            PaymentUrl     = initResponse.GatewayUrl
+        };
+
+        return Ok(new { success = true, appointment = card });
     }
 
     // DELETE /api/agent/appointments/{id}

@@ -60,6 +60,7 @@ public class AppointmentCardDto
     public string Status         { get; set; } = "";
     public string? ChiefComplaint{ get; set; }
     public decimal Fee           { get; set; }
+    public string? PaymentUrl    { get; set; }   // SSLCommerz gateway URL (chatbot booking)
 }
 
 public class AppointmentListResult

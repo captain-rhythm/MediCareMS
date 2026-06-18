@@ -15,10 +15,12 @@
 </head>
 <body>
 <div class="app-wrapper">
-    <!-- Ambient Background Glows -->
-    <div class="ambient-glows">
-        <div class="glow-1"></div>
-        <div class="glow-2"></div>
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="bg-orb bg-orb-4"></div>
     </div>
     
     <aside class="sidebar" id="sidebar">
@@ -90,9 +92,6 @@
             else if (User.IsInRole("Patient"))
             {
                 <div class="nav-section-label">User Portal</div>
-                <a asp-controller="User" asp-action="Dashboard" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="Dashboard"?"active":"")">
-                    <i class="fas fa-home"></i><span>Dashboard</span>
-                </a>
                 <a asp-controller="User" asp-action="MyAppointments" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="MyAppointments"?"active":"")">
                     <i class="fas fa-calendar-alt"></i><span>My Appointments</span>
                 </a>

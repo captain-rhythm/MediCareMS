@@ -1,8 +1,258 @@
+@model MediCareMS.Models.Entities.System.HospitalProfile
 @{
-    ViewData["Title"] = "Settings";
+    ViewData["Title"] = "System Settings";
+    Layout = "_Layout";
+    var email  = ViewBag.EmailConfig  as Microsoft.Extensions.Configuration.IConfigurationSection;
+    var ssl    = ViewBag.SslConfig    as Microsoft.Extensions.Configuration.IConfigurationSection;
+    var groq   = ViewBag.GroqConfig   as Microsoft.Extensions.Configuration.IConfigurationSection;
+    var gemini = ViewBag.GeminiConfig as Microsoft.Extensions.Configuration.IConfigurationSection;
+
+    string Mask(string? s) => string.IsNullOrEmpty(s) ? "—" :
+        (s.Length <= 8 ? new string('•', s.Length) : s[..4] + new string('•', s.Length - 8) + s[^4..]);
 }
 
-<div class="card p-4 text-center">
-    <h3><i class="fas fa-cog text-secondary"></i> System Settings</h3>
-    <p class="text-muted mt-3">The Settings module is currently under development. You will be able to configure global hospital variables, email integrations, and core system properties here.</p>
+<div class="page-header">
+    <h2><i class="fas fa-cog"></i> System Settings <span>Manage hospital configuration</span></h2>
 </div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mb-4">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Stats Row -->
+<div class="stats-grid mb-4">
+    <div class="stat-card stat-blue">
+        <div class="stat-icon"><i class="fas fa-user-md"></i></div>
+        <div class="stat-info"><div class="stat-value">@ViewBag.TotalDoctors</div><div class="stat-label">Doctors</div></div>
+    </div>
+    <div class="stat-card stat-green">
+        <div class="stat-icon"><i class="fas fa-procedures"></i></div>
+        <div class="stat-info"><div class="stat-value">@ViewBag.TotalPatients</div><div class="stat-label">Patients</div></div>
+    </div>
+    <div class="stat-card stat-purple">
+        <div class="stat-icon"><i class="fas fa-building"></i></div>
+        <div class="stat-info"><div class="stat-value">@ViewBag.TotalDepartments</div><div class="stat-label">Departments</div></div>
+    </div>
+    <div class="stat-card stat-orange">
+        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-info"><div class="stat-value">@ViewBag.TotalAppointments</div><div class="stat-label">Appointments</div></div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="card">
+    <div class="card-header" style="border-bottom:none;padding-bottom:0;">
+        <ul class="nav nav-tabs" id="settingsTabs" style="border:none;gap:4px;">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-hospital">
+                    <i class="fas fa-hospital me-1"></i> Hospital Info
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-email">
+                    <i class="fas fa-envelope me-1"></i> Email
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-payment">
+                    <i class="fas fa-credit-card me-1"></i> Payment Gateway
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-ai">
+                    <i class="fas fa-robot me-1"></i> AI Config
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-system">
+                    <i class="fas fa-info-circle me-1"></i> System Info
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card-body tab-content" id="settingsTabContent" style="padding-top:28px;">
+
+        <!-- ── HOSPITAL INFO ─────────────────────────────────────── -->
+        <div class="tab-pane fade show active" id="tab-hospital">
+            <form asp-action="SaveHospital" method="post">
+                @Html.AntiForgeryToken()
+                <input asp-for="Id" type="hidden" />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Hospital Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g. MediCare General Hospital" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Contact Email</label>
+                        <input asp-for="Email" class="form-control" type="email" placeholder="contact@hospital.com" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Phone</label>
+                        <input asp-for="Phone" class="form-control" placeholder="+880-1234-567890" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Website</label>
+                        <input asp-for="Website" class="form-control" placeholder="https://www.hospital.com" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Address</label>
+                        <textarea asp-for="Address" class="form-control" rows="2" placeholder="Full address..."></textarea>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Hospital Profile</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ── EMAIL CONFIG ──────────────────────────────────────── -->
+        <div class="tab-pane fade" id="tab-email">
+            <div class="alert alert-info mb-4" style="background:var(--primary-light);border:none;color:var(--primary-dark);border-radius:12px;">
+                <i class="fas fa-info-circle me-2"></i>
+                Email settings are configured in <code>appsettings.json</code>. Restart the app after editing the file.
+            </div>
+            <div class="row g-3">
+                @{
+                    void Row(string label, string? value, bool secret = false) {
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-muted small">@label</label>
+                            <div class="form-control" style="background:var(--surface-2);cursor:default;color:@(string.IsNullOrEmpty(value)?"var(--text-light)":"var(--text)");">
+                                @(secret ? Mask(value) : (value ?? "—"))
+                            </div>
+                        </div>
+                    }
+                    Row("SMTP Host",  email?["Host"]);
+                    Row("SMTP Port",  email?["Port"]);
+                    Row("Username",   email?["UserName"]);
+                    Row("From Email", email?["From"]);
+                    Row("Password",   email?["Password"], secret: true);
+                    Row("SSL Enabled",email?["EnableSsl"]);
+                }
+            </div>
+        </div>
+
+        <!-- ── PAYMENT GATEWAY ───────────────────────────────────── -->
+        <div class="tab-pane fade" id="tab-payment">
+            <div class="alert alert-info mb-4" style="background:var(--primary-light);border:none;color:var(--primary-dark);border-radius:12px;">
+                <i class="fas fa-info-circle me-2"></i>
+                SSLCommerz credentials are configured in <code>appsettings.json</code>.
+            </div>
+            <div class="row g-3">
+                @{
+                    var isSandbox = ssl?["IsSandbox"] == "true";
+                }
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Mode</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">
+                        @if (isSandbox) {
+                            <span class="status-badge status-pending">Sandbox / Test</span>
+                        } else {
+                            <span class="status-badge status-available">Live / Production</span>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Store ID</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">@(ssl?["StoreId"] ?? "—")</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Store Password</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">@Mask(ssl?["StorePassword"])</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Base URL</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">@(ssl?["BaseUrl"] ?? "—")</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">App Base URL</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">@(ssl?["AppBaseUrl"] ?? "—")</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── AI CONFIG ─────────────────────────────────────────── -->
+        <div class="tab-pane fade" id="tab-ai">
+            <div class="alert alert-info mb-4" style="background:var(--primary-light);border:none;color:var(--primary-dark);border-radius:12px;">
+                <i class="fas fa-robot me-2"></i>
+                AI keys are configured in <code>appsettings.json</code>. The Aletta AI Agent uses these settings.
+            </div>
+            <div class="row g-3">
+                <div class="col-12 mb-2"><h5 class="fw-bold" style="color:var(--primary);"><i class="fas fa-brain me-2"></i>Groq (Primary)</h5></div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">API Key</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;font-family:monospace;">@Mask(groq?["ApiKey"])</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-muted small">Model</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;font-size:12px;">@(groq?["Model"] ?? "—")</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-muted small">Max Tokens</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">@(groq?["MaxTokens"] ?? "—")</div>
+                </div>
+
+                <div class="col-12 mt-3 mb-2"><h5 class="fw-bold" style="color:var(--secondary);"><i class="fas fa-gem me-2"></i>Gemini (Fallback)</h5></div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">API Key</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;font-family:monospace;">@Mask(gemini?["ApiKey"])</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-muted small">Model</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;font-size:12px;">@(gemini?["Model"] ?? "—")</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-muted small">Max Tokens</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">@(gemini?["MaxTokens"] ?? "—")</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SYSTEM INFO ───────────────────────────────────────── -->
+        <div class="tab-pane fade" id="tab-system">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Application Name</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">MediCare HMS</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Version</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">@ViewBag.AppVersion</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Environment</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">
+                        @{
+                            var envName = ViewBag.Environment as string ?? "Unknown";
+                            var envClass = envName == "Production" ? "status-available" : "status-pending";
+                        }
+                        <span class="status-badge @envClass">@envName</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Framework</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">ASP.NET Core 8.0 MVC</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Server Time</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">@DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted small">Database</label>
+                    <div class="form-control" style="background:var(--surface-2);cursor:default;">SQL Server (Entity Framework Core)</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.nav-tabs .nav-link { border:none; border-radius:10px 10px 0 0; color:var(--text-muted); font-weight:500; padding:10px 18px; transition:all .2s; }
+.nav-tabs .nav-link:hover { color:var(--primary); background:var(--primary-light); }
+.nav-tabs .nav-link.active { color:var(--primary); background:var(--primary-light); font-weight:700; }
+</style>

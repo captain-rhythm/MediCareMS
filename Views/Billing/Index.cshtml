@@ -138,6 +138,7 @@
             <table class="table table-custom m-0">
                 <thead>
                     <tr>
+                        <th style="width:50px;">#</th>
                         <th>INVOICE NO</th>
                         <th>PATIENT DETAILS</th>
                         <th>ASSIGNED DOCTOR</th>
@@ -149,9 +150,11 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @{ int serialNo = 1; }
                     @foreach (var invoice in Model)
                     {
                         <tr>
+                            <td style="font-weight:600;color:var(--text-muted);font-size:13px;">@(serialNo++)</td>
                             <td>
                                 <span class="badge badge-light border" style="font-family:monospace;font-size:13px;color:var(--text);">@invoice.InvoiceNo</span>
                             </td>
@@ -207,7 +210,7 @@
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="8" class="text-center" style="padding:60px 20px;">
+                            <td colspan="9" class="text-center" style="padding:60px 20px;">
                                 <div style="font-size:40px;color:var(--border);margin-bottom:16px;"><i class="fas fa-file-invoice"></i></div>
                                 <h4 style="color:var(--text-muted);font-weight:600;">No Invoices Found</h4>
                                 <p style="color:var(--border);">Try adjusting your search filters or create a new invoice.</p>

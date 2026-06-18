@@ -1,7 +1,7 @@
 namespace MediCareMS.Models.Enums;
 
 public enum AccountStatus { Active = 1, Inactive = 0, Suspended = 2 }
-public enum AppointmentStatus { Pending = 0, Confirmed = 1, Completed = 2, Cancelled = 3, NoShow = 4 }
+public enum AppointmentStatus { Pending = 0, Confirmed = 1, Completed = 2, Cancelled = 3, NoShow = 4, PendingPayment = 5 }
 public enum PaymentStatus { Unpaid = 0, Paid = 1, Partial = 2, Refunded = 3, Cancelled = 4 }
 public enum PaymentMethod { Cash = 0, Card = 1, Online = 2, Insurance = 3 }
 public enum SSLCommerzStatus { Pending = 0, Success = 1, Failed = 2, Cancelled = 3, Invalid = 4 }

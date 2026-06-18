@@ -769,20 +769,41 @@
 /* ── Appointment Confirmation ────────────────────────────────── */
 .agent-confirm-card {
     display: flex; gap: 12px; align-items: flex-start;
-    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(5,150,105,0.04));
-    border: 1.5px solid rgba(16,185,129,0.3);
+    background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(168,85,247,0.04));
+    border: 1.5px solid rgba(99,102,241,0.3);
     border-radius: var(--r-md); padding: 14px;
-    box-shadow: 0 4px 16px rgba(16,185,129,0.1);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.1);
 }
 .acc-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
 .acc-body { flex: 1; }
-.acc-title { font-size: 14px; font-weight: 700; color: #059669; margin-bottom: 2px; }
+.acc-title { font-size: 14px; font-weight: 700; color: #6366f1; margin-bottom: 2px; }
 .acc-ref   { font-size: 10px; color: var(--t4); font-family: monospace; margin-bottom: 8px; }
 .acc-row   { display: flex; justify-content: space-between; align-items: center;
              font-size: 12px; padding: 3px 0; border-bottom: 1px solid rgba(0,0,0,0.04); }
 .acc-row:last-child { border-bottom: none; }
 .acc-row span  { color: var(--t3); }
 .acc-row strong{ color: var(--t1); }
+.acc-pay-wrap  { margin-top: 10px; }
+.acc-pay-btn {
+    display: block; width: 100%; text-align: center;
+    padding: 10px 16px; border-radius: 8px;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: #fff; font-weight: 700; font-size: 13px;
+    text-decoration: none; letter-spacing: .02em;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.35);
+    transition: opacity .2s, transform .15s;
+}
+.acc-pay-btn:hover { opacity: .9; transform: translateY(-1px); color: #fff; }
+.acc-pay-note { font-size: 11px; color: #059669; margin-top: 4px; }
+.acc-pay-note a { color: #6366f1; text-decoration: underline; }
+
+/* Book Appointment chip highlight */
+.cpw-chip-book {
+    background: linear-gradient(135deg, #6366f1, #a855f7) !important;
+    color: #fff !important; font-weight: 700 !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(99,102,241,.3) !important;
+}
 
 /* ── Appointment List ────────────────────────────────────────── */
 .agent-appt-list { display: flex; flex-direction: column; gap: 7px; }

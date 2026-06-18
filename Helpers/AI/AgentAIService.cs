@@ -136,7 +136,11 @@ public class AgentAIService
             };
 
             var intentJson = await CallGroq(apiKey, model, 512, intentMessages, temperature: 0.1);
-            if (intentJson == null) return FallbackResponse(history, clean, apiKey, model, maxTok).Result;
+            if (intentJson == null)
+            {
+                // Groq Step 1 failed — attempt a direct fallback response
+                return await FallbackResponse(history, clean, apiKey, model, maxTok);
+            }
 
             // Parse intent
             var intentText = intentJson["choices"]?[0]?["message"]?["content"]?.GetValue<string>() ?? "{}";
@@ -197,7 +201,7 @@ public class AgentAIService
         catch (Exception ex)
         {
             _logger.LogError(ex, "AgentAIService error userId={UserId}", userId);
-            return new AgentResponse { Message = "I encountered a temporary error. Please try again." };
+            return new AgentResponse { Message = "I'm having trouble connecting right now. Please try again in a moment. 🔄" };
         }
     }
 
@@ -337,7 +341,10 @@ public class AgentAIService
             }
 
             default:
-                return ("General conversation — no specific action taken.", null);
+            {
+                // For general_chat, return empty context — Groq will generate a natural response
+                return ("General conversation — answer helpfully based on the user's message.", null);
+            }
         }
     }
 
@@ -385,10 +392,29 @@ public class AgentAIService
             messages.Add(new { role = h.Sender == ChatSender.User ? "user" : "assistant", content = h.Message });
         messages.Add(new { role = "user", content = message });
 
-        var r    = await CallGroq(apiKey, model, maxTok, messages);
-        var text = r?["choices"]?[0]?["message"]?["content"]?.GetValue<string>()?.Trim()
-                   ?? "I'm here to help. What would you like to do?";
-        return new AgentResponse { Message = text };
+        try
+        {
+            var r    = await CallGroq(apiKey, model, maxTok, messages);
+            var text = r?["choices"]?[0]?["message"]?["content"]?.GetValue<string>()?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(text))
+                return new AgentResponse { Message = text };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "FallbackResponse also failed for message: {Msg}", message);
+        }
+
+        // Both Groq calls failed — return a meaningful offline message
+        return new AgentResponse
+        {
+            Message = "⚠️ I'm having trouble reaching the AI service right now. " +
+                      "Please check your internet connection or try again in a few moments.\n\n" +
+                      "In the meantime, you can:\n" +
+                      "- 📅 Browse doctors from the **Appointments** section\n" +
+                      "- 📋 View your invoices from **My Invoices**\n" +
+                      "- 🏥 Explore departments from the navigation menu"
+        };
     }
 
     private static string DefaultMessage(string intent, string? actionType) => actionType switch

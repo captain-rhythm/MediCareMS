@@ -355,7 +355,23 @@
         };
 
         recognition.onend = () => { isRecording = false; voiceBtn?.classList.remove('recording'); };
-        recognition.onerror = (e) => { isRecording = false; voiceBtn?.classList.remove('recording'); showToast('Voice error: ' + e.error, 'error'); };
+        recognition.onerror = (e) => {
+            isRecording = false;
+            voiceBtn?.classList.remove('recording');
+            const msgs = {
+                'audio-capture'  : 'No microphone found. Please connect a mic and try again.',
+                'not-allowed'    : 'Microphone access denied. Please allow mic permission in your browser.',
+                'network'        : 'Network error during voice recognition. Check your connection.',
+                'no-speech'      : 'No speech detected. Please try speaking again.',
+                'aborted'        : null,   // user cancelled — no toast needed
+            };
+            const msg = msgs[e.error];
+            if (msg) showToast(msg, 'warning');
+            // Hide voice button entirely if mic hardware is unavailable
+            if (e.error === 'audio-capture') {
+                if (voiceBtn) { voiceBtn.style.display = 'none'; }
+            }
+        };
 
         voiceBtn?.addEventListener('click', () => {
             if (isRecording) { recognition.stop(); }
@@ -481,11 +497,15 @@
 
     // ── Appointment Confirm Card ───────────────────────────────────────
     function appendApptConfirm(appt) {
+        const payBtn = appt.paymentUrl
+            ? `<a href="${appt.paymentUrl}" class="acc-pay-btn" target="_self">💳 Pay Now — ৳${appt.fee}</a>`
+            : `<div class="acc-pay-note">✅ Appointment reserved. Complete payment from <a href="/User/MyAppointments">My Appointments</a>.</div>`;
+
         agentCard(`
             <div class="agent-confirm-card">
-                <div class="acc-icon">✅</div>
+                <div class="acc-icon">🗓️</div>
                 <div class="acc-body">
-                    <div class="acc-title">Appointment Confirmed!</div>
+                    <div class="acc-title">Appointment Booked!</div>
                     <div class="acc-ref">${escapeHtml(appt.appointmentNo)}</div>
                     <div class="acc-row"><span>👨‍⚕️ Doctor</span><strong>${escapeHtml(appt.doctorName)}</strong></div>
                     <div class="acc-row"><span>🩺 Specialty</span><strong>${escapeHtml(appt.specialization)}</strong></div>
@@ -493,6 +513,7 @@
                     <div class="acc-row"><span>⏰ Time</span><strong>${escapeHtml(appt.time)}</strong></div>
                     <div class="acc-row"><span>💰 Fee</span><strong>৳${appt.fee}</strong></div>
                     ${appt.chiefComplaint ? `<div class="acc-row"><span>📋 Reason</span><strong>${escapeHtml(appt.chiefComplaint)}</strong></div>` : ''}
+                    <div class="acc-pay-wrap">${payBtn}</div>
                 </div>
             </div>`);
     }
@@ -547,11 +568,42 @@
         sendMessage();
     };
 
-    // Called when user clicks a time slot button
-    window.agentSelectSlot = function(doctorId, doctorName, date, time, displayTime) {
-        const msg = `Book Dr. ${doctorName} on ${date} at ${time}`;
-        inputEl.value = msg;
-        sendMessage();
+    // Called when user clicks a time slot button — directly books + initiates payment
+    window.agentSelectSlot = async function(doctorId, doctorName, date, time, displayTime) {
+        // Ask for symptoms first
+        const symptoms = prompt(
+            `📋 Briefly describe your symptoms or reason for visiting Dr. ${doctorName}:\n(Press Cancel to abort booking)`);
+        if (symptoms === null) return; // user cancelled
+
+        showToast('Booking your appointment and preparing payment...', 'info');
+
+        try {
+            const res = await fetch('/api/agent/book-with-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                body: JSON.stringify({
+                    doctorId,
+                    date,
+                    time,
+                    chiefComplaint: symptoms || null
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                hideWelcome();
+                appendApptConfirm(data.appointment);
+                scrollToBottom();
+                showToast('Appointment booked! Complete your payment below.', 'success');
+            } else {
+                showToast(data.error || 'Booking failed. Please try again.', 'error');
+            }
+        } catch {
+            showToast('Network error. Please try again.', 'error');
+        }
     };
 
     // Called when user clicks Cancel on an appointment row

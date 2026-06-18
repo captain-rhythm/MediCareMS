@@ -34,6 +34,7 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
+                        <th style="width:50px;">#</th>
                         <th>Date & Time</th>
                         <th>Invoice</th>
                         <th>Patient</th>
@@ -43,9 +44,11 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @{ int serialNo = 1; }
                     @foreach (var payment in Model)
                     {
                         <tr>
+                            <td style="color:var(--text-muted);font-weight:600;">@(serialNo++)</td>
                             <td>
                                 <div class="font-weight-bold" style="color:var(--text);">@payment.PaidAt.ToString("MMM dd, yyyy")</div>
                                 <div class="small text-muted">@payment.PaidAt.ToString("hh:mm tt")</div>
@@ -85,7 +88,7 @@
                     @if (!Model.Any())
                     {
                         <tr>
-                            <td colspan="6" class="text-center p-5 text-muted">No transactions found.</td>
+                            <td colspan="7" class="text-center p-5 text-muted">No transactions found.</td>
                         </tr>
                     }
                 </tbody>

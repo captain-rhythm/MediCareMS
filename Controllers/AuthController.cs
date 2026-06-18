@@ -30,7 +30,7 @@ public class AuthController : Controller
         if (User.Identity?.IsAuthenticated == true)
         {
             if (User.IsInRole("Patient"))
-                return RedirectToAction("Dashboard", "User");
+                return RedirectToAction("MyAppointments", "User");
             return RedirectToAction("Dashboard", "Admin");
         }
         ViewBag.ReturnUrl = returnUrl;
@@ -100,7 +100,7 @@ public class AuthController : Controller
             return RedirectToAction("Dashboard", "Admin");
         }
         
-        return RedirectToAction("Dashboard", "User");
+        return RedirectToAction("MyAppointments", "User");
     }
 
     [HttpGet]
@@ -204,7 +204,7 @@ public class AuthController : Controller
         if (User.Identity?.IsAuthenticated == true)
         {
             if (User.IsInRole("Patient"))
-                return RedirectToAction("Dashboard", "User");
+                return RedirectToAction("MyAppointments", "User");
             return RedirectToAction("Dashboard", "Admin");
         }
         return View();
@@ -278,7 +278,7 @@ public class AuthController : Controller
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, props);
 
         TempData["Success"] = "Account created successfully. Welcome!";
-        return RedirectToAction("Dashboard", "User");
+        return RedirectToAction("MyAppointments", "User");
     }
 
     [HttpGet]
@@ -394,7 +394,7 @@ public class AuthController : Controller
             return RedirectToAction("Dashboard", "Admin");
         }
         
-        return RedirectToAction("Dashboard", "User");
+        return RedirectToAction("MyAppointments", "User");
     }
 
     [HttpGet]
