@@ -315,53 +315,64 @@
     background: transparent !important;
     font-family: 'Inter', sans-serif !important;
     font-size: 13px !important;
+    border-radius: 0 0 12px 12px !important;
+    overflow: hidden !important;
 }
 #revenue-table .tabulator-header {
-    background: linear-gradient(135deg, rgba(139,92,246,.07) 0%, rgba(168,85,247,.04) 100%) !important;
-    border-bottom: 2px solid rgba(139,92,246,.18) !important;
-    color: #64748b !important;
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 40%, #4f46e5 100%) !important;
+    border-bottom: none !important;
+    box-shadow: 0 4px 18px rgba(109,40,217,.35) !important;
 }
 #revenue-table .tabulator-col {
     background: transparent !important;
-    border-right: 1px solid rgba(139,92,246,.08) !important;
-    color: #64748b !important;
+    border-right: 1px solid rgba(255,255,255,.12) !important;
+    color: #fff !important;
 }
 #revenue-table .tabulator-col:hover {
-    background: rgba(139,92,246,.05) !important;
+    background: rgba(255,255,255,.1) !important;
 }
 #revenue-table .tabulator-col-title {
     font-weight: 700 !important;
     font-size: 11px !important;
     text-transform: uppercase !important;
-    letter-spacing: .6px !important;
-    color: #64748b !important;
+    letter-spacing: .7px !important;
+    color: #fff !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,.2) !important;
 }
-#revenue-table .tabulator-col-sorter { color: #a78bfa !important; }
-#revenue-table .tabulator-col-sorter .tabulator-arrow { border-top-color: #a78bfa !important; border-bottom-color: #a78bfa !important; }
-#revenue-table .tabulator-header-filter { background: transparent !important; }
+#revenue-table .tabulator-col-sorter { color: rgba(255,255,255,.7) !important; }
+#revenue-table .tabulator-col-sorter .tabulator-arrow {
+    border-top-color: rgba(255,255,255,.7) !important;
+    border-bottom-color: rgba(255,255,255,.7) !important;
+}
+#revenue-table .tabulator-header-filter { background: transparent !important; padding: 4px 6px 6px !important; }
 #revenue-table .tabulator-header-filter input,
 #revenue-table .tabulator-header-filter select {
     width: 100% !important;
-    padding: 4px 8px !important;
-    border: 1.5px solid rgba(139,92,246,.25) !important;
-    border-radius: 7px !important;
-    background: #fff !important;
+    padding: 5px 9px !important;
+    border: 1.5px solid rgba(255,255,255,.35) !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,.15) !important;
+    backdrop-filter: blur(6px) !important;
     font-size: 11.5px !important;
     font-family: 'Inter', sans-serif !important;
-    color: #1e293b !important;
+    color: #fff !important;
     outline: none !important;
-    transition: border-color .18s, box-shadow .18s;
+    transition: border-color .18s, background .18s, box-shadow .18s;
 }
+#revenue-table .tabulator-header-filter input::placeholder { color: rgba(255,255,255,.55) !important; }
 #revenue-table .tabulator-header-filter input:focus,
 #revenue-table .tabulator-header-filter select:focus {
-    border-color: #8b5cf6 !important;
-    box-shadow: 0 0 0 3px rgba(139,92,246,.12) !important;
+    border-color: rgba(255,255,255,.8) !important;
+    background: rgba(255,255,255,.25) !important;
+    box-shadow: 0 0 0 3px rgba(255,255,255,.15) !important;
 }
-#revenue-table .tabulator-row { border-bottom: 1px solid rgba(139,92,246,.06) !important; transition: background .14s; }
-#revenue-table .tabulator-row:hover { background: rgba(139,92,246,.04) !important; }
-#revenue-table .tabulator-row.tabulator-row-even { background: rgba(248,250,252,.6) !important; }
+#revenue-table .tabulator-header-filter select option { background: #4f46e5 !important; color: #fff !important; }
+#revenue-table .tabulator-row { border-bottom: 1px solid rgba(139,92,246,.07) !important; transition: background .14s; }
+#revenue-table .tabulator-row:hover { background: rgba(109,40,217,.05) !important; }
+#revenue-table .tabulator-row.tabulator-row-even { background: rgba(238,234,255,.35) !important; }
 #revenue-table .tabulator-row.tabulator-row-odd  { background: #fff !important; }
 #revenue-table .tabulator-cell { padding: 10px 14px !important; border-right: none !important; }
+
 
 
 /* Badges */
