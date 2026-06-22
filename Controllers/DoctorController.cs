@@ -21,51 +21,31 @@ public class DoctorController : Controller
         _env = env;
     }
 
-    public async Task<IActionResult> Index(string? search, int? deptId, int page = 1)
+    public async Task<IActionResult> Index()
     {
-        const int pageSize = 9;
-        var query = _db.Doctors
+        var doctors = await _db.Doctors
             .Include(d => d.Department)
             .Include(d => d.Specialization)
-            .Where(d => !d.IsDeleted);
-
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(d => d.FullName.Contains(search) || d.DoctorNo.Contains(search));
-
-        if (deptId.HasValue)
-            query = query.Where(d => d.DepartmentId == deptId.Value);
-
-        var projected = query.OrderBy(d => d.FullName).Select(d => new DoctorListViewModel
-        {
-            Id = d.Id,
-            DoctorNo = d.DoctorNo,
-            FullName = d.FullName,
-            Department = d.Department.Name,
-            Specialization = d.Specialization.Name,
-            Qualification = d.Qualification,
-            ExperienceYears = d.ExperienceYears,
-            ConsultationFee = d.ConsultationFee,
-            Status = d.Status,
-            ProfileImagePath = d.ProfileImagePath
-        });
-
-        var paged = await PaginatedList<DoctorListViewModel>.CreateAsync(projected, page, pageSize);
-
-        ViewBag.Departments = await _db.Departments
-            .Where(d => d.IsActive)
-            .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Name })
+            .Where(d => !d.IsDeleted)
+            .OrderBy(d => d.FullName)
+            .Select(d => new DoctorListViewModel
+            {
+                Id             = d.Id,
+                DoctorNo       = d.DoctorNo,
+                FullName       = d.FullName,
+                Department     = d.Department.Name,
+                Specialization = d.Specialization.Name,
+                Qualification  = d.Qualification,
+                ExperienceYears= d.ExperienceYears,
+                ConsultationFee= d.ConsultationFee,
+                Status         = d.Status,
+                ProfileImagePath = d.ProfileImagePath
+            })
             .ToListAsync();
-        ViewBag.Search = search;
-        ViewBag.DeptId = deptId;
-        ViewData["PageIndex"]  = paged.PageIndex;
-        ViewData["TotalPages"] = paged.TotalPages;
-        ViewData["TotalCount"] = paged.TotalCount;
-        ViewData["PageSize"]   = paged.PageSize;
-        ViewData["PagAction"]  = "Index";
-        ViewData["PagSearch"]  = search;
-        ViewData["PagExtra"]   = new Dictionary<string,string?> {{ "deptId", deptId?.ToString() }};
-        return View(paged.Items);
+
+        return View(doctors);
     }
+
 
     [HttpGet]
     public async Task<IActionResult> Create()
