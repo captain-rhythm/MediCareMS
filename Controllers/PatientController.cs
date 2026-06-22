@@ -20,24 +20,40 @@ public class PatientController : Controller
 
     public async Task<IActionResult> Index()
     {
-        var patients = await _db.Patients
+        // Fetch raw data from DB (no Age computation in SQL)
+        var raw = await _db.Patients
             .Where(p => !p.IsDeleted)
             .OrderBy(p => p.FullName)
-            .Select(p => new PatientListViewModel
+            .Select(p => new
             {
-                Id = p.Id,
-                PatientNo = p.PatientNo,
-                FullName = p.FullName,
-                MobileNumber = p.MobileNumber,
-                Gender = p.Gender,
-                BloodGroup = p.BloodGroup,
-                Age = (int)((DateTime.Today - p.DateOfBirth).TotalDays / 365.25),
+                p.Id,
+                p.PatientNo,
+                p.FullName,
+                p.MobileNumber,
+                p.Gender,
+                p.BloodGroup,
+                p.DateOfBirth,
                 TotalVisits = p.Appointments.Count(a => !a.IsDeleted)
             })
             .ToListAsync();
 
+        // Compute Age in C# to avoid EF Core SQL translation issues
+        var today = DateTime.Today;
+        var patients = raw.Select(p => new PatientListViewModel
+        {
+            Id           = p.Id,
+            PatientNo    = p.PatientNo,
+            FullName     = p.FullName,
+            MobileNumber = p.MobileNumber,
+            Gender       = p.Gender,
+            BloodGroup   = p.BloodGroup,
+            Age          = (int)((today - p.DateOfBirth).TotalDays / 365.25),
+            TotalVisits  = p.TotalVisits
+        }).ToList();
+
         return View(patients);
     }
+
 
     [HttpGet]
     public IActionResult Create() => View(new PatientCreateEditViewModel());
