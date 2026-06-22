@@ -26,23 +26,23 @@
   --danger:   #EF4444;
   --info:     #3B82F6;
 
-  /* Surface — dark theme */
-  --bg:          #020617;
-  --bg-alt:      #0f172a;
-  --surface:     rgba(15, 23, 42, 0.85);
-  --surface-2:   rgba(30, 41, 59, 0.70);
-  --card-bg:     rgba(15, 23, 42, 0.80);
-  --sidebar-bg:  rgba(2, 6, 23, 0.95);
+  /* Surface */
+  --bg:          #F4F6FC;
+  --bg-alt:      #EEF2FF;
+  --surface:     #FFFFFF;
+  --surface-2:   #F8FAFF;
+  --card-bg:     #FFFFFF;
+  --sidebar-bg:  #FFFFFF;
 
   /* Text */
-  --text:       #f1f5f9;
-  --text-2:     #e2e8f0;
-  --text-muted: #94a3b8;
-  --text-light: #64748b;
+  --text:       #0F172A;
+  --text-2:     #1E293B;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
 
   /* Borders */
-  --border:      rgba(255, 255, 255, 0.08);
-  --border-2:    rgba(255, 255, 255, 0.05);
+  --border:      rgba(226, 232, 240, 0.8);
+  --border-2:    rgba(203, 213, 225, 0.6);
 
   /* Layout */
   --sidebar-width: 268px;
@@ -52,64 +52,28 @@
   --radius-lg:     24px;
 
   /* Shadows */
-  --shadow-xs: 0 1px 3px rgba(0,0,0,0.3),  0 1px 2px rgba(0,0,0,0.2);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
-  --shadow:    0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
-  --shadow-md: 0 8px 24px rgba(0,0,0,0.45),0 3px 8px rgba(0,0,0,0.35);
-  --shadow-lg: 0 16px 40px rgba(0,0,0,0.5),0 6px 16px rgba(0,0,0,0.4);
-  --shadow-primary: 0 8px 24px rgba(79,70,229,0.45);
-  --shadow-success: 0 8px 24px rgba(16,185,129,0.35);
-  --shadow-danger:  0 8px 24px rgba(239,68,68,0.35);
+  --shadow-xs: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow:    0 4px 16px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.08), 0 3px 8px rgba(0,0,0,0.04);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.10), 0 6px 16px rgba(0,0,0,0.05);
+  --shadow-primary: 0 8px 24px rgba(79,70,229,0.28);
+  --shadow-success: 0 8px 24px rgba(16,185,129,0.28);
+  --shadow-danger:  0 8px 24px rgba(239,68,68,0.28);
 }
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ RESET & BASE Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html {
-  background: radial-gradient(circle at top left, #0f172a, #020617);
-  min-height: 100%;
-}
-
-body {
+html, body {
   font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  background: transparent;
+  background: url('/images/app-bg.png') center center / cover fixed no-repeat;
   color: var(--text);
   font-size: 14px;
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
-  overflow-x: hidden;
-  position: relative;
-}
-
-/* Cyan glow orb */
-body::before {
-  content: "";
-  position: fixed;
-  width: 600px;
-  height: 600px;
-  background: rgba(0, 255, 255, 0.12);
-  filter: blur(120px);
-  top: 10%;
-  left: 20%;
-  pointer-events: none;
-  z-index: 0;
-  animation: orbFloat1 22s ease-in-out infinite;
-}
-
-/* Purple glow orb */
-body::after {
-  content: "";
-  position: fixed;
-  width: 500px;
-  height: 500px;
-  background: rgba(168, 85, 247, 0.13);
-  filter: blur(120px);
-  bottom: 10%;
-  right: 20%;
-  pointer-events: none;
-  z-index: 0;
-  animation: orbFloat2 26s ease-in-out infinite;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
 }
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ SCROLLBAR Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
@@ -159,13 +123,11 @@ body::after {
   min-height: 100vh;
   background: transparent;
   position: relative;
-  z-index: 1;
 }
-
-/* Suppress old orb layers */
-.app-wrapper::before,
-.app-wrapper::after { display: none; }
-.bg-orbs, .ambient-glows { display: none; }
+/* Remove old pseudo-element overlays — image handles the background */
+.app-wrapper::before, .app-wrapper::after { display: none; }
+/* Hide floating orb elements */
+.bg-orbs, .bg-orb, .bg-orb-1, .bg-orb-2, .bg-orb-3, .bg-orb-4, .ambient-glows { display: none; }
 
 .main-content {
   flex: 1;
@@ -185,11 +147,9 @@ body::after {
   top: 0; left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background: rgba(2, 6, 23, 0.92);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(0,255,255,0.08);
-  box-shadow: 4px 0 32px rgba(0,0,0,0.5);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  box-shadow: 4px 0 24px rgba(0,0,0,0.04);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -344,11 +304,11 @@ body::after {
   position: sticky;
   top: 0;
   height: var(--topbar-h);
-  background: rgba(2, 6, 23, 0.80);
+  background: rgba(255,255,255,0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0,255,255,0.08);
-  box-shadow: 0 1px 20px rgba(0,0,0,0.4);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 12px rgba(0,0,0,0.04);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -491,27 +451,25 @@ body::after {
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ CARDS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .card {
-  background: rgba(15, 23, 42, 0.75) !important;
+  background: var(--surface) !important;
   border-radius: var(--radius) !important;
-  border: 1.5px solid rgba(255,255,255,0.07) !important;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4) !important;
+  border: 1.5px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
   overflow: hidden !important;
   transition: transform .3s ease, box-shadow .3s ease !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: none !important;
 }
 .card:hover {
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+  box-shadow: var(--shadow-md) !important;
   transform: translateY(-2px) !important;
-  border-color: rgba(0,255,255,0.12) !important;
 }
 .card-header {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   padding: 20px 24px !important;
-  border-bottom: 1.5px solid rgba(255,255,255,0.06) !important;
-  background: rgba(30, 41, 59, 0.5) !important;
+  border-bottom: 1.5px solid var(--border) !important;
+  background: var(--surface-2) !important;
 }
 .card-header h3, .card-header h4, .card-header h5 {
   font-weight: 700 !important;
@@ -524,7 +482,7 @@ body::after {
   gap: 9px;
 }
 .card-header h3 i, .card-header h4 i, .card-header h5 i {
-  color: #22d3ee;
+  color: var(--primary);
   font-size: 16px;
 }
 .card-body { padding: 24px !important; }
