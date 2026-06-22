@@ -21,7 +21,37 @@ public class DoctorController : Controller
         _env = env;
     }
 
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index()
+    {
+        var doctors = await _db.Doctors
+            .Include(d => d.Department)
+            .Include(d => d.Specialization)
+            .Where(d => !d.IsDeleted)
+            .OrderBy(d => d.FullName)
+            .Select(d => new
+            {
+                id             = d.Id,
+                doctorNo       = d.DoctorNo,
+                fullName       = d.FullName,
+                department     = d.Department != null ? d.Department.Name : "",
+                specialization = d.Specialization != null ? d.Specialization.Name : "",
+                qualification  = d.Qualification ?? "",
+                experience     = d.ExperienceYears ?? 0,
+                fee            = d.ConsultationFee,
+                status         = d.Status.ToString(),
+                editUrl        = Url.Action("Edit",   "Doctor", new { id = d.Id }),
+                deleteUrl      = Url.Action("Delete", "Doctor", new { id = d.Id })
+            })
+            .ToListAsync();
+
+        var opts = new System.Text.Json.JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        ViewBag.DoctorJson = System.Text.Json.JsonSerializer.Serialize(doctors, opts);
+        return View();
+    }
+
 
     [HttpGet]
     public async Task<IActionResult> GetList()

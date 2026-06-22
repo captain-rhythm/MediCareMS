@@ -10,15 +10,7 @@
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
-    <div id="patient-loading" style="text-align:center;padding:40px;color:#64748b;">
-        <i class="fas fa-spinner fa-spin" style="font-size:28px;margin-bottom:10px;display:block;color:#8b5cf6;"></i>
-        Loading patients...
-    </div>
-    <div id="patient-table" style="display:none;"></div>
-    <div id="patient-error" style="display:none;text-align:center;padding:40px;color:#dc2626;font-size:14px;">
-        <i class="fas fa-exclamation-triangle" style="font-size:32px;margin-bottom:10px;display:block;opacity:.6;"></i>
-        <span id="patient-error-msg">Failed to load patients.</span>
-    </div>
+    <div id="patient-table"></div>
 </div>
 
 @section Scripts {
@@ -171,8 +163,6 @@
     ];
 
     function initTable(patients) {
-        document.getElementById('patient-loading').style.display = 'none';
-        document.getElementById('patient-table').style.display   = 'block';
 
         new Tabulator('#patient-table', {
             data:                  patients,
@@ -207,20 +197,9 @@
         });
     }
 
-    /* ── Fetch from API ── */
-    fetch('/Patient/GetList')
-        .then(res => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return res.json();
-        })
-        .then(data => initTable(Array.isArray(data) ? data : []))
-        .catch(err => {
-            console.error('Patient list fetch error:', err);
-            document.getElementById('patient-loading').style.display = 'none';
-            const errEl = document.getElementById('patient-error');
-            errEl.style.display = 'block';
-            document.getElementById('patient-error-msg').textContent = 'Failed to load patients: ' + err.message;
-        });
+    /* ── Pre-loaded data (server-side rendered, zero extra round-trip) ── */
+    const _preloaded = @Html.Raw(ViewBag.PatientJson ?? "[]");
+    initTable(Array.isArray(_preloaded) ? _preloaded : []);
 
     /* ── Delete helper ── */
     window.deletePatient = function (url) {

@@ -18,7 +18,45 @@ public class PatientController : Controller
         _db = db;
     }
 
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index()
+    {
+        var raw = await _db.Patients
+            .Where(p => !p.IsDeleted)
+            .OrderBy(p => p.FullName)
+            .Select(p => new
+            {
+                p.Id, p.PatientNo, p.FullName, p.MobileNumber,
+                p.Gender, p.BloodGroup, p.DateOfBirth,
+                TotalVisits = p.Appointments.Count(a => !a.IsDeleted)
+            })
+            .ToListAsync();
+
+        var today = DateTime.Today;
+        var patients = raw.Select(p => new
+        {
+            id          = p.Id,
+            patientNo   = p.PatientNo,
+            fullName    = p.FullName,
+            mobile      = p.MobileNumber ?? "",
+            ageGender   = $"{(int)((today - p.DateOfBirth).TotalDays / 365.25)} yrs / {p.Gender}",
+            age         = (int)((today - p.DateOfBirth).TotalDays / 365.25),
+            bloodGroup  = p.BloodGroup.HasValue
+                            ? p.BloodGroup.Value.ToString().Replace("_", " ")
+                            : "",
+            totalVisits = p.TotalVisits,
+            detailUrl   = Url.Action("Details", "Patient", new { id = p.Id }),
+            editUrl     = Url.Action("Edit",    "Patient", new { id = p.Id }),
+            deleteUrl   = Url.Action("Delete",  "Patient", new { id = p.Id })
+        });
+
+        var opts = new System.Text.Json.JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        ViewBag.PatientJson = System.Text.Json.JsonSerializer.Serialize(patients, opts);
+        return View();
+    }
+
 
     [HttpGet]
     public async Task<IActionResult> GetList()
