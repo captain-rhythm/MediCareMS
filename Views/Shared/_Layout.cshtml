@@ -71,6 +71,12 @@
                 <a asp-controller="Payment" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Payment"?"active":"")">
                     <i class="fas fa-money-bill-wave"></i><span>Payments</span>
                 </a>
+                @if (User.IsInRole("Super Admin") || User.IsInRole("Hospital Admin"))
+                {
+                    <a asp-controller="Report" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Report"?"active":"")">
+                        <i class="fas fa-chart-line"></i><span>Revenue Reports</span>
+                    </a>
+                }
                 <div class="nav-section-label">System</div>
                 <a asp-controller="UserManagement" asp-action="Index" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="UserManagement"?"active":"")">
                     <i class="fas fa-users-cog"></i><span>Users</span>

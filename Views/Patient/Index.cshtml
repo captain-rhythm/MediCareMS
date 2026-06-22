@@ -1,53 +1,363 @@
 @model IEnumerable<MediCareMS.Models.ViewModels.Patient.PatientListViewModel>
 @using MediCareMS.Models.Enums
+@using System.Text.Json
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{ ViewData["Title"] = "Patients"; }
+
+@{
+    var patientJson = JsonSerializer.Serialize(Model.Select(p => new {
+        id        = p.Id,
+        patientNo = p.PatientNo,
+        fullName  = p.FullName,
+        mobile    = p.MobileNumber ?? "—",
+        ageGender = $"{p.Age} yrs / {p.Gender}",
+        age       = p.Age,
+        bloodGroup= p.BloodGroup.HasValue ? p.BloodGroup.Value.ToString().Replace("_"," ") : "—",
+        totalVisits = p.TotalVisits,
+        detailUrl = Url.Action("Details","Patient",new{id=p.Id}),
+        editUrl   = Url.Action("Edit","Patient",new{id=p.Id}),
+        deleteUrl = Url.Action("Delete","Patient",new{id=p.Id})
+    }));
+
+    // antiforgery token for delete posts
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
 
 <div class="page-header">
     <h2><i class="fas fa-procedures"></i> Patient Management</h2>
     <a asp-action="Create" class="btn btn-primary"><i class="fas fa-user-plus"></i> Register Patient</a>
 </div>
-<div class="card">
-    <div class="card-header">
-        <form method="get" class="search-bar">
-            <div class="search-group">
-                <input name="search" value="@ViewBag.Search" placeholder="Search by name, patient no, or mobile..." class="form-control" />
-                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
-                <a asp-action="Index" class="btn btn-outline">Reset</a>
-            </div>
-        </form>
-    </div>
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr><th style="width:50px;">#</th><th>Patient No</th><th>Full Name</th><th>Age / Gender</th><th>Blood Group</th><th>Mobile</th><th>Total Visits</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-            @{ int serialNo = 1; }
-            @foreach (var p in Model)
-            {
-                <tr>
-                    <td style="color:var(--text-muted);font-weight:600;">@(serialNo++)</td>
-                    <td><span class="badge badge-light">@p.PatientNo</span></td>
-                    <td><strong>@p.FullName</strong></td>
-                    <td>@p.Age yrs / @p.Gender</td>
-                    <td>@(p.BloodGroup?.ToString().Replace("_", " ") ?? "—")</td>
-                    <td>@(p.MobileNumber ?? "—")</td>
-                    <td><span class="badge badge-info">@p.TotalVisits visits</span></td>
-                    <td class="actions-cell">
-                        <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-outline" title="View"><i class="fas fa-eye"></i></a>
-                        <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline" title="Edit"><i class="fas fa-edit"></i></a>
-                        <form asp-action="Delete" asp-route-id="@p.Id" method="post" style="display:inline" onsubmit="return confirm('Delete this patient?')">
-                            <button class="btn btn-sm btn-danger" title="Delete"><i class="fas fa-trash"></i></button>
-                        </form>
-                    </td>
-                </tr>
-            }
-            @if (!Model.Any())
-            {
-                <tr><td colspan="8" class="text-center"><div class="empty-state"><i class="fas fa-procedures"></i><p>No patients found.</p></div></td></tr>
-            }
-            </tbody>
-        </table>
-    </div>
-    @await Html.PartialAsync("_Pagination")
+
+<div class="card" style="padding:0;overflow:hidden;">
+    <div id="patient-table"></div>
 </div>
+
+@section Scripts {
+<link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet"/>
+<script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+<style>
+/* ── Tabulator skin override to match MediCare HMS design ── */
+#patient-table .tabulator {
+    border: none;
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--text-primary, #1e293b);
+}
+#patient-table .tabulator-header {
+    background: linear-gradient(135deg, rgba(139,92,246,0.07) 0%, rgba(168,85,247,0.04) 100%);
+    border-bottom: 2px solid rgba(139,92,246,0.18);
+}
+#patient-table .tabulator-col {
+    background: transparent;
+    border-right: 1px solid rgba(139,92,246,0.10);
+}
+#patient-table .tabulator-col-title {
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-secondary, #64748b);
+    padding-bottom: 4px;
+}
+/* Header filter inputs */
+#patient-table .tabulator-header-filter input,
+#patient-table .tabulator-header-filter select {
+    width: 100%;
+    padding: 5px 10px;
+    border: 1.5px solid rgba(139,92,246,0.2);
+    border-radius: 8px;
+    background: rgba(139,92,246,0.04);
+    color: var(--text-primary, #1e293b);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+#patient-table .tabulator-header-filter input:focus,
+#patient-table .tabulator-header-filter select:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
+    background: #fff;
+}
+/* Row styles */
+#patient-table .tabulator-row {
+    border-bottom: 1px solid rgba(139,92,246,0.07);
+    transition: background .15s;
+}
+#patient-table .tabulator-row:hover {
+    background: rgba(139,92,246,0.04) !important;
+}
+#patient-table .tabulator-row.tabulator-row-even {
+    background: rgba(248,250,252,0.6);
+}
+/* Cells */
+#patient-table .tabulator-cell {
+    padding: 11px 14px;
+    vertical-align: middle;
+}
+/* Badges */
+.tab-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.tab-badge-light {
+    background: rgba(139,92,246,0.1);
+    color: #7c3aed;
+    border: 1px solid rgba(139,92,246,0.2);
+}
+.tab-badge-info {
+    background: rgba(6,182,212,0.1);
+    color: #0891b2;
+    border: 1px solid rgba(6,182,212,0.2);
+}
+.tab-badge-blood {
+    background: rgba(239,68,68,0.08);
+    color: #dc2626;
+    border: 1px solid rgba(239,68,68,0.15);
+}
+/* Action buttons */
+.tab-actions { display: flex; gap: 5px; align-items: center; }
+.tab-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1.5px solid rgba(139,92,246,0.22);
+    background: transparent; color: #7c3aed;
+    cursor: pointer; text-decoration: none;
+    transition: all .18s ease; font-size: 12px;
+}
+.tab-btn:hover {
+    background: rgba(139,92,246,0.1);
+    border-color: #8b5cf6;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(139,92,246,0.18);
+    color: #6d28d9;
+}
+.tab-btn-danger {
+    border-color: rgba(239,68,68,0.25);
+    color: #dc2626;
+}
+.tab-btn-danger:hover {
+    background: rgba(239,68,68,0.08);
+    border-color: #ef4444;
+    box-shadow: 0 3px 8px rgba(239,68,68,0.18);
+    color: #b91c1c;
+}
+/* Paginator */
+#patient-table .tabulator-paginator {
+    padding: 10px 16px;
+    border-top: 1px solid rgba(139,92,246,0.1);
+    background: rgba(248,250,252,0.5);
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap; justify-content: center;
+}
+#patient-table .tabulator-page {
+    min-width: 34px; height: 34px; padding: 0 10px;
+    border-radius: 9px; border: 1.5px solid #e5e7eb;
+    background: #fff; color: #374151;
+    font-size: 12.5px; font-weight: 500; cursor: pointer;
+    transition: all .18s; font-family: 'Inter', sans-serif;
+}
+#patient-table .tabulator-page:hover:not([disabled]) {
+    background: rgba(139,92,246,0.07);
+    border-color: #8b5cf6; color: #7c3aed;
+    transform: translateY(-1px);
+}
+#patient-table .tabulator-page.active {
+    background: linear-gradient(135deg, #8b5cf6, #a855f7);
+    border-color: transparent; color: #fff;
+    box-shadow: 0 4px 12px rgba(139,92,246,0.35);
+}
+#patient-table .tabulator-page[disabled] { opacity: .35; cursor: not-allowed; }
+#patient-table .tabulator-page-size {
+    border: 1.5px solid rgba(139,92,246,0.2);
+    border-radius: 8px; padding: 4px 8px;
+    font-size: 12px; font-family: 'Inter', sans-serif;
+    color: #374151; background: #fff; cursor: pointer;
+}
+/* Sort arrows */
+#patient-table .tabulator-col .tabulator-col-sorter { color: #a78bfa; }
+/* Empty state */
+.tab-empty {
+    text-align: center; padding: 52px 20px;
+    color: #94a3b8; font-size: 14px;
+}
+.tab-empty i { font-size: 40px; margin-bottom: 10px; opacity: .4; display:block; }
+</style>
+
+<script>
+(function(){
+    const patients = @Html.Raw(patientJson);
+    const AF_TOKEN = "@antiforgeryToken";
+
+    /* ── Custom formatters ── */
+    const fmtPatNo = (cell) =>
+        `<span class="tab-badge tab-badge-light">${cell.getValue()}</span>`;
+
+    const fmtName = (cell) =>
+        `<strong style="color:var(--text-primary,#1e293b)">${cell.getValue()}</strong>`;
+
+    const fmtBlood = (cell) => {
+        const v = cell.getValue();
+        return v && v !== "—"
+            ? `<span class="tab-badge tab-badge-blood">${v}</span>`
+            : `<span style="color:#cbd5e1">—</span>`;
+    };
+
+    const fmtVisits = (cell) =>
+        `<span class="tab-badge tab-badge-info">${cell.getValue()} visits</span>`;
+
+    const fmtActions = (cell) => {
+        const row = cell.getRow().getData();
+        return `<div class="tab-actions">
+            <a href="${row.detailUrl}" class="tab-btn" title="View"><i class="fas fa-eye"></i></a>
+            <a href="${row.editUrl}"   class="tab-btn" title="Edit"><i class="fas fa-edit"></i></a>
+            <button class="tab-btn tab-btn-danger" title="Delete"
+                onclick="deletePatient('${row.deleteUrl}')"><i class="fas fa-trash"></i></button>
+        </div>`;
+    };
+
+    /* ── Blood group dropdown options ── */
+    const bgValues = [
+        {label:"All Blood Groups", value:""},
+        {label:"A Positive",  value:"A Positive"},
+        {label:"A Negative",  value:"A Negative"},
+        {label:"B Positive",  value:"B Positive"},
+        {label:"B Negative",  value:"B Negative"},
+        {label:"AB Positive", value:"AB Positive"},
+        {label:"AB Negative", value:"AB Negative"},
+        {label:"O Positive",  value:"O Positive"},
+        {label:"O Negative",  value:"O Negative"},
+        {label:"—",           value:"—"},
+    ];
+
+    /* ── Numeric header filter ── */
+    function numHeaderFilter(headerValue, rowValue) {
+        if (!headerValue) return true;
+        const h = headerValue.trim();
+        if (/^>=/.test(h)) return rowValue >= parseInt(h.slice(2));
+        if (/^<=/.test(h)) return rowValue <= parseInt(h.slice(2));
+        if (/^>/.test(h))  return rowValue >  parseInt(h.slice(1));
+        if (/^</.test(h))  return rowValue <  parseInt(h.slice(1));
+        return rowValue === parseInt(h);
+    }
+
+    /* ── Initialize Tabulator ── */
+    new Tabulator("#patient-table", {
+        data: patients,
+        layout: "fitColumns",
+        responsiveLayout: "collapse",
+        pagination: true,
+        paginationMode: "local",
+        paginationSize: 10,
+        paginationSizeSelector: [5, 10, 20, 50],
+        movableColumns: false,
+        sortMode: "local",
+        filterMode: "local",
+        placeholder: `<div class="tab-empty"><i class="fas fa-procedures"></i>No patients found.</div>`,
+        columns: [
+            {
+                title: "#",
+                field: "id",
+                width: 55,
+                hozAlign: "center",
+                headerHozAlign: "center",
+                headerFilter: false,
+                headerSort: false,
+                formatter: (cell) => {
+                    const rows = cell.getTable().getRows("active");
+                    const idx  = rows.indexOf(cell.getRow());
+                    return `<span style="color:#94a3b8;font-weight:600;font-size:12px">${idx + 1}</span>`;
+                }
+            },
+            {
+                title: "Patient No",
+                field: "patientNo",
+                minWidth: 130,
+                headerFilter: "input",
+                headerFilterPlaceholder: "Search…",
+                formatter: fmtPatNo,
+                sorter: "string"
+            },
+            {
+                title: "Full Name",
+                field: "fullName",
+                minWidth: 160,
+                headerFilter: "input",
+                headerFilterPlaceholder: "Search…",
+                formatter: fmtName,
+                sorter: "string"
+            },
+            {
+                title: "Mobile",
+                field: "mobile",
+                minWidth: 130,
+                headerFilter: "input",
+                headerFilterPlaceholder: "Search…",
+                sorter: "string"
+            },
+            {
+                title: "Age / Gender",
+                field: "ageGender",
+                minWidth: 120,
+                headerFilter: "input",
+                headerFilterPlaceholder: "Search…",
+                sorter: "string"
+            },
+            {
+                title: "Blood Group",
+                field: "bloodGroup",
+                minWidth: 130,
+                headerFilter: "select",
+                headerFilterParams: { values: bgValues },
+                headerFilterFunc: "=",
+                formatter: fmtBlood,
+                sorter: "string"
+            },
+            {
+                title: "Total Visits",
+                field: "totalVisits",
+                minWidth: 120,
+                hozAlign: "center",
+                headerHozAlign: "center",
+                headerFilter: "input",
+                headerFilterPlaceholder: "e.g. >5",
+                headerFilterFunc: numHeaderFilter,
+                formatter: fmtVisits,
+                sorter: "number"
+            },
+            {
+                title: "Actions",
+                field: "id",
+                minWidth: 120,
+                hozAlign: "center",
+                headerHozAlign: "center",
+                headerFilter: false,
+                headerSort: false,
+                formatter: fmtActions,
+                cellClick: function(){} // prevent row selection on click
+            }
+        ]
+    });
+
+    /* ── Delete helper ── */
+    window.deletePatient = function(url) {
+        if (!confirm("Delete this patient?")) return;
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = url;
+        const tok = document.createElement("input");
+        tok.type  = "hidden";
+        tok.name  = "__RequestVerificationToken";
+        tok.value = AF_TOKEN;
+        form.appendChild(tok);
+        document.body.appendChild(form);
+        form.submit();
+    };
+})();
+</script>
+}

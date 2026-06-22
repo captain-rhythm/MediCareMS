@@ -18,15 +18,10 @@ public class PatientController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index(string? search, int page = 1)
+    public async Task<IActionResult> Index()
     {
-        const int pageSize = 10;
-        var query = _db.Patients.Where(p => !p.IsDeleted);
-
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(p => p.FullName.Contains(search) || p.PatientNo.Contains(search) || p.MobileNumber!.Contains(search));
-
-        var projected = query
+        var patients = await _db.Patients
+            .Where(p => !p.IsDeleted)
             .OrderBy(p => p.FullName)
             .Select(p => new PatientListViewModel
             {
@@ -38,18 +33,10 @@ public class PatientController : Controller
                 BloodGroup = p.BloodGroup,
                 Age = (int)((DateTime.Today - p.DateOfBirth).TotalDays / 365.25),
                 TotalVisits = p.Appointments.Count(a => !a.IsDeleted)
-            });
+            })
+            .ToListAsync();
 
-        var paged = await PaginatedList<PatientListViewModel>.CreateAsync(projected, page, pageSize);
-
-        ViewBag.Search = search;
-        ViewData["PageIndex"]  = paged.PageIndex;
-        ViewData["TotalPages"] = paged.TotalPages;
-        ViewData["TotalCount"] = paged.TotalCount;
-        ViewData["PageSize"]   = paged.PageSize;
-        ViewData["PagAction"]  = "Index";
-        ViewData["PagSearch"]  = search;
-        return View(paged.Items);
+        return View(patients);
     }
 
     [HttpGet]
