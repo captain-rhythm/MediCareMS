@@ -25,10 +25,25 @@ public class AuthController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login(string? returnUrl = null)
+    public async Task<IActionResult> Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
+            // If authenticated but no valid role claim exists, sign out to break redirect loops
+            var hasRole = User.IsInRole("Patient")
+                       || User.IsInRole("Super Admin")
+                       || User.IsInRole("Hospital Admin")
+                       || User.IsInRole("Doctor")
+                       || User.IsInRole("Receptionist")
+                       || User.IsInRole("Nurse");
+
+            if (!hasRole)
+            {
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                ViewBag.ReturnUrl = returnUrl;
+                return View();
+            }
+
             if (User.IsInRole("Patient"))
                 return RedirectToAction("MyAppointments", "User");
             return RedirectToAction("Dashboard", "Admin");
