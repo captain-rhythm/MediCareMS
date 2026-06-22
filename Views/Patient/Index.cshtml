@@ -38,64 +38,106 @@
 <style>
 /* ── Tabulator skin override to match MediCare HMS design ── */
 #patient-table .tabulator {
-    border: none;
-    background: transparent;
-    font-family: 'Inter', sans-serif;
-    font-size: 13.5px;
-    color: var(--text-primary, #1e293b);
+    border: none !important;
+    background: transparent !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13.5px !important;
+    color: var(--text-primary, #1e293b) !important;
+    border-radius: 0 0 12px 12px !important;
+    overflow: hidden !important;
 }
 #patient-table .tabulator-header {
-    background: linear-gradient(135deg, rgba(139,92,246,0.07) 0%, rgba(168,85,247,0.04) 100%);
-    border-bottom: 2px solid rgba(139,92,246,0.18);
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 40%, #4f46e5 100%) !important;
+    border-bottom: none !important;
+    box-shadow: 0 4px 18px rgba(109,40,217,.3) !important;
 }
 #patient-table .tabulator-col {
-    background: transparent;
-    border-right: 1px solid rgba(139,92,246,0.10);
+    background: transparent !important;
+    border-right: 1px solid rgba(255,255,255,.12) !important;
+    color: #fff !important;
+}
+#patient-table .tabulator-col:hover {
+    background: rgba(255,255,255,.1) !important;
 }
 #patient-table .tabulator-col-title {
-    font-weight: 700;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-secondary, #64748b);
-    padding-bottom: 4px;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .7px !important;
+    color: #fff !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,.2) !important;
+    padding-bottom: 4px !important;
 }
-/* Header filter inputs */
-#patient-table .tabulator-header-filter input,
+#patient-table .tabulator-col-sorter { color: rgba(255,255,255,.75) !important; }
+#patient-table .tabulator-col-sorter .tabulator-arrow {
+    border-top-color: rgba(255,255,255,.75) !important;
+    border-bottom-color: rgba(255,255,255,.75) !important;
+}
+/* Header filter text inputs — frosted glass */
+#patient-table .tabulator-header-filter { background: transparent !important; padding: 4px 6px 6px !important; }
+#patient-table .tabulator-header-filter input {
+    width: 100% !important;
+    padding: 5px 10px !important;
+    border: 1.5px solid rgba(255,255,255,.4) !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,.18) !important;
+    backdrop-filter: blur(6px) !important;
+    color: #fff !important;
+    font-size: 12px !important;
+    font-family: 'Inter', sans-serif !important;
+    outline: none !important;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+}
+#patient-table .tabulator-header-filter input::placeholder { color: rgba(255,255,255,.6) !important; }
+#patient-table .tabulator-header-filter input:focus {
+    border-color: rgba(255,255,255,.9) !important;
+    background: rgba(255,255,255,.28) !important;
+    box-shadow: 0 0 0 3px rgba(255,255,255,.15) !important;
+}
+/* Header filter dropdowns — solid white */
 #patient-table .tabulator-header-filter select {
-    width: 100%;
-    padding: 5px 10px;
-    border: 1.5px solid rgba(139,92,246,0.2);
-    border-radius: 8px;
-    background: rgba(139,92,246,0.04);
-    color: var(--text-primary, #1e293b);
-    font-size: 12px;
-    font-family: 'Inter', sans-serif;
-    outline: none;
-    transition: border-color .2s, box-shadow .2s;
+    width: 100% !important;
+    padding: 5px 10px !important;
+    border: 2px solid rgba(255,255,255,.5) !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    color: #5b21b6 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    font-family: 'Inter', sans-serif !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: border-color .18s, box-shadow .18s;
 }
-#patient-table .tabulator-header-filter input:focus,
 #patient-table .tabulator-header-filter select:focus {
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139,92,246,0.12);
-    background: #fff;
+    border-color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(255,255,255,.25) !important;
+}
+#patient-table .tabulator-header-filter select option {
+    background: #fff !important;
+    color: #1e293b !important;
+    font-weight: 500 !important;
 }
 /* Row styles */
 #patient-table .tabulator-row {
-    border-bottom: 1px solid rgba(139,92,246,0.07);
+    border-bottom: 1px solid rgba(139,92,246,.07) !important;
     transition: background .15s;
 }
 #patient-table .tabulator-row:hover {
-    background: rgba(139,92,246,0.04) !important;
+    background: rgba(109,40,217,.05) !important;
 }
 #patient-table .tabulator-row.tabulator-row-even {
-    background: rgba(248,250,252,0.6);
+    background: rgba(238,234,255,.35) !important;
+}
+#patient-table .tabulator-row.tabulator-row-odd {
+    background: #fff !important;
 }
 /* Cells */
 #patient-table .tabulator-cell {
-    padding: 11px 14px;
-    vertical-align: middle;
+    padding: 11px 14px !important;
+    border-right: none !important;
 }
+
 /* Badges */
 .tab-badge {
     display: inline-block;
