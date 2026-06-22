@@ -18,9 +18,12 @@ public class PatientController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index()
+    public IActionResult Index() => View();
+
+    [HttpGet]
+    public async Task<IActionResult> GetList()
     {
-        // Fetch raw data from DB (no Age computation in SQL)
+        // Fetch raw data from DB (Age computed in C# to avoid EF Core SQL translation issues)
         var raw = await _db.Patients
             .Where(p => !p.IsDeleted)
             .OrderBy(p => p.FullName)
@@ -37,22 +40,27 @@ public class PatientController : Controller
             })
             .ToListAsync();
 
-        // Compute Age in C# to avoid EF Core SQL translation issues
         var today = DateTime.Today;
-        var patients = raw.Select(p => new PatientListViewModel
+        var patients = raw.Select(p => new
         {
-            Id           = p.Id,
-            PatientNo    = p.PatientNo,
-            FullName     = p.FullName,
-            MobileNumber = p.MobileNumber,
-            Gender       = p.Gender,
-            BloodGroup   = p.BloodGroup,
-            Age          = (int)((today - p.DateOfBirth).TotalDays / 365.25),
-            TotalVisits  = p.TotalVisits
+            id          = p.Id,
+            patientNo   = p.PatientNo,
+            fullName    = p.FullName,
+            mobile      = p.MobileNumber ?? "",
+            ageGender   = $"{(int)((today - p.DateOfBirth).TotalDays / 365.25)} yrs / {p.Gender}",
+            age         = (int)((today - p.DateOfBirth).TotalDays / 365.25),
+            bloodGroup  = p.BloodGroup.HasValue
+                            ? p.BloodGroup.Value.ToString().Replace("_", " ")
+                            : "",
+            totalVisits = p.TotalVisits,
+            detailUrl   = Url.Action("Details", "Patient", new { id = p.Id }),
+            editUrl     = Url.Action("Edit",    "Patient", new { id = p.Id }),
+            deleteUrl   = Url.Action("Delete",  "Patient", new { id = p.Id })
         }).ToList();
 
-        return View(patients);
+        return Json(patients);
     }
+
 
 
     [HttpGet]

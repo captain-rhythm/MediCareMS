@@ -1,23 +1,6 @@
-@model IEnumerable<MediCareMS.Models.ViewModels.Doctor.DoctorListViewModel>
-@using MediCareMS.Models.Enums
-@using System.Text.Json
-@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{ ViewData["Title"] = "Doctors"; }
-
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
-    var doctorJson = JsonSerializer.Serialize(Model.Select(d => new {
-        id             = d.Id,
-        doctorNo       = d.DoctorNo,
-        fullName       = d.FullName,
-        department     = d.Department,
-        specialization = d.Specialization,
-        qualification  = d.Qualification  ?? "—",
-        experience     = d.ExperienceYears ?? 0,
-        fee            = d.ConsultationFee,
-        status         = d.Status.ToString(),
-        editUrl        = Url.Action("Edit",   "Doctor", new { id = d.Id }),
-        deleteUrl      = Url.Action("Delete", "Doctor", new { id = d.Id })
-    }));
     var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
 }
 
@@ -27,7 +10,11 @@
 </div>
 
 <div class="card" style="padding:0;overflow:hidden;">
-    <div id="doctor-table"></div>
+    <div id="doctor-loading" style="text-align:center;padding:40px;color:#64748b;">
+        <i class="fas fa-spinner fa-spin" style="font-size:28px;margin-bottom:10px;display:block;color:#6366f1;"></i>
+        Loading doctors...
+    </div>
+    <div id="doctor-table" style="display:none;"></div>
 </div>
 
 @section Scripts {
@@ -59,7 +46,10 @@
     letter-spacing: .6px !important;
     text-transform: uppercase !important;
 }
-#doctor-table .tabulator-col .tabulator-col-sorter .tabulator-arrow { border-top-color: rgba(255,255,255,0.7) !important; border-bottom-color: rgba(255,255,255,0.7) !important; }
+#doctor-table .tabulator-col .tabulator-col-sorter .tabulator-arrow {
+    border-top-color: rgba(255,255,255,0.7) !important;
+    border-bottom-color: rgba(255,255,255,0.7) !important;
+}
 #doctor-table .tabulator-col-content { padding: 10px 12px 4px !important; }
 
 /* Header filter inputs */
@@ -89,8 +79,8 @@
 .doc-badge-no   { background:#ede9fe; color:#6d28d9; }
 .doc-badge-dept { background:#e0f2fe; color:#0369a1; }
 .doc-badge-spec { background:#f0fdf4; color:#166534; }
-.doc-badge-avail { background:#dcfce7; color:#166534; }
-.doc-badge-leave  { background:#fef9c3; color:#854d0e; }
+.doc-badge-avail    { background:#dcfce7; color:#166534; }
+.doc-badge-leave    { background:#fef9c3; color:#854d0e; }
 .doc-badge-inactive { background:#fee2e2; color:#991b1b; }
 .doc-fee  { font-weight:700; color:#0ea5e9; }
 
@@ -131,145 +121,118 @@
 /* Empty state */
 .doc-empty { text-align:center; padding:52px 20px; color:#94a3b8; font-size:14px; }
 .doc-empty i { font-size:40px; margin-bottom:10px; opacity:.4; display:block; }
+
+/* Error state */
+#doctor-error {
+    display:none; text-align:center; padding:40px;
+    color:#dc2626; font-size:14px;
+}
 </style>
 
+<div id="doctor-error">
+    <i class="fas fa-exclamation-triangle" style="font-size:32px;margin-bottom:10px;display:block;opacity:.6;"></i>
+    <span id="doctor-error-msg">Failed to load doctors.</span>
+</div>
+
 <script>
-(function(){
-    const doctors = @Html.Raw(doctorJson);
-    const AF_TOKEN = "@antiforgeryToken";
+(function () {
+    const AF_TOKEN = '@antiforgeryToken';
 
     /* ── Formatters ── */
-    const fmtDocNo = (cell) =>
-        `<span class="doc-badge doc-badge-no">${cell.getValue()}</span>`;
-
-    const fmtName = (cell) =>
-        `<strong style="color:var(--text-primary,#1e293b)">${cell.getValue()}</strong>`;
-
-    const fmtDept = (cell) =>
-        `<span class="doc-badge doc-badge-dept">${cell.getValue()}</span>`;
-
-    const fmtSpec = (cell) =>
-        `<span class="doc-badge doc-badge-spec">${cell.getValue()}</span>`;
-
-    const fmtFee = (cell) =>
-        `<span class="doc-fee">৳${Number(cell.getValue()).toLocaleString()}</span>`;
-
-    const fmtExp = (cell) =>
-        `<span style="color:#475569;font-weight:600">${cell.getValue()} yrs</span>`;
-
-    const fmtStatus = (cell) => {
-        const v = cell.getValue();
+    const fmtDocNo  = c => `<span class="doc-badge doc-badge-no">${c.getValue() || ''}</span>`;
+    const fmtName   = c => `<strong style="color:var(--text-primary,#1e293b)">${c.getValue() || ''}</strong>`;
+    const fmtDept   = c => `<span class="doc-badge doc-badge-dept">${c.getValue() || '—'}</span>`;
+    const fmtSpec   = c => `<span class="doc-badge doc-badge-spec">${c.getValue() || '—'}</span>`;
+    const fmtFee    = c => `<span class="doc-fee">৳${Number(c.getValue() || 0).toLocaleString()}</span>`;
+    const fmtExp    = c => `<span style="color:#475569;font-weight:600">${c.getValue() || 0} yrs</span>`;
+    const fmtStatus = c => {
+        const v   = c.getValue() || '';
         const cls = v === 'Available' ? 'doc-badge-avail'
                   : v === 'OnLeave'   ? 'doc-badge-leave'
                   : 'doc-badge-inactive';
-        const label = v === 'OnLeave' ? 'On Leave' : v;
-        return `<span class="doc-badge ${cls}">${label}</span>`;
+        const lbl = v === 'OnLeave' ? 'On Leave' : (v || '—');
+        return `<span class="doc-badge ${cls}">${lbl}</span>`;
     };
-
-    const fmtActions = (cell) => {
-        const row = cell.getRow().getData();
+    const fmtActions = c => {
+        const row = c.getRow().getData();
         return `<div class="doc-actions">
-            <a href="${row.editUrl}" class="doc-btn doc-btn-edit" title="Edit"><i class="fas fa-edit"></i></a>
+            <a href="${row.editUrl || '#'}" class="doc-btn doc-btn-edit" title="Edit"><i class="fas fa-edit"></i></a>
             <button class="doc-btn doc-btn-delete" title="Delete"
-                onclick="deleteDoctor('${row.deleteUrl}')"><i class="fas fa-trash"></i></button>
+                onclick="deleteDoctor('${row.deleteUrl || ''}')"><i class="fas fa-trash"></i></button>
         </div>`;
     };
 
-    /* ── Status dropdown options ── */
-    const statusValues = [
-        {label:"All Status",   value:""},
-        {label:"Available",    value:"Available"},
-        {label:"On Leave",     value:"OnLeave"},
-        {label:"Inactive",     value:"Inactive"},
-    ];
+    function initTable(doctors) {
+        document.getElementById('doctor-loading').style.display = 'none';
+        document.getElementById('doctor-table').style.display   = 'block';
 
-    /* ── Unique department list ── */
-    const deptSet = [...new Set(doctors.map(d => d.department))].sort();
-    const deptValues = [{label:"All Departments", value:""}, ...deptSet.map(d=>({label:d, value:d}))];
+        const deptSet    = [...new Set(doctors.map(d => d.department).filter(Boolean))].sort();
+        const deptValues = [{ label: 'All Departments', value: '' },
+                            ...deptSet.map(d => ({ label: d, value: d }))];
 
-    /* ── Initialize Tabulator ── */
-    new Tabulator("#doctor-table", {
-        data: doctors,
-        layout: "fitColumns",
-        responsiveLayout: "collapse",
-        pagination: true,
-        paginationMode: "local",
-        paginationSize: 10,
-        paginationSizeSelector: [5, 10, 20, 50],
-        movableColumns: false,
-        sortMode: "local",
-        filterMode: "local",
-        placeholder: `<div class="doc-empty"><i class="fas fa-user-md"></i>No doctors found.</div>`,
-        columns: [
-            {
-                title: "#", field: "id", width: 55,
-                hozAlign: "center", headerHozAlign: "center",
-                headerFilter: false, headerSort: false,
-                formatter: (cell) => {
-                    const rows = cell.getTable().getRows("active");
-                    const idx  = rows.indexOf(cell.getRow());
-                    return `<span style="color:#94a3b8;font-weight:600;font-size:12px">${idx+1}</span>`;
-                }
-            },
-            {
-                title: "Doctor No", field: "doctorNo", minWidth: 130,
-                headerFilter: "input", headerFilterPlaceholder: "Search…",
-                formatter: fmtDocNo, sorter: "string"
-            },
-            {
-                title: "Full Name", field: "fullName", minWidth: 170,
-                headerFilter: "input", headerFilterPlaceholder: "Search…",
-                formatter: fmtName, sorter: "string"
-            },
-            {
-                title: "Department", field: "department", minWidth: 150,
-                headerFilter: "select",
-                headerFilterParams: { values: deptValues },
-                headerFilterFunc: "=",
-                formatter: fmtDept, sorter: "string"
-            },
-            {
-                title: "Specialization", field: "specialization", minWidth: 180,
-                headerFilter: "input", headerFilterPlaceholder: "Search…",
-                formatter: fmtSpec, sorter: "string"
-            },
-            {
-                title: "Qualification", field: "qualification", minWidth: 160,
-                headerFilter: "input", headerFilterPlaceholder: "Search…",
-                sorter: "string"
-            },
-            {
-                title: "Exp.", field: "experience", width: 80,
-                hozAlign: "center", headerHozAlign: "center",
-                headerFilter: false,
-                formatter: fmtExp, sorter: "number"
-            },
-            {
-                title: "Fee (৳)", field: "fee", width: 100,
-                hozAlign: "right", headerHozAlign: "right",
-                headerFilter: false,
-                formatter: fmtFee, sorter: "number"
-            },
-            {
-                title: "Status", field: "status", width: 120,
-                hozAlign: "center", headerHozAlign: "center",
-                headerFilter: "select",
-                headerFilterParams: { values: statusValues },
-                headerFilterFunc: "=",
-                formatter: fmtStatus, sorter: "string"
-            },
-            {
-                title: "Actions", field: "id", width: 100,
-                hozAlign: "center", headerHozAlign: "center",
-                headerFilter: false, headerSort: false,
-                formatter: fmtActions
-            }
-        ]
-    });
+        const statusValues = [
+            { label: 'All Status',  value: '' },
+            { label: 'Available',   value: 'Available' },
+            { label: 'On Leave',    value: 'OnLeave' },
+            { label: 'Inactive',    value: 'Inactive' },
+        ];
+
+        new Tabulator('#doctor-table', {
+            data:                  doctors,
+            layout:                'fitColumns',
+            responsiveLayout:      'collapse',
+            pagination:            true,
+            paginationMode:        'local',
+            paginationSize:        10,
+            paginationSizeSelector:[5, 10, 20, 50],
+            movableColumns:        false,
+            sortMode:              'local',
+            filterMode:            'local',
+            placeholder:           `<div class="doc-empty"><i class="fas fa-user-md"></i>No doctors found.</div>`,
+            columns: [
+                {
+                    title: '#', field: 'id', width: 55,
+                    hozAlign: 'center', headerHozAlign: 'center',
+                    headerFilter: false, headerSort: false,
+                    formatter: c => {
+                        const rows = c.getTable().getRows('active');
+                        const idx  = rows.indexOf(c.getRow());
+                        return `<span style="color:#94a3b8;font-weight:600;font-size:12px">${idx + 1}</span>`;
+                    }
+                },
+                { title: 'Doctor No',     field: 'doctorNo',       minWidth: 130, headerFilter: 'input', headerFilterPlaceholder: 'Search…', formatter: fmtDocNo, sorter: 'string' },
+                { title: 'Full Name',      field: 'fullName',       minWidth: 170, headerFilter: 'input', headerFilterPlaceholder: 'Search…', formatter: fmtName,  sorter: 'string' },
+                { title: 'Department',     field: 'department',     minWidth: 150, headerFilter: 'select', headerFilterParams: { values: deptValues },   headerFilterFunc: '=', formatter: fmtDept, sorter: 'string' },
+                { title: 'Specialization', field: 'specialization', minWidth: 180, headerFilter: 'input', headerFilterPlaceholder: 'Search…', formatter: fmtSpec,  sorter: 'string' },
+                { title: 'Qualification',  field: 'qualification',  minWidth: 160, headerFilter: 'input', headerFilterPlaceholder: 'Search…', sorter: 'string' },
+                { title: 'Exp.',           field: 'experience',     width: 80,  hozAlign: 'center', headerHozAlign: 'center', headerFilter: false, formatter: fmtExp, sorter: 'number' },
+                { title: 'Fee (৳)',        field: 'fee',            width: 110, hozAlign: 'right',  headerHozAlign: 'right',  headerFilter: false, formatter: fmtFee, sorter: 'number' },
+                { title: 'Status',         field: 'status',         width: 120, hozAlign: 'center', headerHozAlign: 'center', headerFilter: 'select', headerFilterParams: { values: statusValues }, headerFilterFunc: '=', formatter: fmtStatus, sorter: 'string' },
+                { title: 'Actions',        field: 'id',             width: 100, hozAlign: 'center', headerHozAlign: 'center', headerFilter: false, headerSort: false, formatter: fmtActions }
+            ]
+        });
+    }
+
+    /* ── Fetch data from API ── */
+    fetch('/Doctor/GetList')
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        })
+        .then(data => {
+            initTable(Array.isArray(data) ? data : []);
+        })
+        .catch(err => {
+            console.error('Doctor list fetch error:', err);
+            document.getElementById('doctor-loading').style.display = 'none';
+            const errEl = document.getElementById('doctor-error');
+            errEl.style.display = 'block';
+            document.getElementById('doctor-error-msg').textContent = 'Failed to load doctors: ' + err.message;
+        });
 
     /* ── Delete handler ── */
-    window.deleteDoctor = function(url) {
-        if (!confirm('Are you sure you want to remove this doctor?')) return;
+    window.deleteDoctor = function (url) {
+        if (!url || !confirm('Are you sure you want to remove this doctor?')) return;
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = url;

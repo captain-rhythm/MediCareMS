@@ -21,29 +21,33 @@ public class DoctorController : Controller
         _env = env;
     }
 
-    public async Task<IActionResult> Index()
+    public IActionResult Index() => View();
+
+    [HttpGet]
+    public async Task<IActionResult> GetList()
     {
         var doctors = await _db.Doctors
             .Include(d => d.Department)
             .Include(d => d.Specialization)
             .Where(d => !d.IsDeleted)
             .OrderBy(d => d.FullName)
-            .Select(d => new DoctorListViewModel
+            .Select(d => new
             {
-                Id             = d.Id,
-                DoctorNo       = d.DoctorNo,
-                FullName       = d.FullName,
-                Department     = d.Department.Name,
-                Specialization = d.Specialization.Name,
-                Qualification  = d.Qualification,
-                ExperienceYears= d.ExperienceYears,
-                ConsultationFee= d.ConsultationFee,
-                Status         = d.Status,
-                ProfileImagePath = d.ProfileImagePath
+                id             = d.Id,
+                doctorNo       = d.DoctorNo,
+                fullName       = d.FullName,
+                department     = d.Department != null ? d.Department.Name : "",
+                specialization = d.Specialization != null ? d.Specialization.Name : "",
+                qualification  = d.Qualification ?? "",
+                experience     = d.ExperienceYears ?? 0,
+                fee            = d.ConsultationFee,
+                status         = d.Status.ToString(),
+                editUrl        = Url.Action("Edit",   "Doctor", new { id = d.Id }),
+                deleteUrl      = Url.Action("Delete", "Doctor", new { id = d.Id })
             })
             .ToListAsync();
 
-        return View(doctors);
+        return Json(doctors);
     }
 
 
