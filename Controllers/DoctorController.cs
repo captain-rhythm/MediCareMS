@@ -286,6 +286,20 @@ public class DoctorController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreatePrescription(CreatePrescriptionViewModel vm, IFormFile? directUpload)
     {
+        Console.WriteLine("=== CreatePrescription POST Executed ===");
+        if (!ModelState.IsValid)
+        {
+            Console.WriteLine(">>> ModelState is INVALID. Errors:");
+            foreach (var state in ModelState)
+            {
+                foreach (var err in state.Value.Errors)
+                {
+                    Console.WriteLine($"Field: '{state.Key}', Error: '{err.ErrorMessage}'");
+                }
+            }
+            return View(vm);
+        }
+
         var doctorIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(doctorIdClaim, out int docId)) return Unauthorized();
 
