@@ -25,10 +25,66 @@
                 }
             });
         });
+
+        // Navbar mobile toggle
+        const navToggle = document.getElementById('portalNavToggle');
+        const navLinks  = document.getElementById('portalNavLinks');
+        navToggle?.addEventListener('click', () => {
+            navLinks?.classList.toggle('open');
+        });
+
+        // Navbar scroll-spy: highlight active link
+        const sections = document.querySelectorAll('section[id], .portal-hero[id]');
+        const pnavLinks = document.querySelectorAll('.pnav-link');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    pnavLinks.forEach(l => l.classList.remove('active'));
+                    const active = document.querySelector(`.pnav-link[href="#${entry.target.id}"]`);
+                    if (active) active.classList.add('active');
+                }
+            });
+        }, { threshold: 0.4 });
+        sections.forEach(s => observer.observe(s));
+
+        // Navbar shadow on scroll
+        const portalNav = document.getElementById('portalNav');
+        window.addEventListener('scroll', () => {
+            portalNav?.classList.toggle('scrolled', window.scrollY > 10);
+        }, { passive: true });
     </script>
 }
 
 <div class="portal-page">
+
+    <!-- ══════════════════════════════════════════════════
+         PORTAL NAVBAR
+    ═══════════════════════════════════════════════════ -->
+    <nav class="portal-navbar" id="portalNav">
+        <div class="portal-navbar-brand">
+            <div class="portal-navbar-icon">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <span class="portal-navbar-name">MediCareMS Hospital</span>
+        </div>
+        <div class="portal-navbar-links" id="portalNavLinks">
+            <a href="#home" class="pnav-link">Home</a>
+            <a href="#services" class="pnav-link">Services</a>
+            <a href="#specialists" class="pnav-link">Specialists</a>
+            <a href="#lab-tests" class="pnav-link">Lab Tests</a>
+            <a href="#contact" class="pnav-link">Contact</a>
+        </div>
+        <div class="portal-navbar-auth">
+            <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                <button type="submit" class="pnav-logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Log Out
+                </button>
+            </form>
+        </div>
+        <button class="pnav-mobile-toggle" id="portalNavToggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
 
     <!-- ══════════════════════════════════════════════════
          HERO
