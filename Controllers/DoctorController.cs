@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using MediCareMS.Helpers.Security;
+using MediCareMS.Models.Entities.Prescription;
 
 namespace MediCareMS.Controllers;
 
@@ -231,5 +232,85 @@ public class DoctorController : Controller
     public IActionResult Patients()
     {
         return View();
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Doctor")]
+    public async Task<IActionResult> CreatePrescription(int? patientId)
+    {
+        var vm = new CreatePrescriptionViewModel();
+        if (patientId.HasValue)
+        {
+            var patient = await _db.Patients.FirstOrDefaultAsync(p => p.Id == patientId.Value);
+            if (patient != null)
+            {
+                vm.PatientId = patient.Id;
+                vm.PatientName = patient.FullName;
+                vm.PatientIdString = $"#MS-{patient.Id:D4}";
+            }
+        }
+        else
+        {
+            var firstPatient = await _db.Patients.FirstOrDefaultAsync();
+            if (firstPatient != null)
+            {
+                vm.PatientId = firstPatient.Id;
+                vm.PatientName = firstPatient.FullName;
+                vm.PatientIdString = $"#MS-{firstPatient.Id:D4}";
+            }
+        }
+        return View(vm);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Doctor")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreatePrescription(CreatePrescriptionViewModel vm, IFormFile? directUpload)
+    {
+        var doctorIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(doctorIdClaim, out int docId)) return Unauthorized();
+
+        var appointment = await _db.Appointments.FirstOrDefaultAsync(a => a.DoctorId == docId && a.PatientId == vm.PatientId)
+                          ?? await _db.Appointments.FirstOrDefaultAsync(); // Fallback
+
+        var prescription = new Prescription
+        {
+            PatientId = vm.PatientId > 0 ? vm.PatientId : 1,
+            DoctorId = docId,
+            AppointmentId = appointment?.Id ?? 1,
+            Diagnosis = vm.Diagnosis,
+            Notes = vm.Notes,
+            CreatedAt = DateTime.UtcNow,
+            Status = MediCareMS.Models.Enums.PrescriptionStatus.Draft
+        };
+
+        if (vm.Medicines != null)
+        {
+            foreach (var med in vm.Medicines)
+            {
+                if (!string.IsNullOrWhiteSpace(med.MedicineName))
+                {
+                    prescription.Medicines.Add(new PrescriptionMedicine
+                    {
+                        MedicineName = med.MedicineName,
+                        Dosage = med.Dosage,
+                        Duration = med.Duration,
+                        Instructions = med.Instructions,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+        }
+
+        if (directUpload != null && directUpload.Length > 0)
+        {
+            prescription.Notes += $"\n[Attached file: {directUpload.FileName}]";
+        }
+
+        _db.Prescriptions.Add(prescription);
+        await _db.SaveChangesAsync();
+
+        TempData["Success"] = "Prescription created successfully!";
+        return RedirectToAction("Patients");
     }
 }
