@@ -42,6 +42,11 @@ public class UserController : Controller
         return await _db.Patients.FirstOrDefaultAsync(p => p.UserId == userId && !p.IsDeleted);
     }
 
+    public IActionResult Portal()
+    {
+        return View();
+    }
+
     public IActionResult Dashboard()
     {
         return RedirectToAction(nameof(MyAppointments));

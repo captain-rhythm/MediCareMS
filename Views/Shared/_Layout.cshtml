@@ -97,7 +97,10 @@
             }
             else if (User.IsInRole("Patient"))
             {
-                <div class="nav-section-label">User Portal</div>
+                <a asp-controller="User" asp-action="Portal" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="Portal"?"active":"")">
+                    <i class="fas fa-home"></i><span>User Portal</span>
+                </a>
+                <div class="nav-section-label">My Account</div>
                 <a asp-controller="User" asp-action="MyAppointments" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="MyAppointments"?"active":"")">
                     <i class="fas fa-calendar-alt"></i><span>My Appointments</span>
                 </a>

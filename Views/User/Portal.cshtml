@@ -1,0 +1,465 @@
+@{
+    ViewData["Title"] = "User Portal – MediCareMS";
+}
+
+@section Scripts {
+    <link rel="stylesheet" href="~/css/portal.css" asp-append-version="true" />
+    <script>
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(q => {
+            q.addEventListener('click', () => {
+                const item   = q.closest('.faq-item');
+                const answer = item.querySelector('.faq-answer');
+                const isOpen = item.classList.contains('open');
+
+                // Close all
+                document.querySelectorAll('.faq-item').forEach(i => {
+                    i.classList.remove('open');
+                    i.querySelector('.faq-answer').classList.remove('open');
+                });
+
+                // Open clicked (if it was closed)
+                if (!isOpen) {
+                    item.classList.add('open');
+                    answer.classList.add('open');
+                }
+            });
+        });
+    </script>
+}
+
+<div class="portal-page">
+
+    <!-- ══════════════════════════════════════════════════
+         HERO
+    ═══════════════════════════════════════════════════ -->
+    <section class="portal-hero" id="home">
+        <div class="portal-hero-text">
+            <div class="portal-hero-badge">
+                <span class="badge-dot"></span>
+                Trusted by 10,000+ Patients
+            </div>
+            <h1>Leading the Future of <span>Healthcare Excellence</span></h1>
+            <p class="portal-hero-sub">
+                MediCareMS connects you with top-tier medical professionals, enabling seamless appointment booking,
+                digital prescriptions, and real-time health guidance — all in one place.
+            </p>
+            <div class="portal-hero-actions">
+                <a asp-controller="User" asp-action="BookAppointment" class="portal-btn-primary" id="heroBookBtn">
+                    <i class="fas fa-calendar-plus"></i> Book Appointment
+                </a>
+                <a href="#services" class="portal-btn-secondary" id="heroServicesBtn">
+                    <i class="fas fa-stethoscope"></i> Our Services
+                </a>
+            </div>
+            <div class="portal-hero-stats">
+                <div class="hero-stat-item">
+                    <strong>50+</strong>
+                    <span>Specialists</span>
+                </div>
+                <div class="hero-stat-item">
+                    <strong>10K+</strong>
+                    <span>Patients</span>
+                </div>
+                <div class="hero-stat-item">
+                    <strong>24/7</strong>
+                    <span>Support</span>
+                </div>
+            </div>
+        </div>
+        <div class="portal-hero-image">
+            <div class="portal-hero-img-card">
+                <!-- Illustrative healthcare banner -->
+                <div style="text-align:center; padding:2rem;">
+                    <div style="font-size:5rem; margin-bottom:1rem;">🏥</div>
+                    <div style="font-size:1rem; font-weight:700; color:#4f46e5;">Your Health,<br>Our Priority</div>
+                </div>
+            </div>
+            <div class="portal-hero-floating-card">
+                <div class="floating-card-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="floating-card-text">
+                    <strong>Verified Doctors</strong>
+                    <span>100% Certified</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         OUR MEDICAL SERVICES
+    ═══════════════════════════════════════════════════ -->
+    <section class="portal-section" id="services">
+        <div class="portal-section-header">
+            <div class="portal-section-tag">Services</div>
+            <h2>Our Medical Services</h2>
+            <p>Providing progress in healthcare within a state-of-the-art building and the expertise of our specialists.</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-card-icon" style="background:linear-gradient(135deg,#dbeafe,#bfdbfe);">
+                    <span style="font-size:1.3rem;">🎥</span>
+                </div>
+                <h4>Video Consultation</h4>
+                <p>Connect with top doctors via secure HD video call from the comfort of your home.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-card-icon" style="background:linear-gradient(135deg,#d1fae5,#a7f3d0);">
+                    <span style="font-size:1.3rem;">🏥</span>
+                </div>
+                <h4>Physical Appointment</h4>
+                <p>Book in-person consultations with specialists at our certified hospital network.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-card-icon" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);">
+                    <span style="font-size:1.3rem;">🏠</span>
+                </div>
+                <h4>Home Service</h4>
+                <p>Get medical care delivered to your doorstep by certified healthcare professionals.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-card-icon" style="background:linear-gradient(135deg,#fee2e2,#fecaca);">
+                    <span style="font-size:1.3rem;">🚨</span>
+                </div>
+                <h4>Emergency Service</h4>
+                <p>24/7 emergency response coordinated through our dedicated rapid care team.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-card-icon" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);">
+                    <span style="font-size:1.3rem;">👶</span>
+                </div>
+                <h4>Pediatrics</h4>
+                <p>Comprehensive child healthcare in a compassionate, child-friendly environment.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         OUR MEDICAL SPECIALITIES
+    ═══════════════════════════════════════════════════ -->
+    <section class="portal-section" id="specialists">
+        <div class="portal-section-header">
+            <div class="portal-section-tag">Specialities</div>
+            <h2>Our Medical Specialities</h2>
+            <p>MediCareMS brings together top specialists from every discipline to provide you world-class care.</p>
+        </div>
+        <div class="specialities-grid">
+            <div class="speciality-card">
+                <span class="speciality-icon">❤️</span>
+                <span>Cardiology</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🧠</span>
+                <span>Neurology</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">💊</span>
+                <span>Medicine</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">👁️</span>
+                <span>Orthopedics</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🦷</span>
+                <span>Radiology</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🫁</span>
+                <span>Oncology</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🔬</span>
+                <span>ENT</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">👁</span>
+                <span>Ophthalmology</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🩺</span>
+                <span>Pediatrics</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🦴</span>
+                <span>Spine</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🧬</span>
+                <span>Genetics</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🩻</span>
+                <span>Urology</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🫀</span>
+                <span>Vascular</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🤱</span>
+                <span>Gynecology</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">🦋</span>
+                <span>Endocrinology</span>
+            </div>
+            <div class="speciality-card">
+                <span class="speciality-icon">💪</span>
+                <span>Physiotherapy</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         DIAGNOSTIC CATEGORIES
+    ═══════════════════════════════════════════════════ -->
+    <section class="portal-section" id="lab-tests">
+        <div class="portal-section-header">
+            <div class="portal-section-tag">Lab Tests</div>
+            <h2>Diagnostic Categories</h2>
+            <p>Fast, accurate laboratory diagnostics covering all major test categories with certified results.</p>
+        </div>
+        <div class="diagnostic-grid">
+            <div class="diagnostic-card">
+                <span class="diag-icon">🩸</span>
+                <span>Blood Test</span>
+            </div>
+            <div class="diagnostic-card">
+                <span class="diag-icon">🔬</span>
+                <span>Biopsy</span>
+            </div>
+            <div class="diagnostic-card">
+                <span class="diag-icon">💊</span>
+                <span>Urinalysis</span>
+            </div>
+            <div class="diagnostic-card">
+                <span class="diag-icon">🫁</span>
+                <span>Allergy</span>
+            </div>
+            <div class="diagnostic-card">
+                <span class="diag-icon">🧬</span>
+                <span>Pathology</span>
+            </div>
+            <div class="diagnostic-card">
+                <span class="diag-icon">🩻</span>
+                <span>Radiology</span>
+            </div>
+            <div class="diagnostic-card">
+                <span class="diag-icon">❤️</span>
+                <span>Cardiology</span>
+            </div>
+            <div class="diagnostic-card">
+                <span class="diag-icon">🦠</span>
+                <span>Microbiology</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         STAY UPDATED / BLOG
+    ═══════════════════════════════════════════════════ -->
+    <section class="portal-section">
+        <div class="portal-section-header">
+            <div class="portal-section-tag">Health Blog</div>
+            <h2>Stay Updated with MediCareMS</h2>
+            <p>Expert health insights, wellness tips, and the latest medical news curated for you.</p>
+        </div>
+        <div class="blog-grid">
+            <div class="blog-card">
+                <div class="blog-card-img" style="background:linear-gradient(135deg,#dbeafe,#ede9fe);">🤖</div>
+                <div class="blog-card-body">
+                    <span class="blog-tag" style="background:#ede9fe;color:#6d28d9;">AI</span>
+                    <h4>Advancing Robotic Surgery To Lower Wait Volumes</h4>
+                    <p>How AI-powered surgical robotics are reducing procedure time and improving patient outcomes.</p>
+                    <a href="#" class="blog-card-link">Read More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="blog-card">
+                <div class="blog-card-img" style="background:linear-gradient(135deg,#d1fae5,#fef3c7);">💊</div>
+                <div class="blog-card-body">
+                    <span class="blog-tag" style="background:#d1fae5;color:#065f46;">Savings</span>
+                    <h4>Better Clinical Package: 50% Off</h4>
+                    <p>Take advantage of our bundled health check-up packages covering all major diagnostics.</p>
+                    <a href="#" class="blog-card-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="blog-card">
+                <div class="blog-card-img" style="background:linear-gradient(135deg,#fce7f3,#fee2e2);">🌍</div>
+                <div class="blog-card-body">
+                    <span class="blog-tag" style="background:#fee2e2;color:#991b1b;">Research</span>
+                    <h4>Connecting Health Awareness Seminar</h4>
+                    <p>Join our online health seminars and awareness programs hosted by leading specialists.</p>
+                    <a href="#" class="blog-card-link">Join Now <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         WHAT OUR PATIENTS SAY
+    ═══════════════════════════════════════════════════ -->
+    <section class="portal-section">
+        <div class="portal-section-header">
+            <div class="portal-section-tag">Testimonials</div>
+            <h2>What Our Patients Say</h2>
+            <p>Discover the experiences of thousands of patients who trust MediCareMS for their healthcare journey.</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-stars">★★★★★</div>
+                <p>"MediCareMS transformed how I manage my family's health. Booking appointments is effortless and the doctors are genuinely caring and professional."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);">R</div>
+                    <div class="testimonial-author-info">
+                        <strong>Rafi Ahmed</strong>
+                        <span>Patient since 2024</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-stars">★★★★★</div>
+                <p>"The digital prescriptions and video consultation feature is a game changer. I got specialist advice without leaving my home. Highly recommended!"</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar" style="background:linear-gradient(135deg,#059669,#10b981);">S</div>
+                    <div class="testimonial-author-info">
+                        <strong>Sumaiya Khan</strong>
+                        <span>Patient since 2025</span>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="testimonial-stars">★★★★☆</div>
+                <p>"Excellent platform with very responsive support. The AI health assistant Aletta is incredibly helpful for initial guidance before my doctor visits."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar" style="background:linear-gradient(135deg,#d97706,#f59e0b);">M</div>
+                    <div class="testimonial-author-info">
+                        <strong>Masud Rahman</strong>
+                        <span>Patient since 2025</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         FAQ
+    ═══════════════════════════════════════════════════ -->
+    <section class="portal-section" id="contact">
+        <div class="portal-section-header">
+            <div class="portal-section-tag">FAQ</div>
+            <h2>Frequently Asked Questions</h2>
+            <p>Everything you need to know about using MediCareMS effectively.</p>
+        </div>
+        <div class="portal-faq">
+            <div class="faq-item">
+                <div class="faq-question" id="faq-q1" aria-expanded="false">
+                    How do I book an appointment online?
+                    <span class="faq-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="faq-answer" id="faq-a1">
+                    Click the <strong>Book Appointment</strong> button in the sidebar or on this page. Select your preferred department, choose a doctor, pick a date and time slot, then confirm your booking. You'll receive a confirmation with a unique appointment number and QR code.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" id="faq-q2" aria-expanded="false">
+                    What insurance resources does MediCareMS accept?
+                    <span class="faq-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="faq-answer" id="faq-a2">
+                    MediCareMS currently supports SSLCommerz online payment for consultation fees. We are actively working to integrate major health insurance providers. Please contact our support team for insurance-specific queries.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" id="faq-q3" aria-expanded="false">
+                    How do I cancel my appointment?
+                    <span class="faq-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="faq-answer" id="faq-a3">
+                    Navigate to <strong>My Appointments</strong> in the sidebar. Find your appointment and click the <strong>Cancel</strong> button. Cancellations can be made for appointments with Pending or Confirmed status. Completed appointments cannot be cancelled.
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" id="faq-q4" aria-expanded="false">
+                    Do you offer emergency medical services?
+                    <span class="faq-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="faq-answer" id="faq-a4">
+                    Yes. For medical emergencies, please call our 24/7 hotline directly. You can also use the Aletta AI assistant on this page for immediate guidance. For life-threatening emergencies, please dial your local emergency services (999 in Bangladesh).
+                </div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" id="faq-q5" aria-expanded="false">
+                    Can I get a digital prescription after my appointment?
+                    <span class="faq-icon"><i class="fas fa-plus"></i></span>
+                </div>
+                <div class="faq-answer" id="faq-a5">
+                    Yes. After your appointment is completed by the doctor, your digital prescription is available immediately under <strong>My Prescriptions</strong> in the sidebar. You can view it online anytime.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         CTA BANNER
+    ═══════════════════════════════════════════════════ -->
+    <section class="portal-cta-banner">
+        <h3>Still have questions?</h3>
+        <p>Our medical support team and expert AI are available 24/7 to assist you.<br>We're always here to help with your healthcare needs.</p>
+        <a href="tel:+8801700000000" class="portal-cta-phone">
+            <i class="fas fa-phone"></i> +88 Call Us: 179 69 888
+        </a>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════
+         FOOTER
+    ═══════════════════════════════════════════════════ -->
+    <footer class="portal-footer">
+        <div class="portal-footer-top">
+            <div class="portal-footer-brand">
+                <h3>🏥 MediCareMS Hospital</h3>
+                <p>Leading the future of healthcare excellence. Connecting patients with world-class medical professionals through cutting-edge technology.</p>
+            </div>
+            <div class="portal-footer-col">
+                <h4>Hospital</h4>
+                <ul>
+                    <li><a href="#home">About Us</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#specialists">Specialists</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="portal-footer-col">
+                <h4>Patient</h4>
+                <ul>
+                    <li><a asp-controller="User" asp-action="BookAppointment">Book Appointment</a></li>
+                    <li><a asp-controller="User" asp-action="MyAppointments">My Appointments</a></li>
+                    <li><a asp-controller="User" asp-action="MyPrescriptions">My Prescriptions</a></li>
+                    <li><a asp-controller="User" asp-action="MyProfile">My Profile</a></li>
+                </ul>
+            </div>
+            <div class="portal-footer-col">
+                <h4>Newsletter</h4>
+                <p style="font-size:0.75rem;color:#64748b;margin-bottom:0.7rem;">Subscribe for health tips and updates.</p>
+                <div style="display:flex;gap:6px;">
+                    <input type="email" placeholder="your@email.com"
+                           style="flex:1;background:#1e293b;border:1px solid #334155;border-radius:8px;padding:7px 10px;color:#e2e8f0;font-size:0.75rem;outline:none;" />
+                    <button style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:0.75rem;cursor:pointer;font-weight:600;">
+                        Go
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="portal-footer-bottom">
+            <span>&copy; @DateTime.Now.Year MediCareMS. All rights reserved.</span>
+            <div class="portal-social-links">
+                <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+</div>
