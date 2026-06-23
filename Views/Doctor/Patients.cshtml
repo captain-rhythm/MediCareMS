@@ -1,0 +1,288 @@
+@{
+    ViewData["Title"] = "Patient Records";
+}
+
+<style>
+    .patients-container {
+        padding: 20px;
+        background-color: #f8fafc;
+        min-height: calc(100vh - 70px);
+        font-family: 'Inter', sans-serif;
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+    }
+    /* Left Panel Filters */
+    .filter-panel {
+        background: transparent;
+        padding-right: 20px;
+        border-right: 1px solid #e2e8f0;
+    }
+    .filter-group { margin-bottom: 25px; }
+    .filter-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    .filter-option {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        cursor: pointer;
+    }
+    .filter-option input {
+        width: 16px;
+        height: 16px;
+        margin-right: 10px;
+        accent-color: #0b3b84;
+        cursor: pointer;
+    }
+    .filter-option span {
+        font-size: 14px;
+        color: #334155;
+    }
+    .filter-select {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        color: #334155;
+        font-size: 14px;
+        outline: none;
+    }
+    .btn-clear {
+        width: 100%;
+        padding: 10px;
+        background: white;
+        border: 1px solid #3b82f6;
+        color: #3b82f6;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* Main Area */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    .page-title { font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .page-subtitle { font-size: 14px; color: #64748b; }
+    .btn-add { background-color: #0b3b84; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    
+    .patients-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .patient-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        gap: 15px;
+    }
+    .card-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 80px;
+    }
+    .p-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        background: #e2e8f0;
+        margin-bottom: auto;
+    }
+    .p-icon-box {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        margin-top: 15px;
+    }
+    
+    .card-right { flex: 1; }
+    .p-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+    .p-name { font-size: 16px; font-weight: 700; color: #0f172a; }
+    .p-tag { font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+    
+    .tag-emergency { background: #fef2f2; color: #ef4444; }
+    .tag-outpatient { background: #f1f5f9; color: #64748b; }
+    .tag-admitted { background: #eff6ff; color: #3b82f6; }
+    .tag-critical { background: #fef2f2; color: #ef4444; }
+
+    .p-id { font-size: 12px; color: #64748b; margin-bottom: 8px; font-family: monospace; font-weight: 600; }
+    
+    .p-meta { display: flex; align-items: center; gap: 15px; font-size: 12px; color: #64748b; margin-bottom: 15px; }
+    .p-meta i { margin-right: 4px; }
+    
+    .p-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-action {
+        padding: 8px;
+        background: #f1f5f9;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #0b3b84;
+        cursor: pointer;
+    }
+    .btn-ehr { background: #eff6ff; }
+</style>
+
+<div class="patients-container">
+    <!-- Filter Panel -->
+    <div class="filter-panel">
+        <div class="filter-group">
+            <div class="filter-label">Patient Status</div>
+            <label class="filter-option">
+                <input type="checkbox" />
+                <span>Admitted</span>
+            </label>
+            <label class="filter-option">
+                <input type="checkbox" />
+                <span>Outpatient</span>
+            </label>
+            <label class="filter-option">
+                <input type="checkbox" checked />
+                <span>Emergency</span>
+            </label>
+        </div>
+        
+        <div class="filter-group">
+            <div class="filter-label">Department</div>
+            <select class="filter-select">
+                <option>All Departments</option>
+                <option>Cardiology</option>
+                <option>Neurology</option>
+                <option>Pediatrics</option>
+            </select>
+        </div>
+        
+        <button class="btn-clear"><i class="fas fa-filter-slash"></i> Clear Filters</button>
+    </div>
+
+    <!-- Main Content -->
+    <div>
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Patient Records</h1>
+                <div class="page-subtitle">Manage and monitor current hospital admissions and history.</div>
+            </div>
+            <button class="btn-add"><i class="fas fa-plus-circle"></i> Add New Patient</button>
+        </div>
+
+        <div class="patients-grid">
+            <!-- Patient 1 -->
+            <div class="patient-card">
+                <div class="card-left">
+                    <img src="https://ui-avatars.com/api/?name=Robert+Wilson&background=e2e8f0" class="p-avatar" alt="Avatar"/>
+                    <div class="p-icon-box" style="background:#ef4444;"><i class="fas fa-bolt"></i></div>
+                </div>
+                <div class="card-right">
+                    <div class="p-header">
+                        <div class="p-name">Robert J. Wilson</div>
+                        <div class="p-tag tag-emergency">Emergency</div>
+                    </div>
+                    <div class="p-id">ID: #MS-88219</div>
+                    <div class="p-meta">
+                        <span><i class="fas fa-user"></i> 68y/M</span>
+                        <span><i class="fas fa-clock"></i> Last: 2h ago</span>
+                    </div>
+                    <div class="p-actions">
+                        <button class="btn-action btn-ehr" style="grid-column: span 2;">View EHR</button>
+                        <button class="btn-action" style="grid-column: span 2;">Book Appt.</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient 2 -->
+            <div class="patient-card">
+                <div class="card-left">
+                    <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=e2e8f0" class="p-avatar" alt="Avatar"/>
+                    <div class="p-icon-box" style="background:#3b82f6;"><i class="fas fa-check"></i></div>
+                </div>
+                <div class="card-right">
+                    <div class="p-header">
+                        <div class="p-name">Sarah Jenkins</div>
+                        <div class="p-tag tag-outpatient">Outpatient</div>
+                    </div>
+                    <div class="p-id">ID: #MS-11402</div>
+                    <div class="p-meta">
+                        <span><i class="fas fa-user"></i> 32y/F</span>
+                        <span><i class="fas fa-clock"></i> Last: 3 days ago</span>
+                    </div>
+                    <div class="p-actions">
+                        <button class="btn-action btn-ehr" style="grid-column: span 2;">View EHR</button>
+                        <button class="btn-action" style="grid-column: span 2;">Add Record</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient 3 -->
+            <div class="patient-card">
+                <div class="card-left">
+                    <img src="https://ui-avatars.com/api/?name=David+Thompson&background=e2e8f0" class="p-avatar" alt="Avatar"/>
+                    <div class="p-icon-box" style="background:#0b3b84;"><i class="fas fa-bed"></i></div>
+                </div>
+                <div class="card-right">
+                    <div class="p-header">
+                        <div class="p-name">David Thompson</div>
+                        <div class="p-tag tag-admitted">Admitted</div>
+                    </div>
+                    <div class="p-id">ID: #MS-99032</div>
+                    <div class="p-meta">
+                        <span><i class="fas fa-user"></i> 54y/M</span>
+                        <span><i class="fas fa-clock"></i> Last: 10m ago</span>
+                    </div>
+                    <div class="p-actions">
+                        <button class="btn-action btn-ehr" style="grid-column: span 2;">View EHR</button>
+                        <button class="btn-action" style="grid-column: span 2;">Vitals</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patient 4 -->
+            <div class="patient-card">
+                <div class="card-left">
+                    <img src="https://ui-avatars.com/api/?name=Leo+Garcia&background=e2e8f0" class="p-avatar" alt="Avatar"/>
+                    <div class="p-icon-box" style="background:#ef4444;"><i class="fas fa-times"></i></div>
+                </div>
+                <div class="card-right">
+                    <div class="p-header">
+                        <div class="p-name">Leo Garcia</div>
+                        <div class="p-tag tag-critical">Critical</div>
+                    </div>
+                    <div class="p-id">ID: #MS-44109</div>
+                    <div class="p-meta">
+                        <span><i class="fas fa-user"></i> 12y/M</span>
+                        <span><i class="fas fa-clock"></i> Last: 5m ago</span>
+                    </div>
+                    <div class="p-actions">
+                        <button class="btn-action btn-ehr" style="grid-column: span 2;">View EHR</button>
+                        <button class="btn-action" style="grid-column: span 2;">Contact</button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+            <button style="width:40px;height:40px;border-radius:8px;background:#0b3b84;color:white;border:none;font-size:20px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-plus"></i></button>
+        </div>
+    </div>
+</div>

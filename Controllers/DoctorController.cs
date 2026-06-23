@@ -218,4 +218,18 @@ public class DoctorController : Controller
     {
         return View();
     }
+
+    [HttpGet]
+    [Authorize(Roles = "Doctor")]
+    public IActionResult Appointments()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Doctor")]
+    public IActionResult Patients()
+    {
+        return View();
+    }
 }
