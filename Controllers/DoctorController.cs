@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using MediCareMS.Helpers.Security;
 
 namespace MediCareMS.Controllers;
 
@@ -14,11 +15,13 @@ public class DoctorController : Controller
 {
     private readonly AppDbContext _db;
     private readonly IWebHostEnvironment _env;
+    private readonly IPasswordHashService _passwordHash;
 
-    public DoctorController(AppDbContext db, IWebHostEnvironment env)
+    public DoctorController(AppDbContext db, IWebHostEnvironment env, IPasswordHashService passwordHash)
     {
         _db = db;
         _env = env;
+        _passwordHash = passwordHash;
     }
 
     public async Task<IActionResult> Index()
@@ -109,6 +112,7 @@ public class DoctorController : Controller
             ChamberAddress = vm.ChamberAddress,
             Bio = vm.Bio,
             Status = vm.Status,
+            PasswordHash = _passwordHash.HashPassword("123"),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -206,5 +210,12 @@ public class DoctorController : Controller
         await using var stream = System.IO.File.Create(path);
         await file.CopyToAsync(stream);
         return $"/uploads/doctors/{fileName}";
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "Doctor")]
+    public IActionResult Portal()
+    {
+        return View();
     }
 }

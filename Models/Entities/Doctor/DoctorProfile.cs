@@ -20,6 +20,7 @@ public class DoctorProfile
     public string? Bio { get; set; }
     public string? ProfileImagePath { get; set; }
     public DoctorStatus Status { get; set; } = DoctorStatus.Available;
+    public string PasswordHash { get; set; } = string.Empty;
     public bool IsDeleted { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

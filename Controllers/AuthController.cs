@@ -46,6 +46,8 @@ public class AuthController : Controller
 
             if (User.IsInRole("Patient"))
                 return RedirectToAction("MyAppointments", "User");
+            if (User.IsInRole("Doctor"))
+                return RedirectToAction("Portal", "Doctor");
             return RedirectToAction("Dashboard", "Admin");
         }
         ViewBag.ReturnUrl = returnUrl;
@@ -67,8 +69,33 @@ public class AuthController : Controller
 
         if (user == null || !_passwordHash.VerifyPassword(model.Password, user.PasswordHash))
         {
-            ModelState.AddModelError(string.Empty, "Invalid username or password.");
-            return View(model);
+            // Fallback to Doctor ID
+            var doctor = await _db.Doctors
+                .FirstOrDefaultAsync(d => !d.IsDeleted && d.DoctorNo == model.UserNameOrEmail, cancellationToken);
+            
+            if (doctor == null || !_passwordHash.VerifyPassword(model.Password, doctor.PasswordHash))
+            {
+                ModelState.AddModelError(string.Empty, "Invalid username, email, or Doctor ID/password.");
+                return View(model);
+            }
+
+            var docClaims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, doctor.Id.ToString()),
+                new(ClaimTypes.Name, doctor.FullName),
+                new(ClaimTypes.Role, "Doctor")
+            };
+
+            var docIdentity = new ClaimsIdentity(docClaims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var docPrincipal = new ClaimsPrincipal(docIdentity);
+            var docProps = new AuthenticationProperties { IsPersistent = model.RememberMe };
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, docPrincipal, docProps);
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
+            return RedirectToAction("Portal", "Doctor");
         }
 
         if (user.Status == Models.Enums.AccountStatus.Inactive)
@@ -110,7 +137,12 @@ public class AuthController : Controller
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
 
-        if (roles.Contains("Super Admin") || roles.Contains("Hospital Admin") || roles.Contains("Doctor") || roles.Contains("Receptionist") || roles.Contains("Nurse"))
+        if (roles.Contains("Doctor"))
+        {
+            return RedirectToAction("Portal", "Doctor");
+        }
+
+        if (roles.Contains("Super Admin") || roles.Contains("Hospital Admin") || roles.Contains("Receptionist") || roles.Contains("Nurse"))
         {
             return RedirectToAction("Dashboard", "Admin");
         }
@@ -220,6 +252,8 @@ public class AuthController : Controller
         {
             if (User.IsInRole("Patient"))
                 return RedirectToAction("MyAppointments", "User");
+            if (User.IsInRole("Doctor"))
+                return RedirectToAction("Portal", "Doctor");
             return RedirectToAction("Dashboard", "Admin");
         }
         return View();
@@ -404,7 +438,12 @@ public class AuthController : Controller
 
         TempData["Success"] = "Welcome back, " + fullName;
 
-        if (roles.Contains("Super Admin") || roles.Contains("Hospital Admin") || roles.Contains("Doctor") || roles.Contains("Receptionist") || roles.Contains("Nurse"))
+        if (roles.Contains("Doctor"))
+        {
+            return RedirectToAction("Portal", "Doctor");
+        }
+
+        if (roles.Contains("Super Admin") || roles.Contains("Hospital Admin") || roles.Contains("Receptionist") || roles.Contains("Nurse"))
         {
             return RedirectToAction("Dashboard", "Admin");
         }

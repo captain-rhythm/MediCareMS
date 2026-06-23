@@ -48,7 +48,22 @@
             <div class="brand-ecg-dot"></div>
         </div>
         <nav class="sidebar-nav">
-            @if (User.IsInRole("Super Admin") || User.IsInRole("Hospital Admin") || User.IsInRole("Doctor") || User.IsInRole("Receptionist") || User.IsInRole("Nurse"))
+            @if (User.IsInRole("Doctor"))
+            {
+                <a asp-controller="Doctor" asp-action="Portal" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="Portal"?"active":"")">
+                    <i class="fas fa-th-large"></i><span>Dashboard</span>
+                </a>
+                <a asp-controller="Doctor" asp-action="Patients" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="Patients"?"active":"")">
+                    <i class="fas fa-user-friends"></i><span>Patients</span>
+                </a>
+                <a asp-controller="Doctor" asp-action="Appointments" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="Appointments"?"active":"")">
+                    <i class="fas fa-calendar"></i><span>Appointments</span>
+                </a>
+                <a asp-controller="Doctor" asp-action="Settings" class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString()=="Settings"?"active":"")">
+                    <i class="fas fa-cog"></i><span>Settings</span>
+                </a>
+            }
+            else if (User.IsInRole("Super Admin") || User.IsInRole("Hospital Admin") || User.IsInRole("Receptionist") || User.IsInRole("Nurse"))
             {
                 <div class="nav-section-label">Main</div>
                 <a asp-controller="Admin" asp-action="Dashboard" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString()=="Admin"?"active":"")">
@@ -121,6 +136,14 @@
                 </a>
             }
         </nav>
+        @if (User.IsInRole("Doctor"))
+        {
+            <div style="padding: 1rem; margin-top: auto;">
+                <button class="btn btn-danger w-100" style="font-weight: 600; border-radius: 8px; background-color: #DC2626; border: none; padding: 10px;">
+                    <i class="fas fa-asterisk"></i> Emergency Alert
+                </button>
+            </div>
+        }
         <div class="sidebar-footer">
             <div class="user-info">
                 <div class="user-avatar"><i class="fas fa-user"></i></div>

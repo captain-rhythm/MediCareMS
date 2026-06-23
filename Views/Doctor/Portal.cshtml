@@ -1,0 +1,375 @@
+@{
+    ViewData["Title"] = "Doctor Dashboard";
+}
+
+<style>
+    .portal-container {
+        padding: 20px;
+        background-color: #f8fafc;
+        min-height: calc(100vh - 70px);
+        font-family: 'Inter', sans-serif;
+    }
+    .hero-card {
+        background-color: #0b3b84; /* MediCare Blue */
+        border-radius: 12px;
+        padding: 30px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .hero-text h2 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .hero-text p {
+        margin: 0;
+        color: #e2e8f0;
+        font-size: 15px;
+    }
+    .hero-btn {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .hero-btn:hover {
+        background-color: #1d4ed8;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+    }
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    .icon-blue { background-color: #eff6ff; color: #3b82f6; }
+    .icon-gray { background-color: #f1f5f9; color: #64748b; }
+    .icon-red { background-color: #fef2f2; color: #ef4444; }
+    .icon-green { background-color: #f0fdf4; color: #10b981; }
+    .stat-badge {
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+    .badge-blue { background: #eff6ff; color: #3b82f6; }
+    .badge-gray { background: #f1f5f9; color: #64748b; }
+    .stat-title {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 5px;
+    }
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .main-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #334155;
+    }
+    .view-all {
+        color: #3b82f6;
+        font-size: 13px;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .appointments-list {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+    }
+    .appointment-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .appointment-item:last-child {
+        border-bottom: none;
+    }
+    .patient-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #f1f5f9;
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+        margin-right: 15px;
+    }
+    .patient-info {
+        flex: 1;
+    }
+    .patient-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 2px;
+    }
+    .patient-meta {
+        font-size: 12px;
+        color: #64748b;
+    }
+    .appointment-time {
+        text-align: right;
+        margin-right: 20px;
+    }
+    .time-val {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .duration {
+        font-size: 12px;
+        color: #64748b;
+    }
+    .status-pill {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 15px;
+    }
+    .pill-consult { background: #eff6ff; color: #3b82f6; }
+    .pill-follow { background: #f1f5f9; color: #64748b; }
+    .pill-procedure { background: #fef2f2; color: #ef4444; }
+    
+    .notifications-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .notification-card {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #3b82f6;
+    }
+    .notification-card.urgent {
+        border-left-color: #ef4444;
+    }
+    .notif-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+    .notif-type {
+        font-size: 12px;
+        font-weight: 700;
+        color: #ef4444;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .notif-type.system {
+        color: #3b82f6;
+    }
+    .notif-time {
+        font-size: 12px;
+        color: #64748b;
+    }
+    .notif-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 5px;
+    }
+    .notif-desc {
+        font-size: 13px;
+        color: #64748b;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+    .notif-action {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0b3b84;
+        text-decoration: none;
+    }
+</style>
+
+<div class="portal-container">
+    <div class="hero-card">
+        <div class="hero-text">
+            <h2>Good Morning, @User.Identity?.Name</h2>
+            <p>You have <strong>12 appointments</strong> today. Your first patient is arriving in 15 minutes.</p>
+        </div>
+        <button class="hero-btn"><i class="fas fa-plus"></i> New Consultation</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon icon-blue"><i class="fas fa-user"></i></div>
+                <div class="stat-badge badge-blue">+12.5%</div>
+            </div>
+            <div class="stat-title">Total Patients</div>
+            <div class="stat-value">1,482</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon icon-gray"><i class="fas fa-calendar-alt"></i></div>
+                <div class="stat-badge badge-gray">Daily</div>
+            </div>
+            <div class="stat-title">Appointments Today</div>
+            <div class="stat-value">12</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon icon-red"><i class="fas fa-file-medical-alt"></i></div>
+                <div class="stat-title" style="color:#ef4444;font-weight:600;margin:0;">8 High Priority</div>
+            </div>
+            <div class="stat-title" style="margin-top:auto;">Pending Reports</div>
+            <div class="stat-value">24</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon icon-green"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="stat-badge badge-blue">Target 92%</div>
+            </div>
+            <div class="stat-title">Total Revenue (MTD)</div>
+            <div class="stat-value">$14,240</div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="appointments-section">
+            <div class="section-header">
+                <div class="section-title">Upcoming Appointments</div>
+                <a href="#" class="view-all">View Schedule &rarr;</a>
+            </div>
+            <div class="appointments-list">
+                <div class="appointment-item">
+                    <div class="patient-avatar">JS</div>
+                    <div class="patient-info">
+                        <div class="patient-name">John Stevenson</div>
+                        <div class="patient-meta">ID: #MS-8821 &bull; New Patient</div>
+                    </div>
+                    <div class="appointment-time">
+                        <div class="time-val">09:30 AM</div>
+                        <div class="duration">Duration: 45 min</div>
+                    </div>
+                    <div class="status-pill pill-consult">Consultation</div>
+                    <i class="fas fa-ellipsis-v" style="color:#cbd5e1;cursor:pointer;"></i>
+                </div>
+                <div class="appointment-item">
+                    <div class="patient-avatar" style="background:#f0fdf4;color:#10b981;">EM</div>
+                    <div class="patient-info">
+                        <div class="patient-name">Elena Martinez</div>
+                        <div class="patient-meta">ID: #MS-7742 &bull; Recurring</div>
+                    </div>
+                    <div class="appointment-time">
+                        <div class="time-val">10:45 AM</div>
+                        <div class="duration">Duration: 30 min</div>
+                    </div>
+                    <div class="status-pill pill-follow">Follow-up</div>
+                    <i class="fas fa-ellipsis-v" style="color:#cbd5e1;cursor:pointer;"></i>
+                </div>
+                <div class="appointment-item">
+                    <div class="patient-avatar" style="background:#fef2f2;color:#ef4444;">RW</div>
+                    <div class="patient-info">
+                        <div class="patient-name">Robert White</div>
+                        <div class="patient-meta">ID: #MS-9901 &bull; Post-Op</div>
+                    </div>
+                    <div class="appointment-time">
+                        <div class="time-val">11:30 AM</div>
+                        <div class="duration">Duration: 60 min</div>
+                    </div>
+                    <div class="status-pill pill-procedure" style="color:#334155;background:#f8fafc;">Procedure</div>
+                    <i class="fas fa-ellipsis-v" style="color:#cbd5e1;cursor:pointer;"></i>
+                </div>
+                
+                <div style="margin-top:20px;padding-top:20px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-weight:600;font-size:14px;">Weekly Patient Trends</div>
+                    <div style="font-size:13px;color:#3b82f6;font-weight:500;">Last 7 Days <i class="fas fa-chevron-down" style="font-size:10px;"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notifications-section">
+            <div class="section-header">
+                <div class="section-title">Urgent Notifications</div>
+                <div style="background:#ef4444;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">3</div>
+            </div>
+            <div class="notifications-panel">
+                <div class="notification-card urgent">
+                    <div class="notif-header">
+                        <span class="notif-type">CRITICAL LAB RESULT</span>
+                        <span class="notif-time">2m ago</span>
+                    </div>
+                    <div class="notif-title">Patient: Sarah Jenkins</div>
+                    <div class="notif-desc">High troponin levels detected in latest bloodwork. Immediate review required.</div>
+                    <a href="#" class="notif-action">View Lab Report</a>
+                </div>
+                
+                <div class="notification-card">
+                    <div class="notif-header">
+                        <span class="notif-type system">SYSTEM UPDATE</span>
+                        <span class="notif-time">45m ago</span>
+                    </div>
+                    <div class="notif-title">New Imaging Tools</div>
+                    <div class="notif-desc">DICOM viewer has been updated with 3D reconstruction capabilities.</div>
+                </div>
+                
+                <div class="notification-card">
+                    <div class="notif-header">
+                        <span class="notif-type system" style="color:#64748b;">NOTE REQUEST</span>
+                        <span class="notif-time">2h ago</span>
+                    </div>
+                    <div class="notif-title">Billing Dept.</div>
+                    <div class="notif-desc">Additional documentation needed for recent procedure on ID #MS-1102.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
