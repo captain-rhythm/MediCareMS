@@ -46,12 +46,22 @@ public class SslCommerzService : ISslCommerzService
         _options = options.Value;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
+        Console.WriteLine("=================================");
+        Console.WriteLine($"SSLCommerz Init - StoreId from config: '{_options.StoreId}'");
+        Console.WriteLine($"SSLCommerz Init - BaseUrl from config: '{_options.BaseUrl}'");
+        Console.WriteLine("=================================");
     }
 
     public async Task<SslCommerzInitResponse> InitiatePaymentAsync(SslCommerzInitRequest request)
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(_options.StoreId) || string.IsNullOrWhiteSpace(_options.StorePassword))
+            {
+                _logger.LogError("SSLCommerz: Missing StoreId or StorePassword in configuration.");
+                return new SslCommerzInitResponse { IsSuccess = false, ErrorMessage = "Payment gateway configuration is missing. Please contact support." };
+            }
+
             _logger.LogInformation("SSLCommerz: Calling init API for txnId={TxnId}", request.TransactionId);
 
             var client = _httpClientFactory.CreateClient();
