@@ -32,7 +32,35 @@
                                 </div>
                                 <div>
                                     <span class="text-uppercase text-muted" style="font-size: 0.75rem; letter-spacing: 0.5px;">Notes & Instructions</span>
-                                    <div class="bg-light p-3 mt-1 rounded" style="font-family: monospace; font-size: 0.9rem; white-space: pre-wrap;">@(prescription.Notes ?? prescription.FollowUpInstructions ?? "No additional instructions.")</div>
+                                    <div class="bg-light p-3 mt-1 rounded" style="font-family: monospace; font-size: 0.9rem; white-space: pre-wrap;">
+                                        @{
+                                            var notes = prescription.Notes ?? prescription.FollowUpInstructions ?? "No additional instructions.";
+                                            var regex = new System.Text.RegularExpressions.Regex(@"\[Attached file: (.*?)\]");
+                                            var matches = regex.Matches(notes);
+                                            var displayNotes = regex.Replace(notes, "").Trim();
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(displayNotes)) {
+                                            @displayNotes
+                                        }
+
+                                        @foreach (System.Text.RegularExpressions.Match match in matches)
+                                        {
+                                            var fileUrl = match.Groups[1].Value;
+                                            var ext = System.IO.Path.GetExtension(fileUrl).ToLower();
+                                            if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif")
+                                            {
+                                                <div class="mt-3">
+                                                    <img src="@fileUrl" alt="Attachment" style="max-width: 100%; border-radius: 8px;" />
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="mt-3">
+                                                    <a href="@fileUrl" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fas fa-file-download"></i> View Attachment</a>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         </div>

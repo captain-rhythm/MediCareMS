@@ -358,7 +358,13 @@ public class DoctorController : Controller
 
         if (hasFile)
         {
-            prescription.Notes += $"\n[Attached file: {directUpload!.FileName}]";
+            var attName = $"{Guid.NewGuid()}_{directUpload!.FileName}";
+            var attPath = Path.Combine(_env.WebRootPath, "prescriptions", "attachments");
+            Directory.CreateDirectory(attPath);
+            using var stream = new FileStream(Path.Combine(attPath, attName), FileMode.Create);
+            await directUpload.CopyToAsync(stream);
+
+            prescription.Notes += $"\n[Attached file: /prescriptions/attachments/{attName}]";
         }
 
         // --- Generate PDF using QuestPDF ---
