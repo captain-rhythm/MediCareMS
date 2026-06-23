@@ -8,5 +8,6 @@ public class SslCommerzOptions
     public string InitUrl => $"{BaseUrl}/gwprocess/v4/api.php";
     public string ValidationUrl => $"{BaseUrl}/validator/api/validationserverAPI.php";
     public bool IsSandbox { get; set; } = true;
+    public bool UseMockPayment { get; set; } = false;
     public string AppBaseUrl { get; set; } = "http://localhost:5002";
 }

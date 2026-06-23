@@ -37,7 +37,7 @@ public class PaymentController : Controller
     // ── Patient: Initiate SSLCommerz Payment ──────────────────────────────────
     [Authorize(Roles = "Patient")]
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Initiate(int invoiceId, decimal amount, CancellationToken ct = default)
+    public async Task<IActionResult> Initiate(int invoiceId, decimal amount, [FromServices] Microsoft.Extensions.Options.IOptions<MediCareMS.Helpers.SslCommerzOptions> options, CancellationToken ct = default)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         var patient = await _db.Patients.FirstOrDefaultAsync(p => p.UserId == userId, ct);
@@ -57,6 +57,39 @@ public class PaymentController : Controller
 
         // Unique, traceable transaction ID
         var txnId = $"MCR-{invoice.Id}-{DateTime.UtcNow.Ticks}";
+
+        if (options.Value.UseMockPayment)
+        {
+            var mockPayment = new Payment
+            {
+                InvoiceId  = invoice.Id,
+                Amount     = amount,
+                Method     = PaymentMethod.Online,
+                TransactionReference = txnId,
+                SslStatus  = SSLCommerzStatus.Success,
+                PaidAt     = DateTime.UtcNow,
+                CreatedAt  = DateTime.UtcNow,
+                CreatedBy  = userId
+            };
+            _db.Payments.Add(mockPayment);
+            
+            invoice.PaidAmount += amount;
+            invoice.Status = invoice.PaidAmount >= invoice.TotalAmount ? PaymentStatus.Paid : PaymentStatus.Partial;
+            invoice.UpdatedAt = DateTime.UtcNow;
+
+            if (invoice.AppointmentId > 0)
+            {
+                var appointment = await _db.Appointments.FindAsync(invoice.AppointmentId, ct);
+                if (appointment != null && appointment.Status == AppointmentStatus.PendingPayment)
+                {
+                    appointment.Status = AppointmentStatus.Confirmed;
+                    appointment.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            await _db.SaveChangesAsync(ct);
+            TempData["Success"] = "Mock Payment Successful! Appointment Confirmed.";
+            return RedirectToAction("Details", "Billing", new { id = invoiceId });
+        }
 
         // Store pending payment BEFORE redirecting to gateway
         var pending = new Payment
