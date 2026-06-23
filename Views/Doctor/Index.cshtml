@@ -1,76 +1,228 @@
-@model IEnumerable<MediCareMS.Models.ViewModels.Doctor.DoctorListViewModel>
-@using MediCareMS.Models.Enums
 @{ ViewData["Title"] = "Doctors"; }
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
 
 <div class="page-header">
     <h2><i class="fas fa-user-md"></i> Doctor Management</h2>
     <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> Add Doctor</a>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <form method="get" class="search-bar">
-            <div class="search-group">
-                <input name="search" value="@ViewBag.Search" placeholder="Search by name or doctor no..." class="form-control" />
-                <select name="deptId" class="form-control">
-                    <option value="">All Departments</option>
-                    @foreach (var d in (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Departments)
-                    {
-                        if (d.Value == ViewBag.DeptId?.ToString())
-                        {
-                            <option value="@d.Value" selected>@d.Text</option>
-                        }
-                        else
-                        {
-                            <option value="@d.Value">@d.Text</option>
-                        }
-                    }
-                </select>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
-                <a asp-action="Index" class="btn btn-outline">Reset</a>
-            </div>
-        </form>
-    </div>
-    <div class="doctor-cards-grid">
-    @foreach (var d in Model)
-    {
-        <div class="doctor-card">
-            <div class="doctor-card-avatar">
-                @if (!string.IsNullOrEmpty(d.ProfileImagePath))
-                {
-                    <img src="@d.ProfileImagePath" alt="@d.FullName" />
-                }
-                else
-                {
-                    <i class="fas fa-user-md"></i>
-                }
-            </div>
-            <div class="doctor-card-info">
-                <h4>@d.FullName</h4>
-                <p class="doctor-specialization">@d.Specialization</p>
-                <p class="doctor-dept"><i class="fas fa-hospital"></i> @d.Department</p>
-                @if (!string.IsNullOrEmpty(d.Qualification))
-                {
-                    <p class="doctor-qual"><i class="fas fa-graduation-cap"></i> @d.Qualification</p>
-                }
-                <div class="doctor-card-meta">
-                    <span><i class="fas fa-briefcase"></i> @(d.ExperienceYears ?? 0) yrs exp</span>
-                    <span class="doctor-fee">৳@d.ConsultationFee.ToString("N0")</span>
-                </div>
-                <span class="status-badge status-@d.Status.ToString().ToLower()">@d.Status</span>
-            </div>
-            <div class="doctor-card-actions">
-                <a asp-action="Edit" asp-route-id="@d.Id" class="btn btn-sm btn-outline"><i class="fas fa-edit"></i></a>
-                <form asp-action="Delete" asp-route-id="@d.Id" method="post" onsubmit="return confirm('Delete this doctor?')">
-                    <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
-                </form>
-            </div>
-        </div>
-    }
-    @if (!Model.Any())
-    {
-        <div class="empty-state"><i class="fas fa-user-md"></i><p>No doctors found.</p></div>
-    }
-    </div>
-    @await Html.PartialAsync("_Pagination")
+<div class="card" style="padding:0;overflow:hidden;">
+    <div id="doctor-table"></div>
 </div>
+
+@section Scripts {
+<link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet"/>
+<script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+<style>
+/* ── Tabulator skin – Doctor Management ── */
+#doctor-table .tabulator {
+    border: none !important;
+    background: transparent !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13.5px !important;
+    color: var(--text-primary, #1e293b) !important;
+    border-radius: 0 0 12px 12px !important;
+    overflow: hidden !important;
+}
+#doctor-table .tabulator-header {
+    background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #8b5cf6 100%) !important;
+    border-bottom: none !important;
+}
+#doctor-table .tabulator-col {
+    background: transparent !important;
+    border-right: 1px solid rgba(255,255,255,0.15) !important;
+}
+#doctor-table .tabulator-col-title {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    letter-spacing: .6px !important;
+    text-transform: uppercase !important;
+}
+#doctor-table .tabulator-col .tabulator-col-sorter .tabulator-arrow {
+    border-top-color: rgba(255,255,255,0.7) !important;
+    border-bottom-color: rgba(255,255,255,0.7) !important;
+}
+#doctor-table .tabulator-col-content { padding: 10px 12px 4px !important; }
+
+/* Header filter inputs */
+#doctor-table .tabulator-header-filter input,
+#doctor-table .tabulator-header-filter select {
+    background: #ffffff !important;
+    border: 1.5px solid rgba(255,255,255,0.6) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 11.5px !important;
+    color: #1e293b !important;
+    width: 100% !important;
+    outline: none !important;
+    transition: border-color .2s !important;
+}
+#doctor-table .tabulator-header-filter input:focus,
+#doctor-table .tabulator-header-filter select:focus { border-color: #0ea5e9 !important; }
+
+/* Rows */
+#doctor-table .tabulator-row { border-bottom: 1px solid #f1f5f9 !important; transition: background .15s; }
+#doctor-table .tabulator-row:hover { background: #f0f9ff !important; }
+#doctor-table .tabulator-row.tabulator-row-even { background: #f8fafc; }
+#doctor-table .tabulator-cell { padding: 10px 12px !important; vertical-align: middle !important; }
+
+/* Badges */
+.doc-badge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11.5px; font-weight:600; }
+.doc-badge-no   { background:#ede9fe; color:#6d28d9; }
+.doc-badge-dept { background:#e0f2fe; color:#0369a1; }
+.doc-badge-spec { background:#f0fdf4; color:#166534; }
+.doc-badge-avail    { background:#dcfce7; color:#166534; }
+.doc-badge-leave    { background:#fef9c3; color:#854d0e; }
+.doc-badge-inactive { background:#fee2e2; color:#991b1b; }
+.doc-fee  { font-weight:700; color:#0ea5e9; }
+
+/* Actions */
+.doc-actions { display:flex; gap:6px; justify-content:center; }
+.doc-btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:7px;
+    border:none; cursor:pointer; text-decoration:none;
+    transition: transform .15s, box-shadow .15s;
+}
+.doc-btn:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,.12); }
+.doc-btn-edit   { background:#e0f2fe; color:#0369a1; }
+.doc-btn-delete { background:#fee2e2; color:#dc2626; }
+
+/* Pagination */
+#doctor-table .tabulator-footer { background:#fff; border-top:1px solid #e2e8f0; padding:8px 12px; }
+#doctor-table .tabulator-page {
+    border:1.5px solid rgba(14,165,233,0.25) !important;
+    border-radius:7px !important; padding:4px 10px !important;
+    font-size:12px !important; font-family:'Inter',sans-serif !important;
+    color:#374151 !important; background:#fff !important;
+    cursor:pointer; transition:all .15s !important; margin:0 2px !important;
+}
+#doctor-table .tabulator-page:hover { background:#e0f2fe !important; transform:translateY(-1px); }
+#doctor-table .tabulator-page.active {
+    background: linear-gradient(135deg,#0ea5e9,#6366f1) !important;
+    border-color:transparent !important; color:#fff !important;
+    box-shadow:0 4px 12px rgba(14,165,233,.35) !important;
+}
+#doctor-table .tabulator-page[disabled] { opacity:.35; cursor:not-allowed; }
+#doctor-table .tabulator-page-size {
+    border:1.5px solid rgba(14,165,233,0.2) !important;
+    border-radius:8px; padding:4px 8px;
+    font-size:12px; font-family:'Inter',sans-serif;
+    color:#374151; background:#fff; cursor:pointer;
+}
+/* Empty state */
+.doc-empty { text-align:center; padding:52px 20px; color:#94a3b8; font-size:14px; }
+.doc-empty i { font-size:40px; margin-bottom:10px; opacity:.4; display:block; }
+
+/* Error state */
+#doctor-error {
+    display:none; text-align:center; padding:40px;
+    color:#dc2626; font-size:14px;
+}
+</style>
+
+<div id="doctor-error">
+    <i class="fas fa-exclamation-triangle" style="font-size:32px;margin-bottom:10px;display:block;opacity:.6;"></i>
+    <span id="doctor-error-msg">Failed to load doctors.</span>
+</div>
+
+<script>
+(function () {
+    const AF_TOKEN = '@antiforgeryToken';
+
+    /* ── Formatters ── */
+    const fmtDocNo  = c => `<span class="doc-badge doc-badge-no">${c.getValue() || ''}</span>`;
+    const fmtName   = c => `<strong style="color:var(--text-primary,#1e293b)">${c.getValue() || ''}</strong>`;
+    const fmtDept   = c => `<span class="doc-badge doc-badge-dept">${c.getValue() || '—'}</span>`;
+    const fmtSpec   = c => `<span class="doc-badge doc-badge-spec">${c.getValue() || '—'}</span>`;
+    const fmtFee    = c => `<span class="doc-fee">৳${Number(c.getValue() || 0).toLocaleString()}</span>`;
+    const fmtExp    = c => `<span style="color:#475569;font-weight:600">${c.getValue() || 0} yrs</span>`;
+    const fmtStatus = c => {
+        const v   = c.getValue() || '';
+        const cls = v === 'Available' ? 'doc-badge-avail'
+                  : v === 'OnLeave'   ? 'doc-badge-leave'
+                  : 'doc-badge-inactive';
+        const lbl = v === 'OnLeave' ? 'On Leave' : (v || '—');
+        return `<span class="doc-badge ${cls}">${lbl}</span>`;
+    };
+    const fmtActions = c => {
+        const row = c.getRow().getData();
+        return `<div class="doc-actions">
+            <a href="${row.editUrl || '#'}" class="doc-btn doc-btn-edit" title="Edit"><i class="fas fa-edit"></i></a>
+            <button class="doc-btn doc-btn-delete" title="Delete"
+                onclick="deleteDoctor('${row.deleteUrl || ''}')"><i class="fas fa-trash"></i></button>
+        </div>`;
+    };
+
+    function initTable(doctors) {
+
+        const deptSet    = [...new Set(doctors.map(d => d.department).filter(Boolean))].sort();
+        const deptValues = [{ label: 'All Departments', value: '' },
+                            ...deptSet.map(d => ({ label: d, value: d }))];
+
+        const statusValues = [
+            { label: 'All Status',  value: '' },
+            { label: 'Available',   value: 'Available' },
+            { label: 'On Leave',    value: 'OnLeave' },
+            { label: 'Inactive',    value: 'Inactive' },
+        ];
+
+        new Tabulator('#doctor-table', {
+            data:                  doctors,
+            layout:                'fitColumns',
+            responsiveLayout:      'collapse',
+            pagination:            true,
+            paginationMode:        'local',
+            paginationSize:        10,
+            paginationSizeSelector:[5, 10, 20, 50],
+            movableColumns:        false,
+            sortMode:              'local',
+            filterMode:            'local',
+            placeholder:           `<div class="doc-empty"><i class="fas fa-user-md"></i>No doctors found.</div>`,
+            columns: [
+                {
+                    title: '#', field: 'id', width: 55,
+                    hozAlign: 'center', headerHozAlign: 'center',
+                    headerFilter: false, headerSort: false,
+                    formatter: c => {
+                        const rows = c.getTable().getRows('active');
+                        const idx  = rows.indexOf(c.getRow());
+                        return `<span style="color:#94a3b8;font-weight:600;font-size:12px">${idx + 1}</span>`;
+                    }
+                },
+                { title: 'Doctor No',     field: 'doctorNo',       minWidth: 130, headerFilter: 'input', headerFilterPlaceholder: 'Search…', formatter: fmtDocNo, sorter: 'string' },
+                { title: 'Full Name',      field: 'fullName',       minWidth: 170, headerFilter: 'input', headerFilterPlaceholder: 'Search…', formatter: fmtName,  sorter: 'string' },
+                { title: 'Department',     field: 'department',     minWidth: 150, headerFilter: 'select', headerFilterParams: { values: deptValues },   headerFilterFunc: '=', formatter: fmtDept, sorter: 'string' },
+                { title: 'Specialization', field: 'specialization', minWidth: 180, headerFilter: 'input', headerFilterPlaceholder: 'Search…', formatter: fmtSpec,  sorter: 'string' },
+                { title: 'Qualification',  field: 'qualification',  minWidth: 160, headerFilter: 'input', headerFilterPlaceholder: 'Search…', sorter: 'string' },
+                { title: 'Exp.',           field: 'experience',     width: 80,  hozAlign: 'center', headerHozAlign: 'center', headerFilter: false, formatter: fmtExp, sorter: 'number' },
+                { title: 'Fee (৳)',        field: 'fee',            width: 110, hozAlign: 'right',  headerHozAlign: 'right',  headerFilter: false, formatter: fmtFee, sorter: 'number' },
+                { title: 'Status',         field: 'status',         width: 120, hozAlign: 'center', headerHozAlign: 'center', headerFilter: 'select', headerFilterParams: { values: statusValues }, headerFilterFunc: '=', formatter: fmtStatus, sorter: 'string' },
+                { title: 'Actions',        field: 'id',             width: 100, hozAlign: 'center', headerHozAlign: 'center', headerFilter: false, headerSort: false, formatter: fmtActions }
+            ]
+        });
+    }
+
+    /* ── Pre-loaded data (server-side rendered, zero extra round-trip) ── */
+    const _preloaded = @Html.Raw(ViewBag.DoctorJson ?? "[]");
+    initTable(Array.isArray(_preloaded) ? _preloaded : []);
+
+    /* ── Delete handler ── */
+    window.deleteDoctor = function (url) {
+        if (!url || !confirm('Are you sure you want to remove this doctor?')) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        const tok = document.createElement('input');
+        tok.type = 'hidden'; tok.name = '__RequestVerificationToken'; tok.value = AF_TOKEN;
+        form.appendChild(tok);
+        document.body.appendChild(form);
+        form.submit();
+    };
+})();
+</script>
+}

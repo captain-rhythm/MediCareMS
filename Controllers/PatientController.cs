@@ -18,39 +18,88 @@ public class PatientController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index(string? search, int page = 1)
+    public async Task<IActionResult> Index()
     {
-        const int pageSize = 10;
-        var query = _db.Patients.Where(p => !p.IsDeleted);
-
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(p => p.FullName.Contains(search) || p.PatientNo.Contains(search) || p.MobileNumber!.Contains(search));
-
-        var projected = query
+        var raw = await _db.Patients
+            .Where(p => !p.IsDeleted)
             .OrderBy(p => p.FullName)
-            .Select(p => new PatientListViewModel
+            .Select(p => new
             {
-                Id = p.Id,
-                PatientNo = p.PatientNo,
-                FullName = p.FullName,
-                MobileNumber = p.MobileNumber,
-                Gender = p.Gender,
-                BloodGroup = p.BloodGroup,
-                Age = (int)((DateTime.Today - p.DateOfBirth).TotalDays / 365.25),
+                p.Id, p.PatientNo, p.FullName, p.MobileNumber,
+                p.Gender, p.BloodGroup, p.DateOfBirth,
                 TotalVisits = p.Appointments.Count(a => !a.IsDeleted)
-            });
+            })
+            .ToListAsync();
 
-        var paged = await PaginatedList<PatientListViewModel>.CreateAsync(projected, page, pageSize);
+        var today = DateTime.Today;
+        var patients = raw.Select(p => new
+        {
+            id          = p.Id,
+            patientNo   = p.PatientNo,
+            fullName    = p.FullName,
+            mobile      = p.MobileNumber ?? "",
+            ageGender   = $"{(int)((today - p.DateOfBirth).TotalDays / 365.25)} yrs / {p.Gender}",
+            age         = (int)((today - p.DateOfBirth).TotalDays / 365.25),
+            bloodGroup  = p.BloodGroup.HasValue
+                            ? p.BloodGroup.Value.ToString().Replace("_", " ")
+                            : "",
+            totalVisits = p.TotalVisits,
+            detailUrl   = Url.Action("Details", "Patient", new { id = p.Id }),
+            editUrl     = Url.Action("Edit",    "Patient", new { id = p.Id }),
+            deleteUrl   = Url.Action("Delete",  "Patient", new { id = p.Id })
+        });
 
-        ViewBag.Search = search;
-        ViewData["PageIndex"]  = paged.PageIndex;
-        ViewData["TotalPages"] = paged.TotalPages;
-        ViewData["TotalCount"] = paged.TotalCount;
-        ViewData["PageSize"]   = paged.PageSize;
-        ViewData["PagAction"]  = "Index";
-        ViewData["PagSearch"]  = search;
-        return View(paged.Items);
+        var opts = new System.Text.Json.JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        ViewBag.PatientJson = System.Text.Json.JsonSerializer.Serialize(patients, opts);
+        return View();
     }
+
+
+    [HttpGet]
+    public async Task<IActionResult> GetList()
+    {
+        // Fetch raw data from DB (Age computed in C# to avoid EF Core SQL translation issues)
+        var raw = await _db.Patients
+            .Where(p => !p.IsDeleted)
+            .OrderBy(p => p.FullName)
+            .Select(p => new
+            {
+                p.Id,
+                p.PatientNo,
+                p.FullName,
+                p.MobileNumber,
+                p.Gender,
+                p.BloodGroup,
+                p.DateOfBirth,
+                TotalVisits = p.Appointments.Count(a => !a.IsDeleted)
+            })
+            .ToListAsync();
+
+        var today = DateTime.Today;
+        var patients = raw.Select(p => new
+        {
+            id          = p.Id,
+            patientNo   = p.PatientNo,
+            fullName    = p.FullName,
+            mobile      = p.MobileNumber ?? "",
+            ageGender   = $"{(int)((today - p.DateOfBirth).TotalDays / 365.25)} yrs / {p.Gender}",
+            age         = (int)((today - p.DateOfBirth).TotalDays / 365.25),
+            bloodGroup  = p.BloodGroup.HasValue
+                            ? p.BloodGroup.Value.ToString().Replace("_", " ")
+                            : "",
+            totalVisits = p.TotalVisits,
+            detailUrl   = Url.Action("Details", "Patient", new { id = p.Id }),
+            editUrl     = Url.Action("Edit",    "Patient", new { id = p.Id }),
+            deleteUrl   = Url.Action("Delete",  "Patient", new { id = p.Id })
+        }).ToList();
+
+        return Json(patients);
+    }
+
+
 
     [HttpGet]
     public IActionResult Create() => View(new PatientCreateEditViewModel());

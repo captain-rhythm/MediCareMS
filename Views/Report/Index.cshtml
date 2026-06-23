@@ -1,0 +1,686 @@
+@model MediCareMS.Models.ViewModels.Report.RevenueReportViewModel
+@using System.Text.Json
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{ ViewData["Title"] = "Revenue Reports"; }
+
+@{
+    var rowsJson        = JsonSerializer.Serialize(Model.Rows.Select(r => new {
+        date          = r.Date.ToString("dd MMM yyyy"),
+        dateSortable  = r.Date.ToString("yyyy-MM-dd"),
+        appointmentNo = r.AppointmentNo,
+        invoiceNo     = r.InvoiceNo,
+        patientName   = r.PatientName,
+        doctorName    = r.DoctorName,
+        totalAmount   = r.TotalAmount,
+        paidAmount    = r.PaidAmount,
+        paymentMethod = r.PaymentMethod,
+        paymentStatus = r.PaymentStatus
+    }));
+
+    var monthLabels = JsonSerializer.Serialize(Model.MonthlyStats.Select(m => m.Label));
+    var monthData   = JsonSerializer.Serialize(Model.MonthlyStats.Select(m => m.Amount));
+    var docLabels   = JsonSerializer.Serialize(Model.DoctorStats.Select(d => d.DoctorName));
+    var docData     = JsonSerializer.Serialize(Model.DoctorStats.Select(d => d.Amount));
+    var methLabels  = JsonSerializer.Serialize(Model.MethodStats.Select(m => m.Method));
+    var methData    = JsonSerializer.Serialize(Model.MethodStats.Select(m => m.Amount));
+
+    string DateVal(DateTime? d) => d.HasValue ? d.Value.ToString("yyyy-MM-dd") : "";
+}
+
+<!-- ══════════════════════════ PAGE HEADER ══════════════════════════════════ -->
+<div class="page-header" id="rpt-header">
+    <h2><i class="fas fa-chart-line"></i> Revenue Reports</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a id="btn-pdf" class="btn btn-outline" href="#" style="color:#dc2626;border-color:rgba(220,38,38,.3);">
+            <i class="fas fa-file-pdf"></i> Export PDF
+        </a>
+        <a id="btn-csv" class="btn btn-primary" href="#">
+            <i class="fas fa-file-excel"></i> Export Excel
+        </a>
+    </div>
+</div>
+
+<!-- ══════════════════════════ SUMMARY CARDS ════════════════════════════════ -->
+<div class="rpt-stats-grid" id="rpt-cards">
+    <div class="rpt-stat-card rpt-stat-purple">
+        <div class="rpt-stat-icon"><i class="fas fa-coins"></i></div>
+        <div class="rpt-stat-body">
+            <div class="rpt-stat-value">৳ @Model.Summary.TotalRevenue.ToString("N0")</div>
+            <div class="rpt-stat-label">Total Revenue</div>
+        </div>
+    </div>
+    <div class="rpt-stat-card rpt-stat-blue">
+        <div class="rpt-stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="rpt-stat-body">
+            <div class="rpt-stat-value">৳ @Model.Summary.TodayRevenue.ToString("N0")</div>
+            <div class="rpt-stat-label">Today's Revenue</div>
+        </div>
+    </div>
+    <div class="rpt-stat-card rpt-stat-teal">
+        <div class="rpt-stat-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div class="rpt-stat-body">
+            <div class="rpt-stat-value">৳ @Model.Summary.MonthlyRevenue.ToString("N0")</div>
+            <div class="rpt-stat-label">Monthly Revenue</div>
+        </div>
+    </div>
+    <div class="rpt-stat-card rpt-stat-green">
+        <div class="rpt-stat-icon"><i class="fas fa-check-circle"></i></div>
+        <div class="rpt-stat-body">
+            <div class="rpt-stat-value">৳ @Model.Summary.PaidRevenue.ToString("N0")</div>
+            <div class="rpt-stat-label">Paid Revenue</div>
+        </div>
+    </div>
+    <div class="rpt-stat-card rpt-stat-orange">
+        <div class="rpt-stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="rpt-stat-body">
+            <div class="rpt-stat-value">৳ @Model.Summary.PendingRevenue.ToString("N0")</div>
+            <div class="rpt-stat-label">Pending Revenue</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════ FILTER BAR ═══════════════════════════════════ -->
+<div class="card rpt-filter-card" id="rpt-filters">
+    <div class="card-header" style="padding-bottom:0;">
+        <h3><i class="fas fa-filter"></i> Filters</h3>
+        <button class="btn btn-sm btn-outline" id="toggleFilters">
+            <i class="fas fa-chevron-up" id="filterChevron"></i>
+        </button>
+    </div>
+    <div id="filterBody" style="padding:16px 20px 20px;">
+        <form method="get" id="filterForm">
+            <div class="rpt-filter-grid">
+                <div class="rpt-filter-group">
+                    <label class="rpt-label"><i class="fas fa-calendar-from"></i> Date From</label>
+                    <input type="date" name="dateFrom" value="@DateVal(Model.Filters.DateFrom)"
+                           class="rpt-input" id="f-dateFrom" />
+                </div>
+                <div class="rpt-filter-group">
+                    <label class="rpt-label"><i class="fas fa-calendar-to"></i> Date To</label>
+                    <input type="date" name="dateTo" value="@DateVal(Model.Filters.DateTo)"
+                           class="rpt-input" id="f-dateTo" />
+                </div>
+                <div class="rpt-filter-group">
+                    <label class="rpt-label"><i class="fas fa-user-md"></i> Doctor</label>
+                    <select name="doctorId" class="rpt-input" id="f-doctor">
+                        <option value="">All Doctors</option>
+                        @foreach (var d in Model.Doctors)
+                        {
+                            if (Model.Filters.DoctorId == d.Id)
+                            {
+                                <option value="@d.Id" selected="selected">@d.FullName</option>
+                            }
+                            else
+                            {
+                                <option value="@d.Id">@d.FullName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="rpt-filter-group">
+                    <label class="rpt-label"><i class="fas fa-credit-card"></i> Payment Method</label>
+                    <select name="method" class="rpt-input" id="f-method">
+                        <option value="">All Methods</option>
+                        @foreach (var m in new[] { "Cash","Card","Online","Insurance" })
+                        {
+                            if (Model.Filters.Method == m)
+                            {
+                                <option value="@m" selected="selected">@m</option>
+                            }
+                            else
+                            {
+                                <option value="@m">@m</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="rpt-filter-group">
+                    <label class="rpt-label"><i class="fas fa-info-circle"></i> Payment Status</label>
+                    <select name="status" class="rpt-input" id="f-status">
+                        <option value="">All Statuses</option>
+                        @foreach (var s in new[] { "Paid","Partial","Unpaid","Cancelled" })
+                        {
+                            if (Model.Filters.Status == s)
+                            {
+                                <option value="@s" selected="selected">@s</option>
+                            }
+                            else
+                            {
+                                <option value="@s">@s</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="rpt-filter-group rpt-filter-actions">
+                    <label class="rpt-label">&nbsp;</label>
+                    <div style="display:flex;gap:8px;">
+                        <button type="submit" class="btn btn-primary" style="flex:1;">
+                            <i class="fas fa-search"></i> Apply
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline" style="flex:1;text-align:center;">
+                            <i class="fas fa-undo"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══════════════════════════ CHARTS ROW ═══════════════════════════════════ -->
+<div class="rpt-charts-grid" id="rpt-charts">
+    <!-- Monthly Trend -->
+    <div class="card rpt-chart-card rpt-chart-wide">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-area"></i> Monthly Revenue Trend</h3>
+            <span class="rpt-chart-sub">Last 12 months</span>
+        </div>
+        <div style="padding:16px;height:260px;position:relative;">
+            <canvas id="chartMonthly"></canvas>
+        </div>
+    </div>
+
+    <!-- Doctor-wise -->
+    <div class="card rpt-chart-card">
+        <div class="card-header">
+            <h3><i class="fas fa-user-md"></i> Doctor Revenue</h3>
+            <span class="rpt-chart-sub">Top earners</span>
+        </div>
+        <div style="padding:16px;height:260px;position:relative;">
+            <canvas id="chartDoctors"></canvas>
+        </div>
+    </div>
+
+    <!-- Payment Method -->
+    <div class="card rpt-chart-card">
+        <div class="card-header">
+            <h3><i class="fas fa-credit-card"></i> Payment Methods</h3>
+            <span class="rpt-chart-sub">Distribution</span>
+        </div>
+        <div style="padding:16px;height:260px;position:relative;display:flex;align-items:center;justify-content:center;">
+            <canvas id="chartMethods" style="max-height:220px;max-width:220px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════ DATA TABLE ═══════════════════════════════════ -->
+<div class="card" style="padding:0;overflow:hidden;" id="rpt-table-card">
+    <div class="card-header" style="padding:14px 20px;">
+        <h3><i class="fas fa-table"></i> Revenue Transactions</h3>
+        <span id="rpt-row-count" class="rpt-chart-sub"></span>
+    </div>
+    <div id="revenue-table"></div>
+</div>
+
+<!-- ══════════════════════════ STYLES ════════════════════════════════════════ -->
+<style>
+/* ── Summary Cards ───────────────────────────────────────────────────────── */
+.rpt-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+@@media (max-width: 1100px) { .rpt-stats-grid { grid-template-columns: repeat(3,1fr); } }
+@@media (max-width: 700px)  { .rpt-stats-grid { grid-template-columns: repeat(2,1fr); } }
+
+.rpt-stat-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 20px; border-radius: 16px;
+    background: var(--card-bg, #fff);
+    box-shadow: 0 4px 20px rgba(0,0,0,.07);
+    border: 1px solid rgba(255,255,255,.6);
+    transition: transform .2s, box-shadow .2s;
+    position: relative; overflow: hidden;
+}
+.rpt-stat-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: inherit; opacity: .06; border-radius: inherit;
+}
+.rpt-stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.12); }
+
+.rpt-stat-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+}
+.rpt-stat-value { font-size: 20px; font-weight: 800; line-height: 1; letter-spacing: -.5px; }
+.rpt-stat-label { font-size: 12px; font-weight: 500; opacity: .72; margin-top: 4px; }
+
+.rpt-stat-purple { border-left: 4px solid #8b5cf6; }
+.rpt-stat-purple .rpt-stat-icon  { background: rgba(139,92,246,.12); color: #8b5cf6; }
+.rpt-stat-purple .rpt-stat-value { color: #6d28d9; }
+
+.rpt-stat-blue { border-left: 4px solid #3b82f6; }
+.rpt-stat-blue .rpt-stat-icon  { background: rgba(59,130,246,.12); color: #3b82f6; }
+.rpt-stat-blue .rpt-stat-value { color: #1d4ed8; }
+
+.rpt-stat-teal { border-left: 4px solid #14b8a6; }
+.rpt-stat-teal .rpt-stat-icon  { background: rgba(20,184,166,.12); color: #14b8a6; }
+.rpt-stat-teal .rpt-stat-value { color: #0f766e; }
+
+.rpt-stat-green { border-left: 4px solid #22c55e; }
+.rpt-stat-green .rpt-stat-icon  { background: rgba(34,197,94,.12); color: #22c55e; }
+.rpt-stat-green .rpt-stat-value { color: #15803d; }
+
+.rpt-stat-orange { border-left: 4px solid #f59e0b; }
+.rpt-stat-orange .rpt-stat-icon  { background: rgba(245,158,11,.12); color: #f59e0b; }
+.rpt-stat-orange .rpt-stat-value { color: #b45309; }
+
+/* ── Filters ─────────────────────────────────────────────────────────────── */
+.rpt-filter-card { margin-bottom: 20px; }
+.rpt-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 14px;
+    align-items: end;
+}
+.rpt-filter-group { display: flex; flex-direction: column; gap: 6px; }
+.rpt-label {
+    font-size: 11.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--text-secondary,#64748b);
+}
+.rpt-input {
+    padding: 9px 12px; border-radius: 10px;
+    border: 1.5px solid rgba(139,92,246,.2);
+    background: rgba(139,92,246,.03);
+    font-size: 13px; font-family: 'Inter', sans-serif;
+    color: var(--text-primary,#1e293b);
+    outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.rpt-input:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139,92,246,.12);
+    background: #fff;
+}
+.rpt-filter-actions { min-width: 160px; }
+
+/* ── Charts ──────────────────────────────────────────────────────────────── */
+.rpt-charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+@@media (max-width: 1000px) { .rpt-charts-grid { grid-template-columns: 1fr 1fr; } }
+@@media (max-width: 680px)  { .rpt-charts-grid { grid-template-columns: 1fr; } }
+
+.rpt-chart-card .card-header { border-bottom: 1px solid rgba(139,92,246,.1); }
+.rpt-chart-sub { font-size: 12px; color: var(--text-secondary,#94a3b8); font-weight: 500; }
+@@media (max-width: 1000px) { .rpt-chart-wide { grid-column: 1 / -1; } }
+
+/* ── Tabulator skin ──────────────────────────────────────────────────────── */
+#revenue-table .tabulator {
+    border: none !important;
+    background: transparent !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    border-radius: 0 0 12px 12px !important;
+    overflow: hidden !important;
+}
+#revenue-table .tabulator-header {
+    background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 40%, #4f46e5 100%) !important;
+    border-bottom: none !important;
+    box-shadow: 0 4px 18px rgba(109,40,217,.35) !important;
+}
+#revenue-table .tabulator-col {
+    background: transparent !important;
+    border-right: 1px solid rgba(255,255,255,.12) !important;
+    color: #fff !important;
+}
+#revenue-table .tabulator-col:hover {
+    background: rgba(255,255,255,.1) !important;
+}
+#revenue-table .tabulator-col-title {
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: .7px !important;
+    color: #fff !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,.2) !important;
+}
+#revenue-table .tabulator-col-sorter { color: rgba(255,255,255,.7) !important; }
+#revenue-table .tabulator-col-sorter .tabulator-arrow {
+    border-top-color: rgba(255,255,255,.7) !important;
+    border-bottom-color: rgba(255,255,255,.7) !important;
+}
+#revenue-table .tabulator-header-filter { background: transparent !important; padding: 4px 6px 6px !important; }
+#revenue-table .tabulator-header-filter input {
+    width: 100% !important;
+    padding: 5px 9px !important;
+    border: 1.5px solid rgba(255,255,255,.4) !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,.18) !important;
+    backdrop-filter: blur(6px) !important;
+    font-size: 11.5px !important;
+    font-family: 'Inter', sans-serif !important;
+    color: #fff !important;
+    outline: none !important;
+    transition: border-color .18s, background .18s, box-shadow .18s;
+}
+#revenue-table .tabulator-header-filter input::placeholder { color: rgba(255,255,255,.6) !important; }
+#revenue-table .tabulator-header-filter input:focus {
+    border-color: rgba(255,255,255,.9) !important;
+    background: rgba(255,255,255,.28) !important;
+    box-shadow: 0 0 0 3px rgba(255,255,255,.15) !important;
+}
+#revenue-table .tabulator-header-filter select {
+    width: 100% !important;
+    padding: 5px 9px !important;
+    border: 2px solid rgba(255,255,255,.5) !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    font-size: 11.5px !important;
+    font-family: 'Inter', sans-serif !important;
+    color: #5b21b6 !important;
+    font-weight: 600 !important;
+    outline: none !important;
+    cursor: pointer !important;
+    transition: border-color .18s, box-shadow .18s;
+}
+#revenue-table .tabulator-header-filter select:focus {
+    border-color: #fff !important;
+    box-shadow: 0 0 0 3px rgba(255,255,255,.25) !important;
+}
+#revenue-table .tabulator-header-filter select option {
+    background: #fff !important;
+    color: #1e293b !important;
+    font-weight: 500 !important;
+}
+
+#revenue-table .tabulator-row { border-bottom: 1px solid rgba(139,92,246,.07) !important; transition: background .14s; }
+#revenue-table .tabulator-row:hover { background: rgba(109,40,217,.05) !important; }
+#revenue-table .tabulator-row.tabulator-row-even { background: rgba(238,234,255,.35) !important; }
+#revenue-table .tabulator-row.tabulator-row-odd  { background: #fff !important; }
+#revenue-table .tabulator-cell { padding: 10px 14px !important; border-right: none !important; }
+
+
+
+/* Badges */
+.rpt-badge { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+.rpt-badge-paid     { background:rgba(34,197,94,.1);   color:#15803d; border:1px solid rgba(34,197,94,.25); }
+.rpt-badge-partial  { background:rgba(59,130,246,.1);  color:#1d4ed8; border:1px solid rgba(59,130,246,.25); }
+.rpt-badge-unpaid   { background:rgba(245,158,11,.1);  color:#b45309; border:1px solid rgba(245,158,11,.25); }
+.rpt-badge-cancelled{ background:rgba(239,68,68,.1);   color:#b91c1c; border:1px solid rgba(239,68,68,.25); }
+.rpt-badge-cash     { background:rgba(139,92,246,.1);  color:#6d28d9; border:1px solid rgba(139,92,246,.2); }
+.rpt-badge-card     { background:rgba(20,184,166,.1);  color:#0f766e; border:1px solid rgba(20,184,166,.25); }
+.rpt-badge-online   { background:rgba(59,130,246,.1);  color:#1d4ed8; border:1px solid rgba(59,130,246,.25); }
+.rpt-badge-insurance{ background:rgba(245,158,11,.1);  color:#b45309; border:1px solid rgba(245,158,11,.25); }
+
+/* Paginator */
+#revenue-table .tabulator-paginator {
+    padding: 10px 16px; border-top: 1px solid rgba(139,92,246,.1);
+    background: rgba(248,250,252,.5);
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center;
+}
+#revenue-table .tabulator-page {
+    min-width:34px; height:34px; padding:0 10px; border-radius:9px;
+    border:1.5px solid #e5e7eb; background:#fff; color:#374151;
+    font-size:12.5px; font-weight:500; cursor:pointer; transition:all .18s; font-family:'Inter',sans-serif;
+}
+#revenue-table .tabulator-page:hover:not([disabled]) {
+    background:rgba(139,92,246,.07); border-color:#8b5cf6; color:#7c3aed; transform:translateY(-1px);
+}
+#revenue-table .tabulator-page.active {
+    background:linear-gradient(135deg,#8b5cf6,#a855f7); border-color:transparent; color:#fff;
+    box-shadow:0 4px 12px rgba(139,92,246,.35);
+}
+#revenue-table .tabulator-page[disabled] { opacity:.35; cursor:not-allowed; }
+#revenue-table .tabulator-page-size {
+    border:1.5px solid rgba(139,92,246,.2); border-radius:8px; padding:4px 8px;
+    font-size:12px; font-family:'Inter',sans-serif; color:#374151; background:#fff; cursor:pointer;
+}
+#revenue-table .tabulator-col .tabulator-col-sorter { color:#a78bfa; }
+
+/* ── Print styles ────────────────────────────────────────────────────────── */
+@@media print {
+    .sidebar, .topbar, #rpt-header .btn, #rpt-filters, .app-wrapper > *:not(.main-content) { display:none !important; }
+    .main-content { margin:0 !important; padding:0 !important; }
+    .rpt-charts-grid { page-break-inside: avoid; }
+    #revenue-table .tabulator-paginator { display:none !important; }
+    body { background: #fff !important; }
+}
+</style>
+
+@section Scripts {
+<link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet"/>
+<script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    /* ── Data from server ── */
+    const rows       = @Html.Raw(rowsJson);
+    const mLabels    = @Html.Raw(monthLabels);
+    const mData      = @Html.Raw(monthData);
+    const dLabels    = @Html.Raw(docLabels);
+    const dData      = @Html.Raw(docData);
+    const methLabels = @Html.Raw(methLabels);
+    const methData   = @Html.Raw(methData);
+
+    /* ── Helpers ── */
+    const fmt = v => '৳' + Number(v).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2});
+
+    /* ── Status badge ── */
+    const statusBadge = v => {
+        const cls = {Paid:'paid',Partial:'partial',Unpaid:'unpaid',Cancelled:'cancelled'}[v] || 'unpaid';
+        return `<span class="rpt-badge rpt-badge-${cls}">${v}</span>`;
+    };
+
+    /* ── Method badge ── */
+    const methodBadge = v => {
+        const cls = (v||'').toLowerCase();
+        return `<span class="rpt-badge rpt-badge-${cls}">${v}</span>`;
+    };
+
+    /* ── Tabulator ── */
+    const table = new Tabulator('#revenue-table', {
+        data: rows,
+        layout: 'fitColumns',
+        responsiveLayout: 'collapse',
+        pagination: true,
+        paginationMode: 'local',
+        paginationSize: 15,
+        paginationSizeSelector: [10, 15, 25, 50, 100],
+        sortMode: 'local',
+        filterMode: 'local',
+        placeholder: '<div style="text-align:center;padding:40px;color:#94a3b8;"><i class="fas fa-chart-line" style="font-size:36px;opacity:.35;display:block;margin-bottom:10px;"></i>No records match the selected filters.</div>',
+        columns: [
+            {
+                title: 'Date', field: 'dateSortable', minWidth: 110,
+                headerFilter: 'input', headerFilterPlaceholder: 'Search…',
+                formatter: cell => `<span style="color:#64748b;font-size:12px;">${cell.getRow().getData().date}</span>`,
+                sorter: 'string'
+            },
+            {
+                title: 'Appt No', field: 'appointmentNo', minWidth: 120,
+                headerFilter: 'input', headerFilterPlaceholder: 'Search…',
+                formatter: cell => `<span style="background:rgba(139,92,246,.1);color:#7c3aed;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;">${cell.getValue()}</span>`,
+                sorter: 'string'
+            },
+            {
+                title: 'Invoice', field: 'invoiceNo', minWidth: 120,
+                headerFilter: 'input', headerFilterPlaceholder: 'Search…',
+                formatter: cell => `<span style="font-size:12px;color:#475569;">${cell.getValue()}</span>`,
+                sorter: 'string'
+            },
+            {
+                title: 'Patient', field: 'patientName', minWidth: 150,
+                headerFilter: 'input', headerFilterPlaceholder: 'Search…',
+                formatter: cell => `<strong style="color:var(--text-primary,#1e293b)">${cell.getValue()}</strong>`,
+                sorter: 'string'
+            },
+            {
+                title: 'Doctor', field: 'doctorName', minWidth: 150,
+                headerFilter: 'input', headerFilterPlaceholder: 'Search…',
+                formatter: cell => `<span style="color:#475569;">${cell.getValue()}</span>`,
+                sorter: 'string'
+            },
+            {
+                title: 'Total (৳)', field: 'totalAmount', minWidth: 110,
+                hozAlign: 'right', headerHozAlign: 'right',
+                headerFilter: false,
+                formatter: cell => `<span style="font-weight:600;color:#1e293b;">${fmt(cell.getValue())}</span>`,
+                sorter: 'number'
+            },
+            {
+                title: 'Paid (৳)', field: 'paidAmount', minWidth: 110,
+                hozAlign: 'right', headerHozAlign: 'right',
+                headerFilter: false,
+                formatter: cell => `<span style="font-weight:700;color:#15803d;">${fmt(cell.getValue())}</span>`,
+                sorter: 'number'
+            },
+            {
+                title: 'Method', field: 'paymentMethod', minWidth: 110,
+                headerFilter: 'select',
+                headerFilterParams: { values: {'':'All','Cash':'Cash','Card':'Card','Online':'Online','Insurance':'Insurance'} },
+                headerFilterFunc: '=',
+                formatter: cell => methodBadge(cell.getValue()),
+                sorter: 'string'
+            },
+            {
+                title: 'Status', field: 'paymentStatus', minWidth: 110,
+                headerFilter: 'select',
+                headerFilterParams: { values: {'':'All','Paid':'Paid','Partial':'Partial','Unpaid':'Unpaid','Cancelled':'Cancelled'} },
+                headerFilterFunc: '=',
+                formatter: cell => statusBadge(cell.getValue()),
+                sorter: 'string'
+            }
+        ],
+        dataFiltered: (filters, rows) => {
+            document.getElementById('rpt-row-count').textContent = `${rows.length} records`;
+        }
+    });
+
+    table.on('tableBuilt', () => {
+        const total = table.getRows('active').length;
+        document.getElementById('rpt-row-count').textContent = `${total} records`;
+    });
+
+    /* ── Chart.js shared config ── */
+    const chartDefaults = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } }
+    };
+
+    /* ── Monthly Trend (Line) ── */
+    new Chart(document.getElementById('chartMonthly'), {
+        type: 'line',
+        data: {
+            labels: mLabels,
+            datasets: [{
+                label: 'Revenue',
+                data: mData,
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139,92,246,.12)',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#8b5cf6',
+                pointRadius: 4, pointHoverRadius: 6,
+                fill: true, tension: 0.4
+            }]
+        },
+        options: {
+            ...chartDefaults,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ' ৳' + Number(ctx.raw).toLocaleString()
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                y: {
+                    grid: { color: 'rgba(0,0,0,.05)' },
+                    ticks: {
+                        font: { size: 11 },
+                        callback: v => '৳' + Number(v).toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+
+    /* ── Doctor Revenue (Horizontal Bar) ── */
+    const barColors = dLabels.map((_, i) => [
+        '#8b5cf6','#6366f1','#3b82f6','#06b6d4','#10b981',
+        '#f59e0b','#f97316','#ef4444','#ec4899','#8b5cf6'
+    ][i % 10]);
+
+    new Chart(document.getElementById('chartDoctors'), {
+        type: 'bar',
+        data: {
+            labels: dLabels,
+            datasets: [{
+                label: 'Revenue',
+                data: dData,
+                backgroundColor: barColors.map(c => c + '22'),
+                borderColor: barColors,
+                borderWidth: 2, borderRadius: 8
+            }]
+        },
+        options: {
+            ...chartDefaults,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ' ৳' + Number(ctx.raw).toLocaleString() } }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(0,0,0,.05)' },
+                    ticks: { font: { size: 10 }, callback: v => '৳' + Number(v).toLocaleString() }
+                },
+                y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+            }
+        }
+    });
+
+    /* ── Payment Method (Doughnut) ── */
+    const doughnutColors = ['#8b5cf6','#3b82f6','#06b6d4','#10b981','#f59e0b'];
+    new Chart(document.getElementById('chartMethods'), {
+        type: 'doughnut',
+        data: {
+            labels: methLabels,
+            datasets: [{
+                data: methData,
+                backgroundColor: doughnutColors.map(c => c + 'cc'),
+                borderColor: doughnutColors,
+                borderWidth: 2, hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+                legend: {
+                    display: true, position: 'bottom',
+                    labels: { font: { size: 11 }, padding: 12, usePointStyle: true }
+                },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ৳${Number(ctx.raw).toLocaleString()}` } }
+            }
+        }
+    });
+
+    /* ── Export URL helpers ── */
+    function buildExportUrl(base) {
+        const p = new URLSearchParams(window.location.search);
+        return `${base}?${p.toString()}`;
+    }
+    document.getElementById('btn-pdf').href = buildExportUrl('/Report/ExportPdf');
+    document.getElementById('btn-csv').href = buildExportUrl('/Report/ExportCsv');
+
+    /* ── Collapsible filter bar ── */
+    const toggleBtn   = document.getElementById('toggleFilters');
+    const filterBody  = document.getElementById('filterBody');
+    const chevron     = document.getElementById('filterChevron');
+    let collapsed     = false;
+    toggleBtn.addEventListener('click', () => {
+        collapsed = !collapsed;
+        filterBody.style.display  = collapsed ? 'none' : '';
+        chevron.className = collapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+    });
+
+})();
+</script>
+}
