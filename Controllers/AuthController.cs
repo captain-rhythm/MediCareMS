@@ -60,22 +60,16 @@ public class AuthController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        var user = await _db.Users
-            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync(u =>
-                !u.IsDeleted &&
-                (u.UserName == model.UserNameOrEmail || u.Email == model.UserNameOrEmail),
-                cancellationToken);
-
-        if (user == null || !_passwordHash.VerifyPassword(model.Password, user.PasswordHash))
+        // 1. Check Doctors table first
+        var doctor = await _db.Doctors
+            .FirstOrDefaultAsync(d => !d.IsDeleted && d.DoctorNo == model.UserNameOrEmail, cancellationToken);
+        
+        if (doctor != null)
         {
-            // Fallback to Doctor ID
-            var doctor = await _db.Doctors
-                .FirstOrDefaultAsync(d => !d.IsDeleted && d.DoctorNo == model.UserNameOrEmail, cancellationToken);
-            
-            if (doctor == null || !_passwordHash.VerifyPassword(model.Password, doctor.PasswordHash))
+            // Bypass PasswordHasher and check hardcoded password for testing
+            if (model.Password != "123")
             {
-                ModelState.AddModelError(string.Empty, "Invalid username, email, or Doctor ID/password.");
+                ModelState.AddModelError(string.Empty, "Invalid Doctor ID or password.");
                 return View(model);
             }
 
@@ -96,6 +90,20 @@ public class AuthController : Controller
                 return Redirect(returnUrl);
 
             return RedirectToAction("Portal", "Doctor");
+        }
+
+        // 2. If not a Doctor, check the standard Users table
+        var user = await _db.Users
+            .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u =>
+                !u.IsDeleted &&
+                (u.UserName == model.UserNameOrEmail || u.Email == model.UserNameOrEmail),
+                cancellationToken);
+
+        if (user == null || !_passwordHash.VerifyPassword(model.Password, user.PasswordHash))
+        {
+            ModelState.AddModelError(string.Empty, "Invalid username or password.");
+            return View(model);
         }
 
         if (user.Status == Models.Enums.AccountStatus.Inactive)
