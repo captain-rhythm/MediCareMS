@@ -403,4 +403,20 @@ public class UserController : Controller
         var thanas = BangladeshGeoData.GetThanas(district);
         return Json(thanas);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> MyRecords()
+    {
+        var patient = await GetCurrentPatientAsync();
+        if (patient == null) return RedirectToAction("Login", "Auth");
+
+        var prescriptions = await _db.Prescriptions
+            .Include(p => p.Doctor)
+            .Include(p => p.Appointment)
+            .Where(p => p.PatientId == patient.Id)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+
+        return View(prescriptions);
+    }
 }

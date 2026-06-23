@@ -1,0 +1,55 @@
+@model IEnumerable<MediCareMS.Models.Entities.Prescription.Prescription>
+@{
+    ViewData["Title"] = "My Records";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Medical Records & Prescriptions</h2>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <p class="text-muted">You have no medical records yet.</p>
+            }
+            else
+            {
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                            <th>Diagnosis</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var record in Model)
+                        {
+                            <tr>
+                                <td>@record.CreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>@record.Doctor.FullName</td>
+                                <td>@(string.IsNullOrEmpty(record.Diagnosis) ? "N/A" : record.Diagnosis)</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(record.PdfFilePath))
+                                    {
+                                        <a href="@record.PdfFilePath" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-file-pdf"></i> Download PDF
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">No PDF</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>

@@ -66,5 +66,31 @@ public class AdminController : Controller
 
         return View(vm);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> PendingAppointments()
+    {
+        var pending = await _db.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Doctor)
+            .Where(a => a.Status == AppointmentStatus.Pending && !a.IsDeleted)
+            .OrderBy(a => a.AppointmentDate).ThenBy(a => a.AppointmentTime)
+            .ToListAsync();
+        
+        return View(pending);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ApproveAppointment(int id)
+    {
+        var appt = await _db.Appointments.FindAsync(id);
+        if (appt != null && appt.Status == AppointmentStatus.Pending)
+        {
+            appt.Status = AppointmentStatus.Confirmed;
+            await _db.SaveChangesAsync();
+            TempData["Success"] = $"Appointment #{appt.AppointmentNo} confirmed.";
+        }
+        return RedirectToAction(nameof(PendingAppointments));
+    }
 }
 

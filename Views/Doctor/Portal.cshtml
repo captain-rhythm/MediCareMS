@@ -262,7 +262,7 @@
                 <div class="stat-badge badge-gray">Daily</div>
             </div>
             <div class="stat-title">Appointments Today</div>
-            <div class="stat-value">12</div>
+            <div class="stat-value">@(ViewBag.Appointments != null ? ((IEnumerable<MediCareMS.Models.Entities.Appointment.Appointment>)ViewBag.Appointments).Count() : 0)</div>
         </div>
         <div class="stat-card">
             <div class="stat-header">
@@ -289,45 +289,29 @@
                 <a href="#" class="view-all">View Schedule &rarr;</a>
             </div>
             <div class="appointments-list">
-                <div class="appointment-item">
-                    <div class="patient-avatar">JS</div>
-                    <div class="patient-info">
-                        <div class="patient-name">John Stevenson</div>
-                        <div class="patient-meta">ID: #MS-8821 &bull; New Patient</div>
-                    </div>
-                    <div class="appointment-time">
-                        <div class="time-val">09:30 AM</div>
-                        <div class="duration">Duration: 45 min</div>
-                    </div>
-                    <div class="status-pill pill-consult">Consultation</div>
-                    <i class="fas fa-ellipsis-v" style="color:#cbd5e1;cursor:pointer;"></i>
-                </div>
-                <div class="appointment-item">
-                    <div class="patient-avatar" style="background:#f0fdf4;color:#10b981;">EM</div>
-                    <div class="patient-info">
-                        <div class="patient-name">Elena Martinez</div>
-                        <div class="patient-meta">ID: #MS-7742 &bull; Recurring</div>
-                    </div>
-                    <div class="appointment-time">
-                        <div class="time-val">10:45 AM</div>
-                        <div class="duration">Duration: 30 min</div>
-                    </div>
-                    <div class="status-pill pill-follow">Follow-up</div>
-                    <i class="fas fa-ellipsis-v" style="color:#cbd5e1;cursor:pointer;"></i>
-                </div>
-                <div class="appointment-item">
-                    <div class="patient-avatar" style="background:#fef2f2;color:#ef4444;">RW</div>
-                    <div class="patient-info">
-                        <div class="patient-name">Robert White</div>
-                        <div class="patient-meta">ID: #MS-9901 &bull; Post-Op</div>
-                    </div>
-                    <div class="appointment-time">
-                        <div class="time-val">11:30 AM</div>
-                        <div class="duration">Duration: 60 min</div>
-                    </div>
-                    <div class="status-pill pill-procedure" style="color:#334155;background:#f8fafc;">Procedure</div>
-                    <i class="fas fa-ellipsis-v" style="color:#cbd5e1;cursor:pointer;"></i>
-                </div>
+                @if (ViewBag.Appointments != null && ((IEnumerable<MediCareMS.Models.Entities.Appointment.Appointment>)ViewBag.Appointments).Any())
+                {
+                    foreach (var appt in (IEnumerable<MediCareMS.Models.Entities.Appointment.Appointment>)ViewBag.Appointments)
+                    {
+                        var initials = string.Join("", appt.Patient.FullName.Split(' ').Take(2).Select(s => s[0])).ToUpper();
+                        <div class="appointment-item">
+                            <div class="patient-avatar">@initials</div>
+                            <div class="patient-info">
+                                <div class="patient-name">@appt.Patient.FullName</div>
+                                <div class="patient-meta">ID: #MS-@appt.Patient.Id.ToString("D4") &bull; @appt.ChiefComplaint</div>
+                            </div>
+                            <div class="appointment-time">
+                                <div class="time-val">@appt.AppointmentTime.ToString("hh:mm tt")</div>
+                                <div class="duration">Consultation</div>
+                            </div>
+                            <a href="@Url.Action("CreatePrescription", "Doctor", new { patientId = appt.Patient.Id })" class="status-pill pill-consult" style="text-decoration:none;">Prescribe</a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted py-4">No confirmed appointments for today.</div>
+                }
                 
                 <div style="margin-top:20px;padding-top:20px;border-top:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
                     <div style="font-weight:600;font-size:14px;">Weekly Patient Trends</div>
