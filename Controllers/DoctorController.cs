@@ -287,18 +287,18 @@ public class DoctorController : Controller
     public async Task<IActionResult> CreatePrescription(CreatePrescriptionViewModel vm, IFormFile? directUpload)
     {
         Console.WriteLine("=== CreatePrescription POST Executed ===");
-        if (!ModelState.IsValid)
+        
+        bool hasManualData = !string.IsNullOrWhiteSpace(vm.Diagnosis);
+        bool hasFile = directUpload != null && directUpload.Length > 0;
+
+        if (!hasManualData && !hasFile)
         {
-            Console.WriteLine(">>> ModelState is INVALID. Errors:");
-            foreach (var state in ModelState)
-            {
-                foreach (var err in state.Value.Errors)
-                {
-                    Console.WriteLine($"Field: '{state.Key}', Error: '{err.ErrorMessage}'");
-                }
-            }
+            ModelState.AddModelError("", "Please provide either a Diagnosis for a manual prescription, or upload a prescription file.");
+            Console.WriteLine(">>> Validation Failed: Neither manual data nor file provided.");
             return View(vm);
         }
+
+        ModelState.Clear(); // We have our custom logic now, clear any implicit nullability validation errors
 
         var doctorIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(doctorIdClaim, out int docId)) return Unauthorized();
@@ -306,16 +306,37 @@ public class DoctorController : Controller
         var appointment = await _db.Appointments.FirstOrDefaultAsync(a => a.DoctorId == docId && a.PatientId == vm.PatientId)
                           ?? await _db.Appointments.FirstOrDefaultAsync(); // Fallback
 
-        var prescription = new Prescription
+        var appointmentId = appointment?.Id ?? 1;
+
+        using var transaction = await _db.Database.BeginTransactionAsync();
+
+        var prescription = await _db.Prescriptions
+            .Include(p => p.Medicines)
+            .FirstOrDefaultAsync(p => p.AppointmentId == appointmentId);
+
+        bool isNew = false;
+        if (prescription == null)
         {
-            PatientId = vm.PatientId > 0 ? vm.PatientId : 1,
-            DoctorId = docId,
-            AppointmentId = appointment?.Id ?? 1,
-            Diagnosis = vm.Diagnosis,
-            Notes = vm.Notes,
-            CreatedAt = DateTime.UtcNow,
-            Status = MediCareMS.Models.Enums.PrescriptionStatus.Draft
-        };
+            isNew = true;
+            prescription = new Prescription
+            {
+                PatientId = vm.PatientId > 0 ? vm.PatientId : 1,
+                DoctorId = docId,
+                AppointmentId = appointmentId,
+                CreatedAt = DateTime.UtcNow,
+                Status = MediCareMS.Models.Enums.PrescriptionStatus.Draft
+            };
+        }
+
+        prescription.Diagnosis = string.IsNullOrWhiteSpace(vm.Diagnosis) && hasFile ? "See Attached File" : vm.Diagnosis ?? "N/A";
+        prescription.Notes = vm.Notes ?? string.Empty;
+        prescription.UpdatedAt = DateTime.UtcNow;
+
+        if (!isNew && prescription.Medicines.Any())
+        {
+            _db.PrescriptionMedicines.RemoveRange(prescription.Medicines);
+            prescription.Medicines.Clear();
+        }
 
         if (vm.Medicines != null)
         {
@@ -326,18 +347,18 @@ public class DoctorController : Controller
                     prescription.Medicines.Add(new PrescriptionMedicine
                     {
                         MedicineName = med.MedicineName,
-                        Dosage = med.Dosage,
-                        Duration = med.Duration,
-                        Instructions = med.Instructions,
+                        Dosage = med.Dosage ?? "",
+                        Duration = med.Duration ?? "",
+                        Instructions = med.Instructions ?? "",
                         CreatedAt = DateTime.UtcNow
                     });
                 }
             }
         }
 
-        if (directUpload != null && directUpload.Length > 0)
+        if (hasFile)
         {
-            prescription.Notes += $"\n[Attached file: {directUpload.FileName}]";
+            prescription.Notes += $"\n[Attached file: {directUpload!.FileName}]";
         }
 
         // --- Generate PDF using QuestPDF ---
@@ -406,8 +427,16 @@ public class DoctorController : Controller
         
         prescription.PdfFilePath = $"/prescriptions/{pdfName}";
 
-        _db.Prescriptions.Add(prescription);
+        if (isNew)
+        {
+            _db.Prescriptions.Add(prescription);
+        }
+        else
+        {
+            _db.Prescriptions.Update(prescription);
+        }
         await _db.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         // --- Send Email ---
         var userEmail = patientInfo?.Email;
