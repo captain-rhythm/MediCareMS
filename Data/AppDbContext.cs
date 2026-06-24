@@ -91,6 +91,22 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<DoctorProfile>().HasIndex(x => x.DoctorNo).IsUnique();
         modelBuilder.Entity<Patient>().HasIndex(x => x.PatientNo).IsUnique();
 
+        // ── Performance indexes for Patient list queries ──────────────────────
+        // Covers: WHERE IsDeleted=0 ORDER BY FullName  (default list)
+        modelBuilder.Entity<Patient>()
+            .HasIndex(x => new { x.IsDeleted, x.FullName })
+            .HasDatabaseName("IX_Patients_IsDeleted_FullName");
+
+        // Covers: WHERE IsDeleted=0 AND BloodGroup=?  (blood-group filter)
+        modelBuilder.Entity<Patient>()
+            .HasIndex(x => new { x.IsDeleted, x.BloodGroup })
+            .HasDatabaseName("IX_Patients_IsDeleted_BloodGroup");
+
+        // Covers: WHERE PatientId=? AND IsDeleted=0  (visit-count sub-query)
+        modelBuilder.Entity<MediCareMS.Models.Entities.Appointment.Appointment>()
+            .HasIndex(x => new { x.PatientId, x.IsDeleted })
+            .HasDatabaseName("IX_Appointments_PatientId_IsDeleted");
+
         // Decimal precision
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {
