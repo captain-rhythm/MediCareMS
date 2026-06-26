@@ -78,7 +78,11 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
         {
             options.ClientId     = googleClientId;
             options.ClientSecret = googleClientSecret;
-            options.SignInScheme = "ExternalCookie";
+            options.SignInScheme  = "ExternalCookie";
+            // Explicitly set the callback path (default is /signin-google).
+            // The Authorized Redirect URI in Google Cloud Console MUST be:
+            //   https://localhost:50002/signin-google
+            options.CallbackPath = "/signin-google";
         });
 }
 
@@ -131,6 +135,18 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+if (!app.Environment.IsDevelopment())
+{
+    // In production HTTPS is enforced by the host/reverse-proxy.
+    // In development we keep this off so both profiles (http/https) work
+    // without requiring a dev certificate for every request.
+}
+else
+{
+    // Force HTTPS so the OAuth middleware always generates https:// redirect URIs
+    // that match the Authorized Redirect URI registered in Google Cloud Console.
+    app.UseHttpsRedirection();
+}
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
